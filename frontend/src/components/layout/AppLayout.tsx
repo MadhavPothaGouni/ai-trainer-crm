@@ -1,8 +1,16 @@
-import { Outlet } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
 import { Button } from "../ui/Button";
 
-/** Shell for every authenticated page: a slim top bar (current user + sign out) plus the routed page content. */
+const NAV_LINKS = [
+  { to: "/", label: "Dashboard", end: true },
+  { to: "/accounts", label: "Accounts", end: false },
+  { to: "/contacts", label: "Contacts", end: false },
+  { to: "/opportunities", label: "Opportunities", end: false },
+  { to: "/leads", label: "Leads", end: false },
+];
+
+/** Shell for every authenticated page: a slim top bar (current user + sign out), CRM nav, and the routed page content. */
 export function AppLayout() {
   const { user, logout } = useAuth();
 
@@ -27,6 +35,22 @@ export function AppLayout() {
             </Button>
           </div>
         </div>
+        <nav className="mx-auto flex max-w-5xl gap-1 px-4">
+          {NAV_LINKS.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              end={link.end}
+              className={({ isActive }) =>
+                `border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+                  isActive ? "border-slate-900 text-slate-900" : "border-transparent text-slate-500 hover:text-slate-900"
+                }`
+              }
+            >
+              {link.label}
+            </NavLink>
+          ))}
+        </nav>
       </header>
       <main className="mx-auto max-w-5xl px-4 py-8">
         <Outlet />

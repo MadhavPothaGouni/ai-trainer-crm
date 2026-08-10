@@ -45,3 +45,85 @@ export const resetPasswordSchema = z
     path: ["confirmPassword"],
   });
 export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
+
+// ---- CRM ----
+
+// Number inputs round-trip through the DOM as strings. Keeping the schema's input
+// *and* output type as `string | undefined` (rather than transforming to `number`
+// here) keeps the inferred FormValues type simple and avoids a zodResolver generic
+// mismatch between useForm's single type parameter and a transformed output type -
+// the actual string-to-number conversion happens at submit time via toOptionalNumber.
+const optionalNumberString = z
+  .string()
+  .optional()
+  .refine((value) => value === undefined || value === "" || !Number.isNaN(Number(value)), "Must be a number");
+
+/** Converts a form's optional numeric-string field into a number for the API request, or undefined if blank. */
+export function toOptionalNumber(value: string | undefined): number | undefined {
+  return value === undefined || value === "" ? undefined : Number(value);
+}
+
+export const createAccountSchema = z.object({
+  name: z.string().min(1, "Account name is required").max(200),
+  industry: z.string().max(100).optional().or(z.literal("")),
+  website: z.string().max(255).optional().or(z.literal("")),
+  phone: z.string().max(30).optional().or(z.literal("")),
+  billingStreet: z.string().max(255).optional().or(z.literal("")),
+  billingCity: z.string().max(100).optional().or(z.literal("")),
+  billingState: z.string().max(100).optional().or(z.literal("")),
+  billingPostalCode: z.string().max(20).optional().or(z.literal("")),
+  billingCountry: z.string().max(100).optional().or(z.literal("")),
+  annualRevenue: optionalNumberString,
+  employeeCount: optionalNumberString,
+  description: z.string().max(2000).optional().or(z.literal("")),
+});
+export type CreateAccountFormValues = z.infer<typeof createAccountSchema>;
+
+export const createContactSchema = z.object({
+  firstName: z.string().min(1, "First name is required").max(100),
+  lastName: z.string().min(1, "Last name is required").max(100),
+  email: z.string().email("Enter a valid email address").max(255).optional().or(z.literal("")),
+  phone: z.string().max(30).optional().or(z.literal("")),
+  title: z.string().max(150).optional().or(z.literal("")),
+  description: z.string().max(2000).optional().or(z.literal("")),
+  accountId: z.string().optional().or(z.literal("")),
+});
+export type CreateContactFormValues = z.infer<typeof createContactSchema>;
+
+export const createOpportunitySchema = z.object({
+  accountId: z.string().min(1, "Account is required"),
+  primaryContactId: z.string().optional().or(z.literal("")),
+  name: z.string().min(1, "Opportunity name is required").max(200),
+  amount: optionalNumberString,
+  currency: z.string().max(3).optional().or(z.literal("")),
+  expectedCloseDate: z.string().optional().or(z.literal("")),
+  description: z.string().max(2000).optional().or(z.literal("")),
+});
+export type CreateOpportunityFormValues = z.infer<typeof createOpportunitySchema>;
+
+export const createLeadSchema = z.object({
+  firstName: z.string().min(1, "First name is required").max(100),
+  lastName: z.string().min(1, "Last name is required").max(100),
+  email: z.string().email("Enter a valid email address").max(255).optional().or(z.literal("")),
+  phone: z.string().max(30).optional().or(z.literal("")),
+  companyName: z.string().max(200).optional().or(z.literal("")),
+  title: z.string().max(150).optional().or(z.literal("")),
+  source: z.string().min(1, "Source is required"),
+  description: z.string().max(2000).optional().or(z.literal("")),
+});
+export type CreateLeadFormValues = z.infer<typeof createLeadSchema>;
+
+export const convertLeadSchema = z.object({
+  existingAccountId: z.string().optional().or(z.literal("")),
+  newAccountName: z.string().max(200).optional().or(z.literal("")),
+  createOpportunity: z.boolean().optional(),
+  opportunityName: z.string().max(200).optional().or(z.literal("")),
+  opportunityAmount: optionalNumberString,
+  opportunityExpectedCloseDate: z.string().optional().or(z.literal("")),
+});
+export type ConvertLeadFormValues = z.infer<typeof convertLeadSchema>;
+
+/** Turns "" into undefined - use when mapping an optional select/text field onto a request DTO. */
+export function blankToUndefined(value: string | undefined | null): string | undefined {
+  return value === "" || value === null || value === undefined ? undefined : value;
+}

@@ -117,13 +117,16 @@ docker-compose.yml       Full local stack: postgres, redis, rabbitmq, backend, f
 ## Roadmap
 
 Built so far: backend scaffold, auth module (register/login/refresh/password
-reset/email verification), organizations/users/RBAC modules, React auth
-scaffold (login/register/forgot/reset/verify-email pages + protected
-routing), Docker Compose + CI for both halves.
+reset/email verification), organizations/users/RBAC modules, the CRM domain
+itself (Account/Contact/Opportunity/Lead, including lead conversion and
+record-level OWN/TEAM/DEPARTMENT/ORGANIZATION scope authorization), React
+auth scaffold (login/register/forgot/reset/verify-email pages + protected
+routing), a CRM workspace UI (list/create/detail pages for accounts,
+contacts, opportunities, and leads, including opportunity stage transitions
+and lead conversion from the UI), Docker Compose + CI for both halves.
 
 Not yet built:
 - Frontend UI for team/role management (the typed API client already exists
   in `frontend/src/api/{users,roles}.ts` — no pages consume it yet)
-- The actual CRM domain (leads, contacts, accounts, opportunities, ...)
 - Frontend test suite
 - Production deploy pipeline (image push + release)

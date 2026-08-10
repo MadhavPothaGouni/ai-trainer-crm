@@ -8,6 +8,18 @@ import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
+import AccountCreatePage from "./pages/accounts/AccountCreatePage";
+import AccountDetailPage from "./pages/accounts/AccountDetailPage";
+import AccountListPage from "./pages/accounts/AccountListPage";
+import ContactCreatePage from "./pages/contacts/ContactCreatePage";
+import ContactDetailPage from "./pages/contacts/ContactDetailPage";
+import ContactListPage from "./pages/contacts/ContactListPage";
+import OpportunityCreatePage from "./pages/opportunities/OpportunityCreatePage";
+import OpportunityDetailPage from "./pages/opportunities/OpportunityDetailPage";
+import OpportunityListPage from "./pages/opportunities/OpportunityListPage";
+import LeadCreatePage from "./pages/leads/LeadCreatePage";
+import LeadDetailPage from "./pages/leads/LeadDetailPage";
+import LeadListPage from "./pages/leads/LeadListPage";
 
 export default function App() {
   return (
@@ -27,6 +39,22 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<DashboardPage />} />
+
+          <Route path="/accounts" element={<AccountListPage />} />
+          <Route path="/accounts/new" element={<AccountCreatePage />} />
+          <Route path="/accounts/:accountId" element={<AccountDetailPage />} />
+
+          <Route path="/contacts" element={<ContactListPage />} />
+          <Route path="/contacts/new" element={<ContactCreatePage />} />
+          <Route path="/contacts/:contactId" element={<ContactDetailPage />} />
+
+          <Route path="/opportunities" element={<OpportunityListPage />} />
+          <Route path="/opportunities/new" element={<OpportunityCreatePage />} />
+          <Route path="/opportunities/:opportunityId" element={<OpportunityDetailPage />} />
+
+          <Route path="/leads" element={<LeadListPage />} />
+          <Route path="/leads/new" element={<LeadCreatePage />} />
+          <Route path="/leads/:leadId" element={<LeadDetailPage />} />
         </Route>
       </Route>
 

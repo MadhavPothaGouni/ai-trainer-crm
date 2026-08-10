@@ -177,3 +177,195 @@ export interface UpdateRoleRequest {
   description?: string;
   permissionIds?: string[] | null;
 }
+
+// ---- CRM: Account ----
+
+export interface AccountDto {
+  id: string;
+  name: string;
+  industry: string | null;
+  website: string | null;
+  phone: string | null;
+  billingStreet: string | null;
+  billingCity: string | null;
+  billingState: string | null;
+  billingPostalCode: string | null;
+  billingCountry: string | null;
+  annualRevenue: number | null;
+  employeeCount: number | null;
+  description: string | null;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateAccountRequest {
+  name: string;
+  industry?: string | null;
+  website?: string | null;
+  phone?: string | null;
+  billingStreet?: string | null;
+  billingCity?: string | null;
+  billingState?: string | null;
+  billingPostalCode?: string | null;
+  billingCountry?: string | null;
+  annualRevenue?: number | null;
+  employeeCount?: number | null;
+  description?: string | null;
+  ownerId?: string | null;
+}
+
+export type UpdateAccountRequest = CreateAccountRequest;
+
+// ---- CRM: Contact ----
+
+export interface ContactDto {
+  id: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  title: string | null;
+  description: string | null;
+  accountId: string | null;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateContactRequest {
+  firstName: string;
+  lastName: string;
+  email?: string | null;
+  phone?: string | null;
+  title?: string | null;
+  description?: string | null;
+  accountId?: string | null;
+  ownerId?: string | null;
+}
+
+export type UpdateContactRequest = CreateContactRequest;
+
+// ---- CRM: Opportunity ----
+
+export type OpportunityStage =
+  | "PROSPECTING"
+  | "QUALIFICATION"
+  | "PROPOSAL"
+  | "NEGOTIATION"
+  | "CLOSED_WON"
+  | "CLOSED_LOST";
+
+export const OPPORTUNITY_STAGES: OpportunityStage[] = [
+  "PROSPECTING",
+  "QUALIFICATION",
+  "PROPOSAL",
+  "NEGOTIATION",
+  "CLOSED_WON",
+  "CLOSED_LOST",
+];
+
+export interface OpportunityDto {
+  id: string;
+  accountId: string;
+  primaryContactId: string | null;
+  name: string;
+  stage: OpportunityStage;
+  amount: number | null;
+  currency: string | null;
+  expectedCloseDate: string | null;
+  actualCloseDate: string | null;
+  description: string | null;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateOpportunityRequest {
+  accountId: string;
+  primaryContactId?: string | null;
+  name: string;
+  amount?: number | null;
+  currency?: string | null;
+  expectedCloseDate?: string | null;
+  description?: string | null;
+  ownerId?: string | null;
+}
+
+export type UpdateOpportunityRequest = CreateOpportunityRequest;
+
+export interface UpdateOpportunityStageRequest {
+  stage: OpportunityStage;
+}
+
+// ---- CRM: Lead ----
+
+export type LeadStatus = "NEW" | "CONTACTED" | "QUALIFIED" | "UNQUALIFIED" | "CONVERTED";
+
+export const LEAD_STATUSES: LeadStatus[] = ["NEW", "CONTACTED", "QUALIFIED", "UNQUALIFIED", "CONVERTED"];
+
+export type LeadSource = "WEBSITE" | "REFERRAL" | "COLD_CALL" | "EVENT" | "ADVERTISEMENT" | "OTHER";
+
+export const LEAD_SOURCES: LeadSource[] = ["WEBSITE", "REFERRAL", "COLD_CALL", "EVENT", "ADVERTISEMENT", "OTHER"];
+
+export interface LeadDto {
+  id: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  companyName: string | null;
+  title: string | null;
+  status: LeadStatus;
+  source: LeadSource;
+  description: string | null;
+  ownerId: string;
+  convertedAccountId: string | null;
+  convertedContactId: string | null;
+  convertedOpportunityId: string | null;
+  convertedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLeadRequest {
+  firstName: string;
+  lastName: string;
+  email?: string | null;
+  phone?: string | null;
+  companyName?: string | null;
+  title?: string | null;
+  source: LeadSource;
+  description?: string | null;
+  ownerId?: string | null;
+}
+
+export type UpdateLeadRequest = CreateLeadRequest;
+
+export interface UpdateLeadStatusRequest {
+  status: LeadStatus;
+}
+
+export interface ConvertLeadRequest {
+  existingAccountId?: string | null;
+  newAccountName?: string | null;
+  createOpportunity?: boolean | null;
+  opportunityName?: string | null;
+  opportunityAmount?: number | null;
+  opportunityExpectedCloseDate?: string | null;
+}
+
+export interface LeadConversionResult {
+  leadId: string;
+  accountId: string;
+  contactId: string;
+  opportunityId: string | null;
+}
+
+// ---- CRM: shared ----
+
+export interface AssignOwnerRequest {
+  ownerId: string;
+}
