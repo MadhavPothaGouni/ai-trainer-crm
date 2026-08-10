@@ -22,6 +22,11 @@
         <jjwt.version>0.12.5</jjwt.version>
         <springdoc.version>2.5.0</springdoc.version>
         <testcontainers.version>1.19.7</testcontainers.version>
+        <!-- Spring Boot 3.2.5's managed Flyway release predates the Flyway 10 split that
+             introduced flyway-database-postgresql as its own artifact, so that dependency
+             has no managed version and needs to be pinned explicitly here - flyway-core is
+             pinned to the same version so the two stay in lockstep. -->
+        <flyway.version>10.15.0</flyway.version>
     </properties>
 
     <dependencies>
@@ -52,10 +57,16 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
+            <!-- No explicit <version> needed: Spring Boot's BOM defines flyway-core's managed
+                 version via this same ${flyway.version} property, so overriding the property
+                 above is enough to bump it too. -->
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
+            <!-- This one needs an explicit version - Spring Boot 3.2.5's BOM has no managed
+                 entry for it at all (see the flyway.version comment above). -->
+            <version>${flyway.version}</version>
         </dependency>
 
         <!-- Security / JWT -->
