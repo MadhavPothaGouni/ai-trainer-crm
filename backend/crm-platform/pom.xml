@@ -204,9 +204,16 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <annotationProcessorPaths>
+                        <!-- Unlike regular <dependencies>, annotationProcessorPaths entries don't
+                             resolve through Spring Boot's dependencyManagement automatically - each
+                             one needs an explicit version. ${lombok.version} is still inherited from
+                             the parent POM's <properties> (property inheritance, unlike
+                             dependencyManagement, works normally), so this stays in lockstep with
+                             whatever Lombok version Spring Boot 3.2.5 actually manages (1.18.32). -->
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
                         </path>
                         <path>
                             <groupId>org.mapstruct</groupId>
