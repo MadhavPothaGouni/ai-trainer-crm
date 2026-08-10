@@ -92,14 +92,27 @@ public class RoleService {
                 .orElseThrow(() -> new IllegalStateException("Organization %s has no MEMBER role".formatted(organizationId)));
     }
 
-    /** Every role - system defaults plus custom - visible to one organization. */
+    /**
+     * Every role - system defaults plus custom - visible to one organization. Uses the
+     * permissions-join-fetched query, not the plain derived one: callers of this method
+     * (RoleController#list) serialize the result straight to RoleDto, which walks
+     * role.getPermissions() - a lazy collection that would throw
+     * LazyInitializationException once the request leaves this method, since
+     * spring.jpa.open-in-view is false.
+     */
+    @Transactional(readOnly = true)
     public List<Role> listForOrganization(UUID organizationId) {
-        return roleRepository.findByOrganizationId(organizationId);
+        return roleRepository.findByOrganizationIdWithPermissions(organizationId);
     }
 
-    /** Scoped lookup: a role from a *different* organization is treated as not found, not forbidden - it should never be revealed to exist. */
+    /**
+     * Scoped lookup: a role from a *different* organization is treated as not found, not
+     * forbidden - it should never be revealed to exist. Also permissions-join-fetched, for
+     * the same reason as {@link #listForOrganization}.
+     */
+    @Transactional(readOnly = true)
     public Role getForOrganization(UUID organizationId, UUID roleId) {
-        Role role = roleRepository.findById(roleId).orElseThrow(() -> new ResourceNotFoundException("Role", roleId));
+        Role role = roleRepository.findByIdWithPermissions(roleId).orElseThrow(() -> new ResourceNotFoundException("Role", roleId));
         if (!organizationId.equals(role.getOrganizationId())) {
             throw new ResourceNotFoundException("Role", roleId);
         }
