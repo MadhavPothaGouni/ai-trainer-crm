@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -76,10 +77,14 @@ class AuthServiceTest {
                 emailVerificationTokenRepository, organizationService, roleService, passwordEncoder,
                 jwtTokenProvider, secureTokenService, securityProperties, emailService, events);
 
-        // Shared stubs used by (almost) every flow that issues a fresh token pair.
-        when(secureTokenService.generateRawToken()).thenReturn("raw-token-value");
-        when(secureTokenService.hash(anyString())).thenReturn("hashed-token-value");
-        when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        // Shared stubs used by most (not all) flows that issue a fresh token pair - lenient
+        // because several tests (an early-thrown DuplicateResourceException, a revoked/expired
+        // refresh token rejected before a new one is ever issued) legitimately never reach the
+        // code that would consume them, and Mockito's strict stubs would otherwise fail the
+        // test for that alone.
+        lenient().when(secureTokenService.generateRawToken()).thenReturn("raw-token-value");
+        lenient().when(secureTokenService.hash(anyString())).thenReturn("hashed-token-value");
+        lenient().when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test

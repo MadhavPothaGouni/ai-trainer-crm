@@ -69,6 +69,7 @@ class UserServiceTest {
         target.setOrganizationId(organizationId);
 
         Role memberRole = new Role(RoleService.MEMBER, "desc", organizationId, true);
+        memberRole.setId(UUID.randomUUID());
         when(userRepository.findActiveById(target.getId())).thenReturn(Optional.of(target));
         when(roleService.resolveForOrganization(organizationId, Set.of(memberRole.getId())))
                 .thenReturn(Set.of(memberRole));
@@ -90,6 +91,7 @@ class UserServiceTest {
         target.setOrganizationId(organizationId);
 
         Role memberRole = new Role(RoleService.MEMBER, "desc", organizationId, true);
+        memberRole.setId(UUID.randomUUID());
         when(userRepository.findActiveById(target.getId())).thenReturn(Optional.of(target));
         when(roleService.resolveForOrganization(organizationId, Set.of(memberRole.getId())))
                 .thenReturn(Set.of(memberRole));
