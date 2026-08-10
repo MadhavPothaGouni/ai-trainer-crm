@@ -1,9 +1,13 @@
 package com.aitrainercrm.platform.role.service;
 
+import com.aitrainercrm.platform.common.exception.DuplicateResourceException;
+import com.aitrainercrm.platform.common.exception.ForbiddenException;
+import com.aitrainercrm.platform.common.exception.ResourceNotFoundException;
 import com.aitrainercrm.platform.role.entity.Permission;
 import com.aitrainercrm.platform.role.entity.Role;
 import com.aitrainercrm.platform.role.repository.PermissionRepository;
 import com.aitrainercrm.platform.role.repository.RoleRepository;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -42,17 +46,21 @@ public class RoleService {
     public Role createDefaultRolesForOrganization(UUID organizationId) {
         List<Permission> allPermissions = permissionRepository.findAll();
 
-        Role owner = new Role(OWNER, "Full access to everything in this organization", organizationId, false);
+        // systemRole=true on all three: RoleService/RoleController never let a tenant admin
+        // rename, edit the permission set of, or delete OWNER/ADMIN/MEMBER - see
+        // RoleService#assertMutable. Only custom roles created via POST /api/v1/roles are
+        // system-role=false and therefore editable/deletable.
+        Role owner = new Role(OWNER, "Full access to everything in this organization", organizationId, true);
         allPermissions.forEach(owner::addPermission);
         roleRepository.save(owner);
 
-        Role admin = new Role(ADMIN, "Manage users, roles, and all business data", organizationId, false);
+        Role admin = new Role(ADMIN, "Manage users, roles, and all business data", organizationId, true);
         allPermissions.stream()
                 .filter(p -> !(p.getResource() == Permission.Resource.ORGANIZATION && p.getAction() == Permission.Action.DELETE))
                 .forEach(admin::addPermission);
         roleRepository.save(admin);
 
-        Role member = new Role(MEMBER, "Standard team member access", organizationId, false);
+        Role member = new Role(MEMBER, "Standard team member access", organizationId, true);
         Set<Permission.Action> memberActions = Set.of(
                 Permission.Action.CREATE, Permission.Action.READ, Permission.Action.UPDATE);
         allPermissions.stream()
@@ -82,5 +90,96 @@ public class RoleService {
         return roleRepository
                 .findByNameAndOrganizationId(MEMBER, organizationId)
                 .orElseThrow(() -> new IllegalStateException("Organization %s has no MEMBER role".formatted(organizationId)));
+    }
+
+    /** Every role - system defaults plus custom - visible to one organization. */
+    public List<Role> listForOrganization(UUID organizationId) {
+        return roleRepository.findByOrganizationId(organizationId);
+    }
+
+    /** Scoped lookup: a role from a *different* organization is treated as not found, not forbidden - it should never be revealed to exist. */
+    public Role getForOrganization(UUID organizationId, UUID roleId) {
+        Role role = roleRepository.findById(roleId).orElseThrow(() -> new ResourceNotFoundException("Role", roleId));
+        if (!organizationId.equals(role.getOrganizationId())) {
+            throw new ResourceNotFoundException("Role", roleId);
+        }
+        return role;
+    }
+
+    @Transactional
+    public Role createCustomRole(UUID organizationId, String name, String description, Set<UUID> permissionIds) {
+        roleRepository.findByNameAndOrganizationId(name, organizationId).ifPresent(existing -> {
+            throw new DuplicateResourceException("A role named '%s' already exists in this organization".formatted(name));
+        });
+
+        Role role = new Role(name, description, organizationId, false);
+        resolvePermissions(permissionIds).forEach(role::addPermission);
+        return roleRepository.save(role);
+    }
+
+    @Transactional
+    public Role updateCustomRole(UUID organizationId, UUID roleId, String name, String description, Set<UUID> permissionIds) {
+        Role role = getForOrganization(organizationId, roleId);
+        assertMutable(role);
+
+        roleRepository.findByNameAndOrganizationId(name, organizationId)
+                .filter(existing -> !existing.getId().equals(roleId))
+                .ifPresent(existing -> {
+                    throw new DuplicateResourceException("A role named '%s' already exists in this organization".formatted(name));
+                });
+
+        role.setName(name);
+        role.setDescription(description);
+        role.getPermissions().clear();
+        resolvePermissions(permissionIds).forEach(role::addPermission);
+        return roleRepository.save(role);
+    }
+
+    @Transactional
+    public void deleteCustomRole(UUID organizationId, UUID roleId) {
+        Role role = getForOrganization(organizationId, roleId);
+        assertMutable(role);
+        // Users still holding this role simply lose the authorities it granted - see
+        // user_roles' ON DELETE CASCADE in V1__init_schema.sql - rather than blocking the
+        // delete on "is anyone assigned to this," which would make cleaning up an unused
+        // custom role needlessly two-step (unassign everyone, then delete).
+        roleRepository.delete(role);
+    }
+
+    /** OWNER/ADMIN/MEMBER ship with every organization and are never editable or deletable through the API - see the systemRole=true comment in createDefaultRolesForOrganization. */
+    private void assertMutable(Role role) {
+        if (role.isSystemRole()) {
+            throw new ForbiddenException("System roles (%s) cannot be modified or deleted".formatted(role.getName()));
+        }
+    }
+
+    /**
+     * Resolves and validates a set of role ids for use in a user-role assignment. Unlike
+     * {@link #resolvePermissions}, this also checks tenant ownership - a role id from another
+     * organization must fail exactly like one that doesn't exist at all, never leaking that a
+     * role with that id exists somewhere else.
+     */
+    public Set<Role> resolveForOrganization(UUID organizationId, Set<UUID> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return Set.of();
+        }
+        Set<Role> roles = new HashSet<>(roleRepository.findAllById(roleIds));
+        boolean allExistAndBelongToOrg =
+                roles.size() == roleIds.size() && roles.stream().allMatch(r -> organizationId.equals(r.getOrganizationId()));
+        if (!allExistAndBelongToOrg) {
+            throw new ResourceNotFoundException("One or more role ids do not exist in this organization");
+        }
+        return roles;
+    }
+
+    private Set<Permission> resolvePermissions(Set<UUID> permissionIds) {
+        if (permissionIds == null || permissionIds.isEmpty()) {
+            return Set.of();
+        }
+        Set<Permission> permissions = new HashSet<>(permissionRepository.findAllById(permissionIds));
+        if (permissions.size() != permissionIds.size()) {
+            throw new ResourceNotFoundException("One or more permission ids do not exist");
+        }
+        return permissions;
     }
 }
