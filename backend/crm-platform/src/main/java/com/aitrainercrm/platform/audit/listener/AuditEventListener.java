@@ -72,7 +72,7 @@ public class AuditEventListener {
     @EventListener
     public void onRefreshTokenReused(AuthAuditEvents.RefreshTokenReused event) {
         AuditEvent auditEvent = new AuditEvent(
-                event.userId(), null, "REFRESH_TOKEN_REUSE_DETECTED", "User", event.userId(),
+                event.userId(), null, "REFRESH_TOKEN_REUSE_DETECTED", "User", event.userId().toString(),
                 "possible token theft - full session revoked", event.ipAddress());
         auditEventRepository.save(auditEvent);
     }
@@ -81,7 +81,7 @@ public class AuditEventListener {
     @EventListener
     public void onUserInvited(OrgManagementAuditEvents.UserInvited event) {
         AuditEvent auditEvent = new AuditEvent(
-                event.actorUserId(), event.organizationId(), "USER_INVITED", "User", event.invitedUserId(),
+                event.actorUserId(), event.organizationId(), "USER_INVITED", "User", event.invitedUserId().toString(),
                 "email=" + event.invitedEmail(), null);
         auditEventRepository.save(auditEvent);
     }
@@ -90,7 +90,7 @@ public class AuditEventListener {
     @EventListener
     public void onUserRolesChanged(OrgManagementAuditEvents.UserRolesChanged event) {
         AuditEvent auditEvent = new AuditEvent(
-                event.actorUserId(), event.organizationId(), "USER_ROLES_CHANGED", "User", event.targetUserId(),
+                event.actorUserId(), event.organizationId(), "USER_ROLES_CHANGED", "User", event.targetUserId().toString(),
                 null, null);
         auditEventRepository.save(auditEvent);
     }
@@ -99,7 +99,7 @@ public class AuditEventListener {
     @EventListener
     public void onUserStatusChanged(OrgManagementAuditEvents.UserStatusChanged event) {
         AuditEvent auditEvent = new AuditEvent(
-                event.actorUserId(), event.organizationId(), "USER_STATUS_CHANGED", "User", event.targetUserId(),
+                event.actorUserId(), event.organizationId(), "USER_STATUS_CHANGED", "User", event.targetUserId().toString(),
                 "newStatus=" + event.newStatus(), null);
         auditEventRepository.save(auditEvent);
     }
@@ -108,7 +108,7 @@ public class AuditEventListener {
     @EventListener
     public void onUserRemoved(OrgManagementAuditEvents.UserRemoved event) {
         AuditEvent auditEvent = new AuditEvent(
-                event.actorUserId(), event.organizationId(), "USER_REMOVED", "User", event.targetUserId(),
+                event.actorUserId(), event.organizationId(), "USER_REMOVED", "User", event.targetUserId().toString(),
                 null, null);
         auditEventRepository.save(auditEvent);
     }
