@@ -59,7 +59,16 @@ public abstract class BaseEntity {
     @Column(name = "updated_by")
     private UUID updatedBy;
 
+    // Deliberately left uninitialized (no "= 0L" default). Spring Data JPA's
+    // SimpleJpaRepository.save() decides persist() vs merge() by checking
+    // isNew(), and for @Version entities that check is "is version null" -
+    // not "is id null". A non-null default here made every brand-new entity
+    // look pre-existing, so save() ran merge() instead of persist(). merge()
+    // returns a *different* managed copy and leaves the object you passed in
+    // untouched, which is why ids kept coming back null after .save(entity)
+    // even though a row really was inserted. Hibernate initializes this to 0
+    // itself on the actual insert.
     @Version
     @Column(name = "version", nullable = false)
-    private Long version = 0L;
+    private Long version;
 }
