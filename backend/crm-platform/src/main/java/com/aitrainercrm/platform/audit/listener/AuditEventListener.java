@@ -2,6 +2,7 @@ package com.aitrainercrm.platform.audit.listener;
 
 import com.aitrainercrm.platform.audit.entity.AuditEvent;
 import com.aitrainercrm.platform.audit.event.AuthAuditEvents;
+import com.aitrainercrm.platform.audit.event.CrmAuditEvents;
 import com.aitrainercrm.platform.audit.event.OrgManagementAuditEvents;
 import com.aitrainercrm.platform.audit.repository.AuditEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -110,6 +111,43 @@ public class AuditEventListener {
         AuditEvent auditEvent = new AuditEvent(
                 event.actorUserId(), event.organizationId(), "USER_REMOVED", "User", event.targetUserId().toString(),
                 null, null);
+        auditEventRepository.save(auditEvent);
+    }
+
+    @Async
+    @EventListener
+    public void onRecordCreated(CrmAuditEvents.RecordCreated event) {
+        save(event.actorUserId(), event.organizationId(), event.resourceType() + "_CREATED", event.resourceType(), event.resourceId(), null);
+    }
+
+    @Async
+    @EventListener
+    public void onRecordUpdated(CrmAuditEvents.RecordUpdated event) {
+        save(event.actorUserId(), event.organizationId(), event.resourceType() + "_UPDATED", event.resourceType(), event.resourceId(), null);
+    }
+
+    @Async
+    @EventListener
+    public void onRecordDeleted(CrmAuditEvents.RecordDeleted event) {
+        save(event.actorUserId(), event.organizationId(), event.resourceType() + "_DELETED", event.resourceType(), event.resourceId(), null);
+    }
+
+    @Async
+    @EventListener
+    public void onRecordAssigned(CrmAuditEvents.RecordAssigned event) {
+        AuditEvent auditEvent = new AuditEvent(
+                event.actorUserId(), event.organizationId(), event.resourceType() + "_ASSIGNED", event.resourceType(),
+                event.resourceId().toString(), "newOwnerId=" + event.newOwnerId(), null);
+        auditEventRepository.save(auditEvent);
+    }
+
+    @Async
+    @EventListener
+    public void onLeadConverted(CrmAuditEvents.LeadConverted event) {
+        AuditEvent auditEvent = new AuditEvent(
+                event.actorUserId(), event.organizationId(), "LEAD_CONVERTED", "Lead", event.leadId().toString(),
+                "accountId=%s,contactId=%s,opportunityId=%s".formatted(event.accountId(), event.contactId(), event.opportunityId()),
+                null);
         auditEventRepository.save(auditEvent);
     }
 
