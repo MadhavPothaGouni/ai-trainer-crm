@@ -130,10 +130,13 @@ public class UserService {
 
     @Transactional
     public User updateStatus(UUID organizationId, User actor, UUID targetUserId, User.Status newStatus) {
-        User target = get(organizationId, targetUserId);
-        if (target.getId().equals(actor.getId()) && newStatus != User.Status.ACTIVE) {
+        // Same reasoning as remove(): check the target id against the actor's own id before
+        // fetching anything.
+        if (targetUserId.equals(actor.getId()) && newStatus != User.Status.ACTIVE) {
             throw new ForbiddenException("You cannot change your own account status");
         }
+
+        User target = get(organizationId, targetUserId);
         if (hasRole(target, RoleService.OWNER) && newStatus != User.Status.ACTIVE) {
             assertAnotherOwnerRemains(organizationId, target.getId());
         }
@@ -150,10 +153,14 @@ public class UserService {
 
     @Transactional
     public void remove(UUID organizationId, User actor, UUID targetUserId) {
-        User target = get(organizationId, targetUserId);
-        if (target.getId().equals(actor.getId())) {
+        // Checked against the id the caller asked to remove, before ever fetching anything -
+        // "am I targeting myself" doesn't need a lookup, and this way the rule is enforced
+        // even if the actor's own row is somehow missing/inconsistent.
+        if (targetUserId.equals(actor.getId())) {
             throw new ForbiddenException("You cannot remove your own account through this endpoint");
         }
+
+        User target = get(organizationId, targetUserId);
         if (hasRole(target, RoleService.OWNER)) {
             assertAnotherOwnerRemains(organizationId, target.getId());
         }
