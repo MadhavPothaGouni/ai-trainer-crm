@@ -32,4 +32,11 @@ public class LoggingEmailService implements EmailService {
     public void sendWelcomeEmail(String toEmail, String firstName) {
         log.info("[email:stub] Welcome email queued for {} ({})", toEmail, firstName);
     }
+
+    @Override
+    public void sendInvitationEmail(String toEmail, String inviterFullName, String setPasswordToken) {
+        log.info(
+                "[email:stub] Invitation from {} for {}: set-password link /reset-password?token={}",
+                inviterFullName, toEmail, setPasswordToken);
+    }
 }

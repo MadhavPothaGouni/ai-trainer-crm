@@ -16,4 +16,7 @@ public interface EmailService {
     void sendEmailVerificationEmail(String toEmail, String verificationToken);
 
     void sendWelcomeEmail(String toEmail, String firstName);
+
+    /** Sent when an admin adds a teammate via UserService#invite - reuses the password-reset token mechanics so the invitee sets their own first password rather than the admin choosing one. */
+    void sendInvitationEmail(String toEmail, String inviterFullName, String setPasswordToken);
 }

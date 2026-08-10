@@ -2,6 +2,7 @@ package com.aitrainercrm.platform.audit.listener;
 
 import com.aitrainercrm.platform.audit.entity.AuditEvent;
 import com.aitrainercrm.platform.audit.event.AuthAuditEvents;
+import com.aitrainercrm.platform.audit.event.OrgManagementAuditEvents;
 import com.aitrainercrm.platform.audit.repository.AuditEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
@@ -73,6 +74,42 @@ public class AuditEventListener {
         AuditEvent auditEvent = new AuditEvent(
                 event.userId(), null, "REFRESH_TOKEN_REUSE_DETECTED", "User", event.userId(),
                 "possible token theft - full session revoked", event.ipAddress());
+        auditEventRepository.save(auditEvent);
+    }
+
+    @Async
+    @EventListener
+    public void onUserInvited(OrgManagementAuditEvents.UserInvited event) {
+        AuditEvent auditEvent = new AuditEvent(
+                event.actorUserId(), event.organizationId(), "USER_INVITED", "User", event.invitedUserId(),
+                "email=" + event.invitedEmail(), null);
+        auditEventRepository.save(auditEvent);
+    }
+
+    @Async
+    @EventListener
+    public void onUserRolesChanged(OrgManagementAuditEvents.UserRolesChanged event) {
+        AuditEvent auditEvent = new AuditEvent(
+                event.actorUserId(), event.organizationId(), "USER_ROLES_CHANGED", "User", event.targetUserId(),
+                null, null);
+        auditEventRepository.save(auditEvent);
+    }
+
+    @Async
+    @EventListener
+    public void onUserStatusChanged(OrgManagementAuditEvents.UserStatusChanged event) {
+        AuditEvent auditEvent = new AuditEvent(
+                event.actorUserId(), event.organizationId(), "USER_STATUS_CHANGED", "User", event.targetUserId(),
+                "newStatus=" + event.newStatus(), null);
+        auditEventRepository.save(auditEvent);
+    }
+
+    @Async
+    @EventListener
+    public void onUserRemoved(OrgManagementAuditEvents.UserRemoved event) {
+        AuditEvent auditEvent = new AuditEvent(
+                event.actorUserId(), event.organizationId(), "USER_REMOVED", "User", event.targetUserId(),
+                null, null);
         auditEventRepository.save(auditEvent);
     }
 
