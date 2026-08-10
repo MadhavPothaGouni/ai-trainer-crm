@@ -2,7 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
 import { Button } from "../ui/Button";
 
-const NAV_LINKS = [
+const CRM_NAV_LINKS = [
   { to: "/", label: "Dashboard", end: true },
   { to: "/accounts", label: "Accounts", end: false },
   { to: "/contacts", label: "Contacts", end: false },
@@ -10,9 +10,22 @@ const NAV_LINKS = [
   { to: "/leads", label: "Leads", end: false },
 ];
 
+// Team/Role management hits USER:READ:ORGANIZATION / ROLE:READ:ORGANIZATION on the
+// backend, which only the built-in OWNER and ADMIN roles hold by default (see
+// RoleService#createDefaultRolesForOrganization) - a custom role *could* also grant
+// these, but there's no per-permission info on the client to check that precisely, so
+// this hides the links for the common case rather than showing a dead end. Anyone who
+// does have access via a custom role can still reach these pages directly by URL.
+const ADMIN_NAV_LINKS = [
+  { to: "/users", label: "Team", end: false },
+  { to: "/roles", label: "Roles", end: false },
+];
+
 /** Shell for every authenticated page: a slim top bar (current user + sign out), CRM nav, and the routed page content. */
 export function AppLayout() {
   const { user, logout } = useAuth();
+  const isOrgAdmin = user?.roles.includes("OWNER") || user?.roles.includes("ADMIN");
+  const navLinks = isOrgAdmin ? [...CRM_NAV_LINKS, ...ADMIN_NAV_LINKS] : CRM_NAV_LINKS;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -36,7 +49,7 @@ export function AppLayout() {
           </div>
         </div>
         <nav className="mx-auto flex max-w-5xl gap-1 px-4">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}

@@ -20,6 +20,12 @@ import OpportunityListPage from "./pages/opportunities/OpportunityListPage";
 import LeadCreatePage from "./pages/leads/LeadCreatePage";
 import LeadDetailPage from "./pages/leads/LeadDetailPage";
 import LeadListPage from "./pages/leads/LeadListPage";
+import RoleCreatePage from "./pages/roles/RoleCreatePage";
+import RoleDetailPage from "./pages/roles/RoleDetailPage";
+import RoleListPage from "./pages/roles/RoleListPage";
+import UserDetailPage from "./pages/users/UserDetailPage";
+import UserInvitePage from "./pages/users/UserInvitePage";
+import UserListPage from "./pages/users/UserListPage";
 
 export default function App() {
   return (
@@ -55,6 +61,14 @@ export default function App() {
           <Route path="/leads" element={<LeadListPage />} />
           <Route path="/leads/new" element={<LeadCreatePage />} />
           <Route path="/leads/:leadId" element={<LeadDetailPage />} />
+
+          <Route path="/users" element={<UserListPage />} />
+          <Route path="/users/invite" element={<UserInvitePage />} />
+          <Route path="/users/:userId" element={<UserDetailPage />} />
+
+          <Route path="/roles" element={<RoleListPage />} />
+          <Route path="/roles/new" element={<RoleCreatePage />} />
+          <Route path="/roles/:roleId" element={<RoleDetailPage />} />
         </Route>
       </Route>
 

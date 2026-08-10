@@ -127,3 +127,18 @@ export type ConvertLeadFormValues = z.infer<typeof convertLeadSchema>;
 export function blankToUndefined(value: string | undefined | null): string | undefined {
   return value === "" || value === null || value === undefined ? undefined : value;
 }
+
+// ---- Team / role management ----
+
+export const roleFormSchema = z.object({
+  name: z.string().min(1, "Role name is required").max(100),
+  description: z.string().max(500).optional().or(z.literal("")),
+});
+export type RoleFormValues = z.infer<typeof roleFormSchema>;
+
+export const inviteUserSchema = z.object({
+  email: emailSchema,
+  firstName: z.string().min(1, "First name is required").max(100),
+  lastName: z.string().min(1, "Last name is required").max(100),
+});
+export type InviteUserFormValues = z.infer<typeof inviteUserSchema>;
