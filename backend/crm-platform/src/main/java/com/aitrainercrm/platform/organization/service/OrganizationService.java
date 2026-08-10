@@ -1,9 +1,12 @@
 package com.aitrainercrm.platform.organization.service;
 
+import com.aitrainercrm.platform.common.exception.ResourceNotFoundException;
+import com.aitrainercrm.platform.organization.dto.UpdateOrganizationRequest;
 import com.aitrainercrm.platform.organization.entity.Organization;
 import com.aitrainercrm.platform.organization.repository.OrganizationRepository;
 import com.aitrainercrm.platform.role.service.RoleService;
 import java.security.SecureRandom;
+import java.util.UUID;
 import java.util.Locale;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,23 @@ public class OrganizationService {
         organizationRepository.save(organization);
         roleService.createDefaultRolesForOrganization(organization.getId());
         return organization;
+    }
+
+    @Transactional(readOnly = true)
+    public Organization getById(UUID organizationId) {
+        return organizationRepository.findById(organizationId)
+                .filter(org -> !org.isDeleted())
+                .orElseThrow(() -> new ResourceNotFoundException("Organization", organizationId));
+    }
+
+    @Transactional
+    public Organization update(UUID organizationId, UpdateOrganizationRequest request) {
+        Organization organization = getById(organizationId);
+        organization.setName(request.name());
+        organization.setDefaultCurrency(request.defaultCurrency());
+        organization.setTimezone(request.timezone());
+        organization.setFiscalYearStartMonth(request.fiscalYearStartMonth());
+        return organizationRepository.save(organization);
     }
 
     private String generateUniqueSlug(String name) {
