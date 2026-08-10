@@ -108,7 +108,7 @@ class LeadServiceTest {
     @Test
     void convert_newAccountUsesLeadsCompanyNameWhenNoOverrideGiven() {
         stubSavesReturnSameEntityWithGeneratedId();
-        ConvertLeadRequest request = new ConvertLeadRequest(null, null, false, null, null, null);
+        ConvertLeadRequest request = new ConvertLeadRequest(null, null, null, null, null, null);
 
         leadService.convert(principal, lead.getId(), request);
 

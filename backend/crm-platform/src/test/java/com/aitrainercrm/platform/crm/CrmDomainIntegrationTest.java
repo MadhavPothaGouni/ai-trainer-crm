@@ -183,10 +183,12 @@ class CrmDomainIntegrationTest extends AbstractIntegrationTest {
                 .andReturn();
         String teammateAccountId = readField(teammateAccountResult, "data", "id");
 
-        // The OWNER holds ACCOUNT:READ:ORGANIZATION - sees both accounts in the org.
+        // The OWNER holds ACCOUNT:READ:ORGANIZATION - sees every account in the org: the
+        // explicit Globex account, the "Springfield Power" account auto-created by the lead
+        // conversion above, and the teammate's own account.
         mockMvc.perform(authed(get("/api/v1/accounts"), ownerToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.totalElements").value(2));
+                .andExpect(jsonPath("$.data.totalElements").value(3));
 
         // The MEMBER's highest granted scope for ACCOUNT:READ is TEAM, which - since nothing
         // sets User#teamId yet - degrades to exactly themselves. This is the actual proof that
