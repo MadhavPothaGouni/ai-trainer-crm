@@ -1,0 +1,18 @@
+# Base config for @SpringBootTest classes. Datasource coordinates are
+# overridden per-test via @DynamicPropertySource pointing at a Testcontainers
+# Postgres instance (see AbstractIntegrationTest) - nothing here is real.
+spring:
+  jpa:
+    show-sql: true
+  flyway:
+    enabled: true
+
+crm:
+  jwt:
+    secret: test-secret-key-not-for-production-use-minimum-256-bits-long-ok
+    access-token-expiration-minutes: 15
+    refresh-token-expiration-days: 30
+
+logging:
+  level:
+    com.aitrainercrm: DEBUG
