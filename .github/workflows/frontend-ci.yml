@@ -18,8 +18,8 @@ defaults:
     working-directory: frontend
 
 jobs:
-  lint-and-build:
-    name: Lint & build (Node 22)
+  lint-test-build:
+    name: Lint, test & build (Node 22)
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -37,6 +37,10 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      # Vitest + React Testing Library - jsdom environment, no browser needed.
+      - name: Test
+        run: npm run test
 
       # Runs tsc -b (type-check) then vite build - a type error or a broken
       # import fails this step exactly like it would fail a local build.

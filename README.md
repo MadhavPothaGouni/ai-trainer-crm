@@ -88,8 +88,9 @@ cd frontend && npm install && npm run dev
 # Testcontainers, full Spring Security filter chain via MockMvc)
 cd backend/crm-platform && mvn verify
 
-# Frontend: type-check + production build (no test suite yet - see Roadmap)
-cd frontend && npm run lint && npm run build
+# Frontend: lint (oxlint) + unit/component tests (Vitest + React Testing
+# Library, jsdom) + type-check and production build
+cd frontend && npm run lint && npm run test && npm run build
 ```
 
 ## CI/CD
@@ -101,17 +102,54 @@ build, and vice versa):
 | Workflow | Triggers on | Does |
 |---|---|---|
 | `backend-ci.yml` | `backend/crm-platform/**` | `mvn verify` (unit + integration tests against a real Postgres), uploads surefire + JaCoCo reports |
-| `frontend-ci.yml` | `frontend/**` | `npm run lint` + `npm run build`, uploads the `dist/` artifact |
-| `docker-build.yml` | either `Dockerfile`'s directory, or `docker-compose.yml` | Builds both container images (no push — no registry configured yet) to catch a broken Dockerfile before deploy time |
+| `frontend-ci.yml` | `frontend/**` | `npm run lint` + `npm run test` + `npm run build`, uploads the `dist/` artifact |
+| `docker-build.yml` | either `Dockerfile`'s directory, or `docker-compose.yml` | Builds both container images (no push — this is pure validation, catching a broken Dockerfile before release time) |
+| `release.yml` | a pushed `v*.*.*` tag (or manual dispatch) | Builds and pushes both images to GHCR, then creates a GitHub Release — see [Deploying to production](#deploying-to-production) |
+
+## Deploying to production
+
+`release.yml` publishes versioned images to GHCR whenever a `v*.*.*` tag is
+pushed (or via manual dispatch against an existing tag):
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+That builds `ghcr.io/<owner>/ai-trainer-crm-backend` and
+`ai-trainer-crm-frontend`, each tagged both with the version and `latest`,
+then creates a GitHub Release listing the published image tags. No secrets
+to configure — it authenticates to GHCR with the workflow's own
+`GITHUB_TOKEN`.
+
+To run those images, use `docker-compose.prod.yml` instead of
+`docker-compose.yml` — same service topology, but it pulls the published
+images instead of building from source, and it doesn't publish the
+Postgres/Redis/RabbitMQ ports to the host (only the app itself needs to be
+reachable from outside the compose network):
+
+```bash
+cp .env.example .env
+# fill in GHCR_NAMESPACE (your GitHub username/org), IMAGE_TAG, and real
+# DB/RabbitMQ/JWT_SECRET/CORS_ALLOWED_ORIGINS values - .env.example has
+# guidance for each
+docker compose -f docker-compose.prod.yml up -d
+```
+
+`docker-compose.prod.yml` fails fast (via compose's `${VAR:?message}`
+syntax) if a required variable is missing, rather than silently falling
+back to a dev default the way `docker-compose.yml` does — there's no safe
+placeholder for a production JWT secret or DB password.
 
 ## Repository layout
 
 ```
-backend/crm-platform/   Spring Boot backend (see its own README.md)
-frontend/               React SPA (see its own README.md)
-docker-compose.yml       Full local stack: postgres, redis, rabbitmq, backend, frontend
-.env.example             Docker Compose env vars (copy to .env)
-.github/workflows/       backend-ci.yml, frontend-ci.yml, docker-build.yml
+backend/crm-platform/    Spring Boot backend (see its own README.md)
+frontend/                React SPA (see its own README.md)
+docker-compose.yml       Full local stack: postgres, redis, rabbitmq, backend, frontend (built from source)
+docker-compose.prod.yml  Production stack: same services, but pulls published GHCR images
+.env.example             Env vars for both compose files (copy to .env)
+.github/workflows/       backend-ci.yml, frontend-ci.yml, docker-build.yml, release.yml
 ```
 
 ## Roadmap
@@ -123,10 +161,14 @@ record-level OWN/TEAM/DEPARTMENT/ORGANIZATION scope authorization), React
 auth scaffold (login/register/forgot/reset/verify-email pages + protected
 routing), a CRM workspace UI (list/create/detail pages for accounts,
 contacts, opportunities, and leads, including opportunity stage transitions
-and lead conversion from the UI), Docker Compose + CI for both halves.
+and lead conversion from the UI), a team/role management UI (invite/list
+users, assign roles and status, create/edit custom roles against the full
+permission catalog), a frontend test suite (Vitest + React Testing Library),
+Docker Compose + CI for both halves, and a production deploy pipeline
+(versioned GHCR image publishing + GitHub Releases on tag push — see
+[Deploying to production](#deploying-to-production)).
 
 Not yet built:
-- Frontend UI for team/role management (the typed API client already exists
-  in `frontend/src/api/{users,roles}.ts` — no pages consume it yet)
-- Frontend test suite
-- Production deploy pipeline (image push + release)
+- A "my profile" settings page on the frontend (the `PATCH /users/me` API
+  exists but no page consumes it yet)
+- Broader frontend test coverage beyond the pages/components covered so far
