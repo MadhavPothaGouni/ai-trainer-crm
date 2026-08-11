@@ -10,6 +10,7 @@ import com.aitrainercrm.platform.common.exception.ForbiddenException;
 import com.aitrainercrm.platform.common.exception.ResourceNotFoundException;
 import com.aitrainercrm.platform.config.SecurityProperties;
 import com.aitrainercrm.platform.notification.email.EmailService;
+import com.aitrainercrm.platform.organization.repository.TeamRepository;
 import com.aitrainercrm.platform.role.entity.Role;
 import com.aitrainercrm.platform.role.service.RoleService;
 import com.aitrainercrm.platform.security.token.SecureTokenService;
@@ -45,6 +46,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final RoleService roleService;
+    private final TeamRepository teamRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final SecureTokenService secureTokenService;
@@ -148,6 +150,26 @@ public class UserService {
         }
 
         events.publishEvent(new OrgManagementAuditEvents.UserStatusChanged(actor.getId(), target.getId(), newStatus.name(), organizationId));
+        return target;
+    }
+
+    /**
+     * The other half of closing ScopeAuthorizationService's long-documented gap - TeamController
+     * (organization/) covers Team CRUD, this is what actually puts a user on one. {@code teamId}
+     * null is a legitimate value (unassign) - see UpdateUserTeamRequest's javadoc - so unlike
+     * updateRoles/updateStatus there's no "reject null" case, just an existence check when it's
+     * non-null.
+     */
+    @Transactional
+    public User updateTeam(UUID organizationId, User actor, UUID targetUserId, UUID teamId) {
+        User target = get(organizationId, targetUserId);
+        if (teamId != null && teamRepository.findByIdAndOrganizationIdAndDeletedAtIsNull(teamId, organizationId).isEmpty()) {
+            throw new ResourceNotFoundException("Team", teamId);
+        }
+
+        target.setTeamId(teamId);
+        userRepository.save(target);
+        events.publishEvent(new OrgManagementAuditEvents.UserTeamChanged(actor.getId(), target.getId(), teamId, organizationId));
         return target;
     }
 

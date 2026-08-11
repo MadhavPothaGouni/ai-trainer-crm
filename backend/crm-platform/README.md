@@ -91,9 +91,18 @@ runtime image, running as a non-root user.
 src/main/java/com/aitrainercrm/platform/
   auth/           registration, login, refresh-token rotation + reuse detection,
                   password reset, email verification
-  organization/   the tenant itself (name, slug, currency, timezone)
+  organization/   the tenant itself (name, slug, currency, timezone), plus
+                  Team (Sales/Marketing/Support/... groupings with a free-text
+                  department string) - Team existed since V1 purely so
+                  ScopeAuthorizationService had something to resolve TEAM/
+                  DEPARTMENT-scope visibility against, with no management API
+                  of its own until V16 shipped TeamController (CRUD) and
+                  UserService#updateTeam (assignment) - see V16's migration
+                  comment and ScopeAuthorizationService's javadoc for the
+                  full backstory
   user/           teammate accounts within an organization: invite, roles,
-                  status, removal
+                  status, removal, and (as of V16) team assignment via
+                  PATCH .../users/{id}/team
   role/           RBAC: Permission (resource × action × scope) -> Role -> User
   account/        companies (CRM)
   contact/        people, usually at an account (CRM)
@@ -252,13 +261,17 @@ owner-scoped record of its own, so it uses
 `ScopeAuthorizationService#visibleOwnerIds` directly against the REPORT
 permission to filter its aggregate queries by owner, rather than the
 record-level `assertCanAccess` pattern the CRUD modules use. `apikey`,
-`webhook`, and `customfield` are a third kind: platform administration,
-gated entirely by `API_KEY:*:ORGANIZATION` / `INTEGRATION:*:ORGANIZATION` /
-`CUSTOM_FIELD:*:ORGANIZATION` / `CUSTOM_OBJECT:*:ORGANIZATION` (no OWN/
-TEAM/DEPARTMENT variant exists for any of these four resources), with no
+`webhook`, `customfield`, and Team (in `organization/`) are a third kind:
+platform administration, gated entirely by `API_KEY:*:ORGANIZATION` /
+`INTEGRATION:*:ORGANIZATION` / `CUSTOM_FIELD:*:ORGANIZATION` /
+`CUSTOM_OBJECT:*:ORGANIZATION` / `TEAM:*:ORGANIZATION` (no OWN/TEAM/
+DEPARTMENT variant exists for any of these five resources - a bit of an
+irony for `TEAM` specifically, whose entire purpose is backing other
+resources' TEAM/DEPARTMENT scope, but managing *teams themselves* is
+still an org-wide admin action, same as managing users or roles), with no
 per-record ownership concept at all - see `ApiKeyController`'s,
-`WebhookSubscriptionController`'s, and `CustomFieldController`'s/
-`CustomObjectController`'s javadoc. Note `CustomFieldController#/values`
+`WebhookSubscriptionController`'s, `CustomFieldController`'s/
+`CustomObjectController`'s, and `TeamController`'s javadoc. Note `CustomFieldController#/values`
 deliberately gates reading/writing a *value on a standard entity's record*
 (e.g. an Account) on `CUSTOM_FIELD:*:ORGANIZATION` rather than
 `ACCOUNT:UPDATE` - a documented simplification, not an oversight. By

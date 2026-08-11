@@ -98,6 +98,15 @@ public class AuditEventListener {
 
     @Async
     @EventListener
+    public void onUserTeamChanged(OrgManagementAuditEvents.UserTeamChanged event) {
+        AuditEvent auditEvent = new AuditEvent(
+                event.actorUserId(), event.organizationId(), "USER_TEAM_CHANGED", "User", event.targetUserId().toString(),
+                "newTeamId=" + event.newTeamId(), null);
+        auditEventRepository.save(auditEvent);
+    }
+
+    @Async
+    @EventListener
     public void onUserStatusChanged(OrgManagementAuditEvents.UserStatusChanged event) {
         AuditEvent auditEvent = new AuditEvent(
                 event.actorUserId(), event.organizationId(), "USER_STATUS_CHANGED", "User", event.targetUserId().toString(),

@@ -14,6 +14,7 @@ import com.aitrainercrm.platform.auth.repository.RefreshTokenRepository;
 import com.aitrainercrm.platform.common.exception.ForbiddenException;
 import com.aitrainercrm.platform.config.SecurityProperties;
 import com.aitrainercrm.platform.notification.email.EmailService;
+import com.aitrainercrm.platform.organization.repository.TeamRepository;
 import com.aitrainercrm.platform.role.entity.Role;
 import com.aitrainercrm.platform.role.service.RoleService;
 import com.aitrainercrm.platform.security.token.SecureTokenService;
@@ -43,6 +44,7 @@ class UserServiceTest {
 
     @Mock private UserRepository userRepository;
     @Mock private RoleService roleService;
+    @Mock private TeamRepository teamRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private PasswordResetTokenRepository passwordResetTokenRepository;
     @Mock private SecureTokenService secureTokenService;
@@ -57,7 +59,7 @@ class UserServiceTest {
     void setUp() {
         SecurityProperties securityProperties = new SecurityProperties(5, 15, 30, 24);
         userService = new UserService(
-                userRepository, roleService, refreshTokenRepository, passwordResetTokenRepository,
+                userRepository, roleService, teamRepository, refreshTokenRepository, passwordResetTokenRepository,
                 secureTokenService, passwordEncoder, emailService, securityProperties, events);
         organizationId = UUID.randomUUID();
     }

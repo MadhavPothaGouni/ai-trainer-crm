@@ -22,6 +22,10 @@ public final class OrgManagementAuditEvents {
     public record UserRolesChanged(UUID actorUserId, UUID targetUserId, UUID organizationId) {
     }
 
+    /** {@code newTeamId} null means the user was unassigned from whatever team they were on - see UpdateUserTeamRequest's javadoc. */
+    public record UserTeamChanged(UUID actorUserId, UUID targetUserId, UUID newTeamId, UUID organizationId) {
+    }
+
     public record UserStatusChanged(UUID actorUserId, UUID targetUserId, String newStatus, UUID organizationId) {
     }
 

@@ -219,6 +219,6 @@ class ScopeAuthorizationServiceTest {
     private void stubTeamDepartment(UUID teamId, String department) {
         Team team = new Team(organizationId, "Team " + teamId, department);
         team.setId(teamId);
-        lenient().when(teamRepository.findByIdAndOrganizationId(eq(teamId), any())).thenReturn(Optional.of(team));
+        lenient().when(teamRepository.findByIdAndOrganizationIdAndDeletedAtIsNull(eq(teamId), any())).thenReturn(Optional.of(team));
     }
 }

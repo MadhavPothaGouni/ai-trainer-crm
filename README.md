@@ -257,6 +257,16 @@ meeting happened" against a record; these two modules capture the actual
 structured data (who it went to, which direction, start/end time, who's
 attending) that Activity was never meant to hold - see
 `backend/crm-platform/README.md`'s module layout for `email`/`calendar`.
+Most recently, Team management: `organization/`'s `Team` entity (Sales/
+Marketing/Support/... groupings with a free-text department string) and
+`users.team_id` have both existed since the very first migration purely so
+`ScopeAuthorizationService` had something to resolve TEAM/DEPARTMENT-scope
+visibility against - but there was never a management API, so in practice
+every user's team was null and those two scope levels sat unreachable
+behind unit tests. `TeamController` (CRUD) and a new `PATCH
+/api/v1/users/{id}/team` endpoint close that gap - see
+`backend/crm-platform/README.md`'s module layout for `organization`/`user`
+and `ScopeAuthorizationService`'s javadoc for the full backstory.
 
 The RBAC model was designed up front for the platform's eventual full
 shape, and every resource seeded in `V2__seed_permission_catalog.sql` now
@@ -265,11 +275,12 @@ on top of it (following the same pattern as `account`/`contact`/
 `opportunity`/`lead`/`activity`/`product`/`quote`/`order`/`invoice`/
 `payment`/`campaign`/`knowledgearticle`/`customfield`/`workflow`/
 `dashboard`/`ticket`, plus a corresponding frontend page where one applies).
-`email`/`calendar` (`EMAIL_MESSAGE`/`CALENDAR_EVENT`) extend the catalog
-itself rather than fill a pre-existing gap - they were seeded and built in
-the same change
-as it got built out, rather than all at once. `report`, `apikey`,
-`webhook`, `customfield`, and `dashboard` are exceptions built without a
+`email`/`calendar` (`EMAIL_MESSAGE`/`CALENDAR_EVENT`) and `TEAM` extend the
+catalog itself rather than fill a pre-existing gap - all three were seeded
+and given a module in the same change, as the platform's shape grew over
+time, rather than the whole catalog being fixed in stone from V2 onward.
+`report`, `apikey`, `webhook`, `customfield`, `dashboard`, and Team (in
+`organization/`) are exceptions built without a
 normal owner-scoped entity of their own (or, for `dashboard`, with one but
 no owned *report data* - it composes `report`'s) - see
 `backend/crm-platform/README.md`'s module layout for why. An earlier
@@ -278,9 +289,10 @@ version of this file incorrectly claimed this was already true while
 for that correction and how the gap was found.
 
 Not yet built, roughly in the order planned:
-- Frontend pages for `email`/`calendar` - the backend modules landed first,
-  same order every prior module (including Ticket) has followed in this
-  project
+- A frontend for Team management (`TeamController` CRUD, the
+  `PATCH .../users/{id}/team` assignment endpoint, and a team picker on the
+  Team page) - the backend module landed first, same order every prior
+  module has followed in this project
 - IMPORT/EXPORT for Opportunity, Activity, and Quote - seeded in the
   catalog like Account/Contact/Lead/Ticket's, not yet built
 - Retry-with-backoff for webhook delivery (today it's a single attempt with

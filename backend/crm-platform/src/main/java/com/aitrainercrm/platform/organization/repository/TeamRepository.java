@@ -4,23 +4,31 @@ import com.aitrainercrm.platform.organization.entity.Team;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 /**
- * There's no Team management API yet (no controller, no CRUD) - this exists
- * solely so {@link com.aitrainercrm.platform.security.authorization.ScopeAuthorizationService}
- * can resolve DEPARTMENT-scope visibility (which team ids share a department)
- * for CRM records. Team assignment itself isn't wired into any endpoint
- * yet either (see User#teamId), so in practice every user's team is null
- * today and TEAM/DEPARTMENT-scope permissions fall back to OWN-equivalent
- * visibility - see ScopeAuthorizationService's javadoc.
+ * Originally existed solely so {@link
+ * com.aitrainercrm.platform.security.authorization.ScopeAuthorizationService}
+ * had something to resolve TEAM/DEPARTMENT-scope visibility against - see
+ * that class's javadoc and V16's migration comment for how "no Team
+ * management API, nothing ever sets a team id" was found and closed.
+ * {@code findByIdAndOrganizationIdAndDeletedAtIsNull}/
+ * {@code findIdsByOrganizationIdAndDepartment} now filter out soft-deleted
+ * teams (V16 added {@code deletedAt}) so a deleted team can't keep granting
+ * DEPARTMENT-scope visibility through its former department string.
  */
 public interface TeamRepository extends JpaRepository<Team, UUID> {
 
-    Optional<Team> findByIdAndOrganizationId(UUID id, UUID organizationId);
+    Optional<Team> findByIdAndOrganizationIdAndDeletedAtIsNull(UUID id, UUID organizationId);
 
-    @Query("select t.id from Team t where t.organizationId = :organizationId and t.department = :department")
+    Page<Team> findByOrganizationIdAndDeletedAtIsNull(UUID organizationId, Pageable pageable);
+
+    List<Team> findByOrganizationIdAndDeletedAtIsNullOrderByNameAsc(UUID organizationId);
+
+    @Query("select t.id from Team t where t.organizationId = :organizationId and t.department = :department and t.deletedAt is null")
     List<UUID> findIdsByOrganizationIdAndDepartment(@Param("organizationId") UUID organizationId, @Param("department") String department);
 }

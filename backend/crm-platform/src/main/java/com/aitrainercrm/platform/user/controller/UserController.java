@@ -8,6 +8,7 @@ import com.aitrainercrm.platform.user.dto.CreateUserRequest;
 import com.aitrainercrm.platform.user.dto.UpdateProfileRequest;
 import com.aitrainercrm.platform.user.dto.UpdateUserRolesRequest;
 import com.aitrainercrm.platform.user.dto.UpdateUserStatusRequest;
+import com.aitrainercrm.platform.user.dto.UpdateUserTeamRequest;
 import com.aitrainercrm.platform.user.dto.UserDto;
 import com.aitrainercrm.platform.user.entity.User;
 import com.aitrainercrm.platform.user.repository.UserRepository;
@@ -93,6 +94,16 @@ public class UserController {
         User actor = currentActor(principal);
         User updated = userService.updateRoles(principal.getOrganizationId(), actor, userId, request.roleIds());
         return ApiResponse.ok(UserDto.from(updated), "Roles updated");
+    }
+
+    @PatchMapping("/{userId}/team")
+    @PreAuthorize("hasAuthority('USER:UPDATE:ORGANIZATION')")
+    public ApiResponse<UserDto> updateTeam(
+            @PathVariable UUID userId, @Valid @RequestBody UpdateUserTeamRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        User actor = currentActor(principal);
+        User updated = userService.updateTeam(principal.getOrganizationId(), actor, userId, request.teamId());
+        return ApiResponse.ok(UserDto.from(updated), "Team updated");
     }
 
     @PatchMapping("/{userId}/status")

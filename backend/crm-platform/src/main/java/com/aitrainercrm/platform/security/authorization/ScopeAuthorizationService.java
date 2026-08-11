@@ -31,13 +31,16 @@ import org.springframework.stereotype.Service;
  * does - see RoleService#createDefaultRolesForOrganization) hold more than
  * one scope for the same permission at once.
  *
- * <p><b>TEAM/DEPARTMENT scope is real but currently unreachable in
- * practice:</b> there's no Team-management API yet and nothing ever sets
- * {@link User#getTeamId()}, so every user's team is null today. That's not
- * a bug in this class - a null team correctly and safely resolves to "only
- * visible to yourself," the same as OWN scope - it just means the
- * TEAM/DEPARTMENT branches below are exercised by unit tests today rather
- * than real traffic, ready for whenever team assignment ships.
+ * <p><b>TEAM/DEPARTMENT scope was real but unreachable in practice until
+ * V16:</b> for a long time there was no Team-management API and nothing
+ * ever set {@link User#getTeamId()}, so every user's team was null and the
+ * TEAM/DEPARTMENT branches below were exercised only by unit tests, never
+ * real traffic. {@code organization.controller.TeamController} (CRUD) and
+ * {@code UserService#updateTeam} (assignment, via {@code PATCH
+ * /api/v1/users/{id}/team}) closed that gap - see V16's migration comment.
+ * A user with no team still correctly and safely resolves to "only visible
+ * to yourself," the same as OWN scope; that behavior didn't change, there's
+ * just now a real way to give someone a team in the first place.
  */
 @Service
 @RequiredArgsConstructor
@@ -138,7 +141,7 @@ public class ScopeAuthorizationService {
         if (teamId == null) {
             return Set.of(principal.getId());
         }
-        Team team = teamRepository.findByIdAndOrganizationId(teamId, principal.getOrganizationId()).orElse(null);
+        Team team = teamRepository.findByIdAndOrganizationIdAndDeletedAtIsNull(teamId, principal.getOrganizationId()).orElse(null);
         if (team == null || team.getDepartment() == null) {
             // No department set on the caller's own team - can't widen beyond team visibility.
             return teamMemberIds(principal);
@@ -157,6 +160,6 @@ public class ScopeAuthorizationService {
     private String departmentOf(UUID userId, UUID organizationId) {
         UUID teamId = teamIdOf(userId, organizationId);
         if (teamId == null) return null;
-        return teamRepository.findByIdAndOrganizationId(teamId, organizationId).map(Team::getDepartment).orElse(null);
+        return teamRepository.findByIdAndOrganizationIdAndDeletedAtIsNull(teamId, organizationId).map(Team::getDepartment).orElse(null);
     }
 }
