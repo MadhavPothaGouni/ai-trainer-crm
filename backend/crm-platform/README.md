@@ -139,6 +139,14 @@ src/main/java/com/aitrainercrm/platform/
                   javadoc for why it has a second, report-only repository
                   interface per aggregated entity instead of adding these
                   queries onto OpportunityRepository/LeadRepository
+  dashboard/      the saved-report/dashboard-builder feature report/'s own
+                  javadoc flagged as future work - a Dashboard is a named,
+                  owner-scoped set of DashboardWidgets, each just naming
+                  one of ReportService's three queries plus grid layout;
+                  DashboardService#getData pulls every widget's numbers
+                  live on each read rather than storing/caching any report
+                  data itself, so a saved dashboard is a saved view, never
+                  a stale snapshot
   customfield/    platform extensibility: Custom Objects (admin-defined
                   generic entities - one built-in Name field, everything
                   else comes from attached fields) and Custom Fields
@@ -176,10 +184,10 @@ Every owner-scoped CRM module (`account`/`contact`/`opportunity`/`lead`/
 `service` + `controller` + `dto`, record-level OWN/TEAM/DEPARTMENT/
 ORGANIZATION authorization via `security.authorization.ScopeAuthorizationService`,
 and a permission catalog already seeded in `V2__seed_permission_catalog.sql`.
-`workflow` follows the same owner-scoped shape too, minus DEPARTMENT (not
-seeded for WORKFLOW - see V2's own comment) - see `workflow`'s module
-comment above for why it, unlike this session's other two modules, gets an
-`ownerId`.
+`workflow` and `dashboard` follow the same owner-scoped shape too, minus
+DEPARTMENT (not seeded for WORKFLOW/DASHBOARD - see V2's own comment) -
+see their module comments above for why they, unlike this session's other
+two modules (campaign/customfield), get an `ownerId`.
 `product`, `order`, `invoice`, `payment`, `campaign`, and
 `knowledgearticle` are shared-org-resource exceptions to that shape - see
 `product`'s module comment above; no `ownerId` column, no
@@ -207,9 +215,17 @@ per-record ownership concept at all - see `ApiKeyController`'s,
 `CustomObjectController`'s javadoc. Note `CustomFieldController#/values`
 deliberately gates reading/writing a *value on a standard entity's record*
 (e.g. an Account) on `CUSTOM_FIELD:*:ORGANIZATION` rather than
-`ACCOUNT:UPDATE` - a documented simplification, not an oversight. The
-catalog seeds exactly one resource left with no module built on top of it -
-`DASHBOARD` (a saved-report builder); see the root README's Roadmap.
+`ACCOUNT:UPDATE` - a documented simplification, not an oversight. By
+contrast, `dashboard`'s own read path (`DashboardService#getData`) is a
+correct use of an *existing* permission, not a shortcut: rendering a
+dashboard's widget data delegates straight into `ReportService`, which
+enforces REPORT:READ's own OWN/TEAM/ORGANIZATION scope internally - so
+viewing a dashboard's numbers requires the caller to hold both DASHBOARD:
+READ (the shell) and some level of REPORT:READ (each widget's data), not a
+single all-encompassing DASHBOARD permission.
+
+Every resource in `V2__seed_permission_catalog.sql` now has a module built
+on top of it.
 
 See the root `README.md` for the RBAC model, multi-tenancy rules, and the
 overall system architecture.

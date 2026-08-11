@@ -217,23 +217,29 @@ whoever owns the record that triggered it - with a full run history
 (succeeded/failed, per fire) and a manual "run now" for testing a workflow
 before switching it on. Unlike Campaign/Knowledge Article/Custom Field/
 Custom Object, Workflow is owner-scoped (OWN/TEAM/ORGANIZATION) - see
-`backend/crm-platform/README.md`'s module layout for `workflow`.
+`backend/crm-platform/README.md`'s module layout for `workflow`. Most
+recently, Dashboards: a named, owner-scoped set of widgets, each pulling
+its numbers live from the same three Reports queries above (pipeline by
+stage, lead funnel, leaderboard) rather than storing any report data of
+its own, plus a default-dashboard toggle. This was the exact feature
+`ReportController`'s own code comment had flagged as future work back
+when Reports first shipped - see `backend/crm-platform/README.md`'s
+module layout for `dashboard`.
 
-The permission catalog seeded in `V2__seed_permission_catalog.sql` now
-covers exactly one resource with no module built on top of it -
-`DASHBOARD` (a saved-report builder). That's deliberate: the RBAC model was
-designed up front for the platform's eventual full shape, and it becomes an
-`entity`/`repository`/`service`/`controller`/`dto` module following the
+Every resource seeded in `V2__seed_permission_catalog.sql` now has a
+module built on top of it - the RBAC model was designed up front for the
+platform's eventual full shape, and each resource became an
+`entity`/`repository`/`service`/`controller`/`dto` module (following the
 same pattern as `account`/`contact`/`opportunity`/`lead`/`activity`/
 `product`/`quote`/`order`/`invoice`/`payment`/`campaign`/
-`knowledgearticle`/`customfield`/`workflow`, plus a corresponding frontend
-page, whenever it gets built. `report`, `apikey`, `webhook`, and
-`customfield` are exceptions already built without a normal owner-scoped
-entity of their own - see `backend/crm-platform/README.md`'s module layout
-for why.
+`knowledgearticle`/`customfield`/`workflow`/`dashboard`, plus a
+corresponding frontend page) as it got built out, rather than all at once.
+`report`, `apikey`, `webhook`, `customfield`, and `dashboard` are
+exceptions built without a normal owner-scoped entity of their own (or, for
+`dashboard`, with one but no owned *report data* - it composes `report`'s)
+- see `backend/crm-platform/README.md`'s module layout for why.
 
 Not yet built, roughly in the order planned:
-- A saved-report Dashboard builder
 - Retry-with-backoff for webhook delivery (today it's a single attempt with
   a short timeout - see `WebhookDispatchListener`'s javadoc for the
   reasoning) and scoped/delegated API keys (today a key inherits its
