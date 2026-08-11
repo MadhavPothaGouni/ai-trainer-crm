@@ -108,7 +108,21 @@ public class DashboardService {
         return dashboard;
     }
 
-    /** MANAGE-gated: marks {@code dashboardId} as this owner's default, unsetting whichever dashboard held that spot before - the same single-consequential-action-gets-MANAGE reasoning WorkflowService#setActive uses. */
+    /**
+     * MANAGE-gated: marks {@code dashboardId} as this owner's default, unsetting whichever dashboard held that spot
+     * before - the same single-consequential-action-gets-MANAGE reasoning WorkflowService#setActive uses.
+     *
+     * <p>The unset-then-set order here is deliberate and the {@code saveAndFlush} on the old default is load-bearing,
+     * not optional. {@code dashboards} has a partial unique index enforcing at most one {@code is_default = true} row
+     * per {@code (organization_id, owner_id)} (see V12), and Postgres checks a non-deferred unique index immediately
+     * after each row-affecting statement, not at commit. Hibernate's flush order is driven by persistence-context
+     * insertion order, not by setter-call order: {@code dashboard} (line above, via findOrThrow) entered the session
+     * before {@code current} (looked up just below it), so a plain save()+save() would have flushed dashboard's
+     * "is_default = true" UPDATE before current's "is_default = false" one - momentarily giving the owner two default
+     * rows and tripping the unique index, which Spring translates to a 409 via
+     * GlobalExceptionHandler#handleDataIntegrityViolation. Flushing the unset immediately guarantees it reaches the
+     * database first.
+     */
     @Transactional
     public Dashboard setDefault(UserPrincipal principal, UUID dashboardId) {
         Dashboard dashboard = findOrThrow(principal.getOrganizationId(), dashboardId);
@@ -119,7 +133,7 @@ public class DashboardService {
                 .filter(current -> !current.getId().equals(dashboard.getId()))
                 .ifPresent(current -> {
                     current.setDefaultDashboard(false);
-                    dashboardRepository.save(current);
+                    dashboardRepository.saveAndFlush(current);
                 });
 
         dashboard.setDefaultDashboard(true);
