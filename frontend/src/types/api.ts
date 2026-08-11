@@ -641,6 +641,104 @@ export interface CreatePaymentRequest {
   notes?: string | null;
 }
 
+// ---- Marketing: Campaign ----
+
+export type CampaignType = "EMAIL" | "WEBINAR" | "EVENT" | "SOCIAL_MEDIA" | "DIRECT_MAIL" | "OTHER";
+
+export const CAMPAIGN_TYPES: CampaignType[] = ["EMAIL", "WEBINAR", "EVENT", "SOCIAL_MEDIA", "DIRECT_MAIL", "OTHER"];
+
+export type CampaignStatus = "PLANNED" | "ACTIVE" | "COMPLETED" | "CANCELLED";
+
+export const CAMPAIGN_STATUSES: CampaignStatus[] = ["PLANNED", "ACTIVE", "COMPLETED", "CANCELLED"];
+
+export type CampaignMemberStatus = "ADDED" | "SENT" | "OPENED" | "CLICKED" | "RESPONDED" | "CONVERTED";
+
+export const CAMPAIGN_MEMBER_STATUSES: CampaignMemberStatus[] = ["ADDED", "SENT", "OPENED", "CLICKED", "RESPONDED", "CONVERTED"];
+
+export interface CampaignDto {
+  id: string;
+  name: string;
+  type: CampaignType;
+  status: CampaignStatus;
+  startDate: string | null;
+  endDate: string | null;
+  budget: number | null;
+  actualCost: number | null;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCampaignRequest {
+  name: string;
+  type: CampaignType;
+  startDate?: string | null;
+  endDate?: string | null;
+  budget?: number | null;
+  actualCost?: number | null;
+  description?: string | null;
+}
+
+export type UpdateCampaignRequest = CreateCampaignRequest;
+
+export interface UpdateCampaignStatusRequest {
+  status: CampaignStatus;
+}
+
+export interface CampaignMemberDto {
+  id: string;
+  leadId: string | null;
+  contactId: string | null;
+  status: CampaignMemberStatus;
+  respondedAt: string | null;
+  createdAt: string;
+}
+
+export interface AddCampaignMemberRequest {
+  leadId?: string | null;
+  contactId?: string | null;
+}
+
+export interface UpdateCampaignMemberStatusRequest {
+  status: CampaignMemberStatus;
+}
+
+export interface CampaignStatsDto {
+  campaignId: string;
+  totalMembers: number;
+  countsByStatus: Record<CampaignMemberStatus, number>;
+}
+
+// ---- Support: Knowledge Article ----
+
+export type KnowledgeArticleStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+
+export const KNOWLEDGE_ARTICLE_STATUSES: KnowledgeArticleStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+
+export interface KnowledgeArticleDto {
+  id: string;
+  title: string;
+  slug: string;
+  category: string | null;
+  /** Only populated on the single-article GET - list rows use the summary shape and omit it. */
+  content?: string;
+  status: KnowledgeArticleStatus;
+  viewCount: number;
+  publishedAt: string | null;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateKnowledgeArticleRequest {
+  title: string;
+  category?: string | null;
+  content: string;
+  tags?: string[];
+}
+
+export type UpdateKnowledgeArticleRequest = CreateKnowledgeArticleRequest;
+
 // ---- Reporting ----
 
 export interface PipelineStageSummaryDto {

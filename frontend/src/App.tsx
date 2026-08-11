@@ -12,11 +12,17 @@ import AccountCreatePage from "./pages/accounts/AccountCreatePage";
 import AccountDetailPage from "./pages/accounts/AccountDetailPage";
 import AccountListPage from "./pages/accounts/AccountListPage";
 import ApiKeysPage from "./pages/apikeys/ApiKeysPage";
+import CampaignCreatePage from "./pages/campaigns/CampaignCreatePage";
+import CampaignDetailPage from "./pages/campaigns/CampaignDetailPage";
+import CampaignListPage from "./pages/campaigns/CampaignListPage";
 import ContactCreatePage from "./pages/contacts/ContactCreatePage";
 import ContactDetailPage from "./pages/contacts/ContactDetailPage";
 import ContactListPage from "./pages/contacts/ContactListPage";
 import InvoiceDetailPage from "./pages/invoices/InvoiceDetailPage";
 import InvoiceListPage from "./pages/invoices/InvoiceListPage";
+import KnowledgeArticleCreatePage from "./pages/knowledge/KnowledgeArticleCreatePage";
+import KnowledgeArticleDetailPage from "./pages/knowledge/KnowledgeArticleDetailPage";
+import KnowledgeArticleListPage from "./pages/knowledge/KnowledgeArticleListPage";
 import OpportunityCreatePage from "./pages/opportunities/OpportunityCreatePage";
 import OpportunityDetailPage from "./pages/opportunities/OpportunityDetailPage";
 import OpportunityListPage from "./pages/opportunities/OpportunityListPage";
@@ -94,6 +100,14 @@ export default function App() {
 
           <Route path="/invoices" element={<InvoiceListPage />} />
           <Route path="/invoices/:invoiceId" element={<InvoiceDetailPage />} />
+
+          <Route path="/campaigns" element={<CampaignListPage />} />
+          <Route path="/campaigns/new" element={<CampaignCreatePage />} />
+          <Route path="/campaigns/:campaignId" element={<CampaignDetailPage />} />
+
+          <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
+          <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />
+          <Route path="/knowledge-articles/:articleId" element={<KnowledgeArticleDetailPage />} />
 
           <Route path="/reports" element={<ReportsPage />} />
 

@@ -267,6 +267,44 @@ export const recordPaymentSchema = z.object({
 });
 export type RecordPaymentFormValues = z.infer<typeof recordPaymentSchema>;
 
+// ---- Marketing/support: campaigns, campaign members, knowledge articles ----
+
+export const createCampaignSchema = z.object({
+  name: z.string().min(1, "Campaign name is required").max(200),
+  type: z.string().min(1, "Type is required"),
+  startDate: z.string().optional().or(z.literal("")),
+  endDate: z.string().optional().or(z.literal("")),
+  budget: optionalNumberString,
+  actualCost: optionalNumberString,
+  description: z.string().max(2000).optional().or(z.literal("")),
+});
+export type CreateCampaignFormValues = z.infer<typeof createCampaignSchema>;
+
+export const addCampaignMemberSchema = z
+  .object({
+    leadId: z.string().optional().or(z.literal("")),
+    contactId: z.string().optional().or(z.literal("")),
+  })
+  .refine((data) => Boolean(data.leadId) !== Boolean(data.contactId), {
+    message: "Choose exactly one of a lead or a contact",
+    path: ["contactId"],
+  });
+export type AddCampaignMemberFormValues = z.infer<typeof addCampaignMemberSchema>;
+
+export const createKnowledgeArticleSchema = z.object({
+  title: z.string().min(1, "Title is required").max(300),
+  category: z.string().max(100).optional().or(z.literal("")),
+  content: z.string().min(1, "Content is required"),
+  tags: z.string().optional().or(z.literal("")), // comma-separated in the form; split into string[] at submit time
+});
+export type CreateKnowledgeArticleFormValues = z.infer<typeof createKnowledgeArticleSchema>;
+
+/** Splits a comma-separated tags field into a trimmed, de-duplicated, non-empty string array. */
+export function toTagList(value: string | undefined): string[] {
+  if (!value) return [];
+  return [...new Set(value.split(",").map((tag) => tag.trim()).filter((tag) => tag.length > 0))];
+}
+
 export const changePasswordFormSchema = z
   .object({
     currentPassword: z.string().min(1, "Current password is required"),
