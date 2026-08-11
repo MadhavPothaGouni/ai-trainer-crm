@@ -29,10 +29,14 @@ const CRM_NAV_LINKS = [
 // Custom Objects/Fields, Workflows, and Dashboards all live in this admin-only group too.
 // (Workflow and Dashboard ARE owner-scoped like Contact/Lead, unlike Custom Field/Object -
 // they're grouped here purely because MEMBER doesn't hold them by default, same reasoning
-// as Reports.)
+// as Reports.) Import/Export rides on ACCOUNT/CONTACT/LEAD's own IMPORT/EXPORT actions,
+// which - unlike those same resources' CREATE/READ/UPDATE - also aren't in MEMBER's default
+// grant (RoleService#createDefaultRolesForOrganization only hands MEMBER CREATE/READ/UPDATE),
+// so it lives here too even though Accounts/Contacts/Leads themselves are in the main nav.
 const ADMIN_NAV_LINKS = [
   { to: "/reports", label: "Reports", end: false },
   { to: "/dashboards", label: "Dashboards", end: false },
+  { to: "/import-export", label: "Import / Export", end: false },
   { to: "/users", label: "Team", end: false },
   { to: "/roles", label: "Roles", end: false },
   { to: "/api-keys", label: "API Keys", end: false },

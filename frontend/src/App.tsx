@@ -27,6 +27,7 @@ import CustomObjectCreatePage from "./pages/customobjects/CustomObjectCreatePage
 import CustomObjectDetailPage from "./pages/customobjects/CustomObjectDetailPage";
 import CustomObjectListPage from "./pages/customobjects/CustomObjectListPage";
 import CustomObjectRecordDetailPage from "./pages/customobjects/CustomObjectRecordDetailPage";
+import ImportExportPage from "./pages/importexport/ImportExportPage";
 import InvoiceDetailPage from "./pages/invoices/InvoiceDetailPage";
 import InvoiceListPage from "./pages/invoices/InvoiceListPage";
 import KnowledgeArticleCreatePage from "./pages/knowledge/KnowledgeArticleCreatePage";
@@ -134,6 +135,8 @@ export default function App() {
           <Route path="/dashboards/:dashboardId" element={<DashboardDetailPage />} />
 
           <Route path="/reports" element={<ReportsPage />} />
+
+          <Route path="/import-export" element={<ImportExportPage />} />
 
           <Route path="/users" element={<UserListPage />} />
           <Route path="/users/invite" element={<UserInvitePage />} />

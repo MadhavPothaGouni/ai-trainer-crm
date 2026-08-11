@@ -1002,6 +1002,37 @@ export interface DashboardDataDto {
   widgets: DashboardWidgetDataDto[];
 }
 
+// ---- Bulk CSV import/export (Account/Contact/Lead) ----
+// LEAD/CONTACT/ACCOUNT/OPPORTUNITY/ACTIVITY/QUOTE/TICKET all got IMPORT and
+// EXPORT permissions seeded alongside their other CRUD actions, but only
+// Account/Contact/Lead have a real implementation so far - see
+// ImportExportService's javadoc on the backend. IMPORT/EXPORT aren't in
+// MEMBER's default permission set (RoleService#isCoreCrmResource only
+// grants CREATE/READ/UPDATE), so this lives in AppLayout's admin-only nav
+// group, same reasoning as Reports/Workflows/Dashboards.
+
+export type ImportEntityType = "ACCOUNT" | "CONTACT" | "LEAD";
+
+export const IMPORT_ENTITY_TYPES: ImportEntityType[] = ["ACCOUNT", "CONTACT", "LEAD"];
+
+export type ImportJobStatus = "COMPLETED" | "FAILED";
+
+export interface ImportRowErrorDto {
+  rowNumber: number;
+  message: string;
+}
+
+export interface ImportJobDto {
+  id: string;
+  entityType: ImportEntityType;
+  status: ImportJobStatus;
+  totalRows: number;
+  successCount: number;
+  errorCount: number;
+  createdAt: string;
+  errors: ImportRowErrorDto[];
+}
+
 // ---- Platform: API keys ----
 
 export interface ApiKeyDto {
