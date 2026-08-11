@@ -366,6 +366,53 @@ export interface LeadConversionResult {
   opportunityId: string | null;
 }
 
+// ---- CRM: Activity ----
+
+export type ActivityType = "CALL" | "EMAIL" | "MEETING" | "TASK" | "NOTE";
+
+export const ACTIVITY_TYPES: ActivityType[] = ["CALL", "EMAIL", "MEETING", "TASK", "NOTE"];
+
+export type ActivityStatus = "OPEN" | "COMPLETED";
+
+export type ActivityPriority = "LOW" | "MEDIUM" | "HIGH";
+
+export const ACTIVITY_PRIORITIES: ActivityPriority[] = ["LOW", "MEDIUM", "HIGH"];
+
+export type RelatedToType = "ACCOUNT" | "CONTACT" | "OPPORTUNITY" | "LEAD";
+
+export interface ActivityDto {
+  id: string;
+  type: ActivityType;
+  subject: string;
+  description: string | null;
+  status: ActivityStatus;
+  priority: ActivityPriority | null;
+  dueAt: string | null;
+  completedAt: string | null;
+  relatedToType: RelatedToType;
+  relatedToId: string;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateActivityRequest {
+  type: ActivityType;
+  subject: string;
+  description?: string | null;
+  priority?: ActivityPriority | null;
+  dueAt?: string | null;
+  relatedToType: RelatedToType;
+  relatedToId: string;
+  ownerId?: string | null;
+}
+
+export type UpdateActivityRequest = CreateActivityRequest;
+
+export interface UpdateActivityStatusRequest {
+  status: ActivityStatus;
+}
+
 // ---- CRM: shared ----
 
 export interface AssignOwnerRequest {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAccount } from "../../api/accounts";
 import { deleteOpportunity, getOpportunity, updateOpportunityStage } from "../../api/opportunities";
+import { ActivityTimeline } from "../../components/activities/ActivityTimeline";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { Select } from "../../components/ui/Select";
@@ -130,6 +131,8 @@ export default function OpportunityDetailPage() {
           <p className="mt-3 whitespace-pre-wrap text-sm text-slate-900">{opportunity.description}</p>
         </div>
       )}
+
+      <ActivityTimeline relatedToType="OPPORTUNITY" relatedToId={opportunity.id} />
     </div>
   );
 }

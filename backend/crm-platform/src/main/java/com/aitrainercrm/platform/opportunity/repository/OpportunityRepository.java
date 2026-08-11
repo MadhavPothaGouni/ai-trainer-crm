@@ -18,4 +18,7 @@ public interface OpportunityRepository extends JpaRepository<Opportunity, UUID> 
     Page<Opportunity> findByOrganizationIdAndDeletedAtIsNull(UUID organizationId, Pageable pageable);
 
     Page<Opportunity> findByOrganizationIdAndOwnerIdInAndDeletedAtIsNull(UUID organizationId, Set<UUID> ownerIds, Pageable pageable);
+
+    /** Existence check that respects tenant + soft-delete - used by ActivityService to validate a related-to reference. */
+    boolean existsByIdAndOrganizationIdAndDeletedAtIsNull(UUID id, UUID organizationId);
 }

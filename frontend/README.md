@@ -39,12 +39,14 @@ npm run test     # Vitest, single run (CI mode)
 ```
 src/
   api/            typed wrappers around each backend module (auth, users, organizations,
-                   roles, accounts, contacts, opportunities, leads)
+                   roles, accounts, contacts, opportunities, leads, activities)
   auth/           AuthContext/AuthProvider, useAuth hook, ProtectedRoute/PublicOnlyRoute, token storage
   components/
     layout/       AuthLayout (centered card, for /login etc.) and AppLayout (top bar + nav + outlet)
     ui/           shared primitives: Button, TextField, TextArea, Select, Alert, Pagination
     roles/        PermissionPicker (permission-catalog checkbox grid, shared by role create/edit)
+    activities/   ActivityTimeline - the calls/emails/meetings/tasks/notes log embedded
+                   on each Account/Contact/Opportunity/Lead detail page
   lib/
     apiClient.ts  axios instance, auth header injection, 401 refresh-and-retry, ApiError
     validation.ts zod schemas mirroring the backend's request DTO constraints
@@ -54,12 +56,14 @@ src/
     accounts/, contacts/, opportunities/, leads/
                    list/create/detail pages for the CRM domain - opportunity detail
                    includes a stage-change control, lead detail includes the
-                   convert-lead flow
+                   convert-lead flow, and every detail page embeds an ActivityTimeline
     users/, roles/ team management (invite/list/roles/status) and role management
                    (built-in roles are read-only, custom roles get a permission picker)
     profile/       ProfilePage.tsx - update name/phone/timezone/locale, change password
                    (change-password signs the current session out too - the backend
                    revokes every refresh token for the account, not just other sessions)
+    tasks/         MyTasksPage.tsx - every open activity assigned to the caller, across
+                   every record, soonest due date first
     DashboardPage.tsx  authenticated landing page (org + account summary)
     NotFoundPage.tsx
   test/setup.ts   Vitest setup: jest-dom matchers + RTL cleanup after every test
@@ -89,7 +93,9 @@ for watch mode during development.
 
 See the root README's Roadmap for the current state of the whole project. As of
 this pass, the auth scaffold, the CRM workspace (accounts/contacts/opportunities/
-leads, including lead conversion), team/role management, and profile settings
-are all built. What's still missing on the frontend specifically: broader test
-coverage beyond the pages/components covered so far, and an avatar upload flow
-(`UserDto.avatarUrl` exists but nothing sets it).
+leads, including lead conversion), team/role management, profile settings, and
+the Activity log (calls/emails/meetings/tasks/notes, plus a cross-record "My
+Tasks" view) are all built. What's still missing on the frontend specifically:
+broader test coverage beyond the pages/components covered so far, an avatar
+upload flow (`UserDto.avatarUrl` exists but nothing sets it), and UI for the
+backend resources that don't have a frontend yet - see the root README.

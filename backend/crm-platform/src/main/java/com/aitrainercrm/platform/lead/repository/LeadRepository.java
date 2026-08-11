@@ -18,4 +18,7 @@ public interface LeadRepository extends JpaRepository<Lead, UUID> {
     Page<Lead> findByOrganizationIdAndDeletedAtIsNull(UUID organizationId, Pageable pageable);
 
     Page<Lead> findByOrganizationIdAndOwnerIdInAndDeletedAtIsNull(UUID organizationId, Set<UUID> ownerIds, Pageable pageable);
+
+    /** Existence check that respects tenant + soft-delete - used by ActivityService to validate a related-to reference. */
+    boolean existsByIdAndOrganizationIdAndDeletedAtIsNull(UUID id, UUID organizationId);
 }

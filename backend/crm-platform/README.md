@@ -95,12 +95,28 @@ src/main/java/com/aitrainercrm/platform/
   user/           teammate accounts within an organization: invite, roles,
                   status, removal
   role/           RBAC: Permission (resource × action × scope) -> Role -> User
+  account/        companies (CRM)
+  contact/        people, usually at an account (CRM)
+  opportunity/    sales pipeline items ("deals"), tied to an account (CRM)
+  lead/           unqualified prospects; convert into account+contact(+opportunity) (CRM)
+  activity/       calls/emails/meetings/tasks/notes logged against any of the
+                  four CRM entities above - see V4's migration comment for why
+                  its related-to reference has no DB foreign key
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security
   common/         BaseEntity, exception hierarchy, ApiResponse/ErrorResponse/
                   PageResponse envelopes
   config/         SecurityConfig, CORS, OpenAPI, properties classes
 ```
+
+Every CRM module (`account`/`contact`/`opportunity`/`lead`/`activity`) follows
+the same shape: `entity` + `repository` + `service` + `controller` + `dto`,
+record-level OWN/TEAM/DEPARTMENT/ORGANIZATION authorization via
+`security.authorization.ScopeAuthorizationService`, and a permission catalog
+already seeded in `V2__seed_permission_catalog.sql` - the catalog seeds
+several resources (`PRODUCT`, `QUOTE`, `CAMPAIGN`, `REPORT`, `WORKFLOW`, ...)
+that don't have a module built on top of them yet; see the root README's
+Roadmap.
 
 See the root `README.md` for the RBAC model, multi-tenancy rules, and the
 overall system architecture.

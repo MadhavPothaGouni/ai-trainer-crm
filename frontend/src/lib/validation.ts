@@ -155,6 +155,17 @@ export const profileFormSchema = z.object({
 });
 export type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
+// ---- Activities (calls/emails/meetings/tasks/notes) ----
+
+export const createActivitySchema = z.object({
+  type: z.string().min(1, "Type is required"),
+  subject: z.string().min(1, "Subject is required").max(200),
+  description: z.string().max(2000).optional().or(z.literal("")),
+  priority: z.string().optional().or(z.literal("")),
+  dueAt: z.string().optional().or(z.literal("")),
+});
+export type CreateActivityFormValues = z.infer<typeof createActivitySchema>;
+
 export const changePasswordFormSchema = z
   .object({
     currentPassword: z.string().min(1, "Current password is required"),

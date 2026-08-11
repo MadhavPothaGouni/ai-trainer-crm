@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { listAccounts } from "../../api/accounts";
 import { convertLead, deleteLead, getLead, updateLeadStatus } from "../../api/leads";
+import { ActivityTimeline } from "../../components/activities/ActivityTimeline";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { Select } from "../../components/ui/Select";
@@ -262,6 +263,8 @@ export default function LeadDetailPage() {
           </div>
         </form>
       )}
+
+      <ActivityTimeline relatedToType="LEAD" relatedToId={lead.id} />
     </div>
   );
 }

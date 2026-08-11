@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAccount } from "../../api/accounts";
 import { deleteContact, getContact } from "../../api/contacts";
+import { ActivityTimeline } from "../../components/activities/ActivityTimeline";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { ApiError } from "../../lib/apiClient";
@@ -99,6 +100,8 @@ export default function ContactDetailPage() {
           <p className="mt-3 whitespace-pre-wrap text-sm text-slate-900">{contact.description}</p>
         </div>
       )}
+
+      <ActivityTimeline relatedToType="CONTACT" relatedToId={contact.id} />
     </div>
   );
 }

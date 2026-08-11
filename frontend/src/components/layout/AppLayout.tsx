@@ -4,6 +4,7 @@ import { Button } from "../ui/Button";
 
 const CRM_NAV_LINKS = [
   { to: "/", label: "Dashboard", end: true },
+  { to: "/tasks", label: "My Tasks", end: false },
   { to: "/accounts", label: "Accounts", end: false },
   { to: "/contacts", label: "Contacts", end: false },
   { to: "/opportunities", label: "Opportunities", end: false },

@@ -18,6 +18,7 @@ import OpportunityCreatePage from "./pages/opportunities/OpportunityCreatePage";
 import OpportunityDetailPage from "./pages/opportunities/OpportunityDetailPage";
 import OpportunityListPage from "./pages/opportunities/OpportunityListPage";
 import ProfilePage from "./pages/profile/ProfilePage";
+import MyTasksPage from "./pages/tasks/MyTasksPage";
 import LeadCreatePage from "./pages/leads/LeadCreatePage";
 import LeadDetailPage from "./pages/leads/LeadDetailPage";
 import LeadListPage from "./pages/leads/LeadListPage";
@@ -46,6 +47,8 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<DashboardPage />} />
+
+          <Route path="/tasks" element={<MyTasksPage />} />
 
           <Route path="/accounts" element={<AccountListPage />} />
           <Route path="/accounts/new" element={<AccountCreatePage />} />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { deleteAccount, getAccount } from "../../api/accounts";
+import { ActivityTimeline } from "../../components/activities/ActivityTimeline";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { ApiError } from "../../lib/apiClient";
@@ -92,6 +93,8 @@ export default function AccountDetailPage() {
           <p className="mt-3 whitespace-pre-wrap text-sm text-slate-900">{account.description}</p>
         </div>
       )}
+
+      <ActivityTimeline relatedToType="ACCOUNT" relatedToId={account.id} />
     </div>
   );
 }
