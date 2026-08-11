@@ -1,6 +1,7 @@
 package com.aitrainercrm.platform.lead.repository;
 
 import com.aitrainercrm.platform.lead.entity.Lead;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -18,6 +19,11 @@ public interface LeadRepository extends JpaRepository<Lead, UUID> {
     Page<Lead> findByOrganizationIdAndDeletedAtIsNull(UUID organizationId, Pageable pageable);
 
     Page<Lead> findByOrganizationIdAndOwnerIdInAndDeletedAtIsNull(UUID organizationId, Set<UUID> ownerIds, Pageable pageable);
+
+    /** Unpaginated variants for CSV export - see AccountRepository's identical pair for why. */
+    List<Lead> findByOrganizationIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID organizationId);
+
+    List<Lead> findByOrganizationIdAndOwnerIdInAndDeletedAtIsNullOrderByCreatedAtDesc(UUID organizationId, Set<UUID> ownerIds);
 
     /** Existence check that respects tenant + soft-delete - used by ActivityService to validate a related-to reference. */
     boolean existsByIdAndOrganizationIdAndDeletedAtIsNull(UUID id, UUID organizationId);

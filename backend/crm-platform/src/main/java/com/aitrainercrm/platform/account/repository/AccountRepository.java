@@ -1,6 +1,7 @@
 package com.aitrainercrm.platform.account.repository;
 
 import com.aitrainercrm.platform.account.entity.Account;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -18,6 +19,11 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
     Page<Account> findByOrganizationIdAndDeletedAtIsNull(UUID organizationId, Pageable pageable);
 
     Page<Account> findByOrganizationIdAndOwnerIdInAndDeletedAtIsNull(UUID organizationId, Set<UUID> ownerIds, Pageable pageable);
+
+    /** Unpaginated variants for CSV export - an export needs every visible row in one pass, not a page at a time (same reasoning CampaignService#exportCsv documents). */
+    List<Account> findByOrganizationIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID organizationId);
+
+    List<Account> findByOrganizationIdAndOwnerIdInAndDeletedAtIsNullOrderByCreatedAtDesc(UUID organizationId, Set<UUID> ownerIds);
 
     /** Existence check that respects tenant + soft-delete, used when another entity (Contact, Opportunity) is asked to link to an account id. */
     boolean existsByIdAndOrganizationIdAndDeletedAtIsNull(UUID id, UUID organizationId);

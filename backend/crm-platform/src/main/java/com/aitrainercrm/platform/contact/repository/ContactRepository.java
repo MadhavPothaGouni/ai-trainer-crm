@@ -1,6 +1,7 @@
 package com.aitrainercrm.platform.contact.repository;
 
 import com.aitrainercrm.platform.contact.entity.Contact;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -18,6 +19,11 @@ public interface ContactRepository extends JpaRepository<Contact, UUID> {
     Page<Contact> findByOrganizationIdAndDeletedAtIsNull(UUID organizationId, Pageable pageable);
 
     Page<Contact> findByOrganizationIdAndOwnerIdInAndDeletedAtIsNull(UUID organizationId, Set<UUID> ownerIds, Pageable pageable);
+
+    /** Unpaginated variants for CSV export - see AccountRepository's identical pair for why. */
+    List<Contact> findByOrganizationIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID organizationId);
+
+    List<Contact> findByOrganizationIdAndOwnerIdInAndDeletedAtIsNullOrderByCreatedAtDesc(UUID organizationId, Set<UUID> ownerIds);
 
     boolean existsByIdAndOrganizationIdAndDeletedAtIsNull(UUID id, UUID organizationId);
 }

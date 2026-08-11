@@ -171,6 +171,17 @@ src/main/java/com/aitrainercrm/platform/
   webhook/        webhook subscriptions, HMAC-signed and dispatched off the
                   exact same CrmAuditEvents the audit module listens to -
                   see WebhookDispatchListener's javadoc
+  importexport/   bulk CSV import/export for Account, Contact, and Lead -
+                  ACCOUNT/CONTACT/LEAD/OPPORTUNITY/ACTIVITY/QUOTE/TICKET all
+                  got IMPORT and EXPORT seeded in V2 alongside their other
+                  CRUD actions, but nothing ever implemented IMPORT anywhere
+                  in the codebase, and EXPORT only existed for Campaign/
+                  Knowledge Article until now - see ImportExportService's
+                  javadoc for the full picture, including why its import
+                  methods are deliberately NOT @Transactional (a subtle
+                  Spring propagation trap that would otherwise silently
+                  roll back an entire batch's successes because of one bad
+                  row)
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security,
                   plus security.apikey - the X-Api-Key request filter
@@ -197,10 +208,13 @@ get an `APPROVE` action for their "sign off on it" transitions
 (`ORDER:APPROVE` on confirm, `INVOICE:APPROVE` on issue); `campaign`/
 `knowledgearticle` don't have APPROVE seeded, so all of their status
 transitions are plain `UPDATE`, and they instead get an `EXPORT` action -
-`CampaignController#export`/`KnowledgeArticleController#export` are the
-only two endpoints in the whole codebase that actually implement it (see
-`common.util.CsvWriter`); every other `:EXPORT`-seeded resource still has
-the permission modeled but unbuilt.
+`CampaignController#export`/`KnowledgeArticleController#export` were the
+first two endpoints in the codebase to actually implement it (see
+`common.util.CsvWriter`); `importexport/` (below) later added EXPORT *and*
+IMPORT for Account, Contact, and Lead using the same `CsvWriter` plus its
+new counterpart `common.util.CsvParser`. Opportunity, Activity, Quote, and
+Ticket still have IMPORT/EXPORT seeded but unbuilt, same as every other
+resource waited its turn earlier in this project.
 `report` is a different kind of exception: it's read-only and has no
 owner-scoped record of its own, so it uses
 `ScopeAuthorizationService#visibleOwnerIds` directly against the REPORT
@@ -224,8 +238,15 @@ viewing a dashboard's numbers requires the caller to hold both DASHBOARD:
 READ (the shell) and some level of REPORT:READ (each widget's data), not a
 single all-encompassing DASHBOARD permission.
 
-Every resource in `V2__seed_permission_catalog.sql` now has a module built
-on top of it.
+Correction to a claim in an earlier version of this file: it isn't quite
+true that *every* resource in `V2__seed_permission_catalog.sql` has a
+module built on top of it - `TICKET` is seeded with a full CRUD/EXPORT/
+IMPORT/ASSIGN permission set (same as LEAD/CONTACT/ACCOUNT/OPPORTUNITY/
+ACTIVITY/QUOTE) but has no `ticket/` package, no entity, and no
+controller anywhere in this codebase. It's the one seeded-but-unbuilt
+resource left; every other resource either has a full module or, for
+IMPORT/EXPORT specifically, at least a real implementation for the three
+entities (`account`/`contact`/`lead`) users most commonly bulk-load.
 
 See the root `README.md` for the RBAC model, multi-tenancy rules, and the
 overall system architecture.
