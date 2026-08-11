@@ -224,40 +224,45 @@ stage, lead funnel, leaderboard) rather than storing any report data of
 its own, plus a default-dashboard toggle. This was the exact feature
 `ReportController`'s own code comment had flagged as future work back
 when Reports first shipped - see `backend/crm-platform/README.md`'s
-module layout for `dashboard`. Most recently, bulk CSV import/export for
-Account, Contact, and Lead: every core CRM resource got `IMPORT` and
-`EXPORT` permissions seeded back in `V2__seed_permission_catalog.sql`
-alongside CREATE/READ/UPDATE/DELETE/ASSIGN, but `IMPORT` had zero
-implementation anywhere in the codebase, and `EXPORT` only existed for
-Campaign/Knowledge Article, until the new `importexport` module - a CSV
-upload creates rows one at a time and reports a per-row success/error
-result rather than failing the whole batch on one bad row, with a saved
-import-job history - see `backend/crm-platform/README.md`'s module layout
-for `importexport`.
+module layout for `dashboard`. Next, bulk CSV import/export for Account,
+Contact, and Lead: every core CRM resource got `IMPORT` and `EXPORT`
+permissions seeded back in `V2__seed_permission_catalog.sql` alongside
+CREATE/READ/UPDATE/DELETE/ASSIGN, but `IMPORT` had zero implementation
+anywhere in the codebase, and `EXPORT` only existed for Campaign/Knowledge
+Article, until the new `importexport` module - a CSV upload creates rows
+one at a time and reports a per-row success/error result rather than
+failing the whole batch on one bad row, with a saved import-job history -
+see `backend/crm-platform/README.md`'s module layout for `importexport`.
+Most recently, Support Tickets: while building `importexport`, `TICKET`
+turned out to be the one resource in the whole permission catalog with a
+full permission set seeded but genuinely no module, entity, or endpoint
+anywhere. The new `ticket` module closes that gap, mirroring Account's
+owner-scoped shape with a free (non-linear) status transition rather than
+Lead/Order's one-way state machines, since reopening a resolved support
+ticket is a completely normal workflow - `importexport` was then extended
+to cover Ticket too, using the exact same engine already built for Account/
+Contact/Lead - see `backend/crm-platform/README.md`'s module layout for
+`ticket`.
 
 The RBAC model was designed up front for the platform's eventual full
-shape, and most resources seeded in `V2__seed_permission_catalog.sql`
-became a full `entity`/`repository`/`service`/`controller`/`dto` module
-(following the same pattern as `account`/`contact`/`opportunity`/`lead`/
-`activity`/`product`/`quote`/`order`/`invoice`/`payment`/`campaign`/
-`knowledgearticle`/`customfield`/`workflow`/`dashboard`, plus a
-corresponding frontend page) as it got built out, rather than all at once.
-`report`, `apikey`, `webhook`, `customfield`, and `dashboard` are
-exceptions built without a normal owner-scoped entity of their own (or, for
-`dashboard`, with one but no owned *report data* - it composes `report`'s)
-- see `backend/crm-platform/README.md`'s module layout for why. One
-resource is still entirely unbuilt: `TICKET` has a full permission set
-seeded (same shape as LEAD/CONTACT/ACCOUNT) but no module, entity, or
-endpoint anywhere - an earlier version of this file incorrectly claimed
-every seeded resource had a module built on top of it, which `TICKET`
-disproves; see `backend/crm-platform/README.md`'s module layout for the
-correction.
+shape, and every resource seeded in `V2__seed_permission_catalog.sql` now
+has a full `entity`/`repository`/`service`/`controller`/`dto` module built
+on top of it (following the same pattern as `account`/`contact`/
+`opportunity`/`lead`/`activity`/`product`/`quote`/`order`/`invoice`/
+`payment`/`campaign`/`knowledgearticle`/`customfield`/`workflow`/
+`dashboard`/`ticket`, plus a corresponding frontend page where one applies)
+as it got built out, rather than all at once. `report`, `apikey`,
+`webhook`, `customfield`, and `dashboard` are exceptions built without a
+normal owner-scoped entity of their own (or, for `dashboard`, with one but
+no owned *report data* - it composes `report`'s) - see
+`backend/crm-platform/README.md`'s module layout for why. An earlier
+version of this file incorrectly claimed this was already true while
+`TICKET` still had no module at all; see `backend/crm-platform/README.md`
+for that correction and how the gap was found.
 
 Not yet built, roughly in the order planned:
-- A `TICKET` module (support tickets) - the one resource in the permission
-  catalog with no implementation at all yet, see above
-- IMPORT/EXPORT for Opportunity, Activity, Quote, and Ticket - seeded in the
-  catalog like Account/Contact/Lead's, not yet built
+- IMPORT/EXPORT for Opportunity, Activity, and Quote - seeded in the
+  catalog like Account/Contact/Lead/Ticket's, not yet built
 - Retry-with-backoff for webhook delivery (today it's a single attempt with
   a short timeout - see `WebhookDispatchListener`'s javadoc for the
   reasoning) and scoped/delegated API keys (today a key inherits its

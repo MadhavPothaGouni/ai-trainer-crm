@@ -30,7 +30,7 @@ import lombok.Setter;
 public class ImportJob extends BaseEntity {
 
     public enum EntityType {
-        ACCOUNT, CONTACT, LEAD
+        ACCOUNT, CONTACT, LEAD, TICKET
     }
 
     public enum Status {

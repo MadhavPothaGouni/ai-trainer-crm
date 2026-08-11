@@ -23,6 +23,10 @@ import com.aitrainercrm.platform.lead.service.LeadService;
 import com.aitrainercrm.platform.role.entity.Permission;
 import com.aitrainercrm.platform.security.authorization.ScopeAuthorizationService;
 import com.aitrainercrm.platform.security.userdetails.UserPrincipal;
+import com.aitrainercrm.platform.ticket.dto.CreateTicketRequest;
+import com.aitrainercrm.platform.ticket.entity.Ticket;
+import com.aitrainercrm.platform.ticket.repository.TicketRepository;
+import com.aitrainercrm.platform.ticket.service.TicketService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import java.io.IOException;
@@ -47,10 +51,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Backs the {@code ACCOUNT:EXPORT}/{@code ACCOUNT:IMPORT}, {@code CONTACT:EXPORT}/{@code
- * CONTACT:IMPORT}, and {@code LEAD:EXPORT}/{@code LEAD:IMPORT} permissions - all six were seeded
- * in V2 alongside every core CRM resource's CRUD/ASSIGN actions, but nothing in the codebase ever
- * implemented IMPORT, and EXPORT only existed for Campaign/Knowledge Article until now (see
- * {@code CampaignService#exportCsv}'s javadoc). See V13's migration comment for the full picture.
+ * CONTACT:IMPORT}, {@code LEAD:EXPORT}/{@code LEAD:IMPORT}, and {@code TICKET:EXPORT}/{@code
+ * TICKET:IMPORT} permissions - all eight were seeded in V2 alongside every core CRM resource's
+ * CRUD/ASSIGN actions, but nothing in the codebase ever implemented IMPORT, and EXPORT only
+ * existed for Campaign/Knowledge Article until now (see {@code CampaignService#exportCsv}'s
+ * javadoc). TICKET support was added once the {@code ticket} module itself existed (see V14's
+ * migration comment) - this class's shape didn't need to change at all, just one more headers
+ * constant, one more export/import method pair, and one more row-builder, following the exact
+ * pattern the first three entities already established. See V13's migration comment for the full
+ * picture.
  *
  * <p><b>Export</b> reuses each entity's own EXPORT scope exactly the way {@code AccountService
  * #list} uses READ - {@link ScopeAuthorizationService#visibleOwnerIds} decides which rows are in
@@ -97,12 +106,17 @@ public class ImportExportService {
             List.of("First Name", "Last Name", "Email", "Phone", "Company Name", "Title", "Source", "Description");
     private static final List<String> LEAD_REQUIRED = List.of("First Name", "Last Name", "Source");
 
+    private static final List<String> TICKET_HEADERS = List.of("Subject", "Description", "Priority", "Account Id", "Contact Id");
+    private static final List<String> TICKET_REQUIRED = List.of("Subject");
+
     private final AccountService accountService;
     private final ContactService contactService;
     private final LeadService leadService;
+    private final TicketService ticketService;
     private final AccountRepository accountRepository;
     private final ContactRepository contactRepository;
     private final LeadRepository leadRepository;
+    private final TicketRepository ticketRepository;
     private final ImportJobRepository importJobRepository;
     private final ImportRowErrorRepository importRowErrorRepository;
     private final ScopeAuthorizationService scopeAuthorizationService;
@@ -158,6 +172,21 @@ public class ImportExportService {
         return csv.toBytes();
     }
 
+    @Transactional(readOnly = true)
+    public byte[] exportTickets(UserPrincipal principal) {
+        Optional<Set<UUID>> visibleOwnerIds =
+                scopeAuthorizationService.visibleOwnerIds(principal, Permission.Resource.TICKET, Permission.Action.EXPORT);
+        List<Ticket> tickets = visibleOwnerIds
+                .map(ids -> ticketRepository.findByOrganizationIdAndOwnerIdInAndDeletedAtIsNullOrderByCreatedAtDesc(principal.getOrganizationId(), ids))
+                .orElseGet(() -> ticketRepository.findByOrganizationIdAndDeletedAtIsNullOrderByCreatedAtDesc(principal.getOrganizationId()));
+
+        CsvWriter csv = new CsvWriter().row(TICKET_HEADERS);
+        for (Ticket t : tickets) {
+            csv.row(t.getSubject(), t.getDescription(), t.getPriority(), t.getAccountId(), t.getContactId());
+        }
+        return csv.toBytes();
+    }
+
     // ---- Import ----
 
     public ImportJob importAccounts(UserPrincipal principal, MultipartFile file) {
@@ -170,6 +199,10 @@ public class ImportExportService {
 
     public ImportJob importLeads(UserPrincipal principal, MultipartFile file) {
         return runImport(principal, ImportJob.EntityType.LEAD, LEAD_HEADERS, LEAD_REQUIRED, file, this::createLeadFromRow);
+    }
+
+    public ImportJob importTickets(UserPrincipal principal, MultipartFile file) {
+        return runImport(principal, ImportJob.EntityType.TICKET, TICKET_HEADERS, TICKET_REQUIRED, file, this::createTicketFromRow);
     }
 
     @Transactional(readOnly = true)
@@ -218,6 +251,16 @@ public class ImportExportService {
                 cells.get("Description"), null);
         validate(request);
         leadService.create(principal, request);
+    }
+
+    private void createTicketFromRow(UserPrincipal principal, Map<String, String> cells) {
+        String subject = require(cells, "Subject");
+        Ticket.Priority priority = parsePriority(cells.get("Priority"));
+        UUID accountId = parseUuid(cells.get("Account Id"), "Account Id");
+        UUID contactId = parseUuid(cells.get("Contact Id"), "Contact Id");
+        CreateTicketRequest request = new CreateTicketRequest(subject, cells.get("Description"), priority, accountId, contactId, null);
+        validate(request);
+        ticketService.create(principal, request);
     }
 
     /**
@@ -359,6 +402,17 @@ public class ImportExportService {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(
                     "Unknown source '%s' - expected one of %s".formatted(raw, Arrays.toString(Lead.Source.values())));
+        }
+    }
+
+    /** Blank defaults to MEDIUM, matching {@code Ticket.priority}'s own column default - unlike Lead's Source, a missing Priority isn't an error. */
+    private Ticket.Priority parsePriority(String raw) {
+        if (raw == null) return Ticket.Priority.MEDIUM;
+        try {
+            return Ticket.Priority.valueOf(raw.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    "Unknown priority '%s' - expected one of %s".formatted(raw, Arrays.toString(Ticket.Priority.values())));
         }
     }
 

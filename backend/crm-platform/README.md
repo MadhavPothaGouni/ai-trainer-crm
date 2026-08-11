@@ -171,17 +171,27 @@ src/main/java/com/aitrainercrm/platform/
   webhook/        webhook subscriptions, HMAC-signed and dispatched off the
                   exact same CrmAuditEvents the audit module listens to -
                   see WebhookDispatchListener's javadoc
-  importexport/   bulk CSV import/export for Account, Contact, and Lead -
-                  ACCOUNT/CONTACT/LEAD/OPPORTUNITY/ACTIVITY/QUOTE/TICKET all
-                  got IMPORT and EXPORT seeded in V2 alongside their other
-                  CRUD actions, but nothing ever implemented IMPORT anywhere
-                  in the codebase, and EXPORT only existed for Campaign/
-                  Knowledge Article until now - see ImportExportService's
-                  javadoc for the full picture, including why its import
-                  methods are deliberately NOT @Transactional (a subtle
-                  Spring propagation trap that would otherwise silently
-                  roll back an entire batch's successes because of one bad
-                  row)
+  ticket/         support tickets - the resource that had a full permission
+                  set seeded in V2 (same "core CRM resource" group as LEAD/
+                  CONTACT/ACCOUNT/OPPORTUNITY/ACTIVITY/QUOTE) but no table,
+                  entity, or endpoint anywhere until now; mirrors Account's
+                  owner-scoped shape exactly, with a free (non-linear)
+                  status transition rather than Lead/Order's one-way state
+                  machines - see V14's migration comment and Ticket's javadoc
+  importexport/   bulk CSV import/export for Account, Contact, Lead, and
+                  Ticket - ACCOUNT/CONTACT/LEAD/OPPORTUNITY/ACTIVITY/QUOTE/
+                  TICKET all got IMPORT and EXPORT seeded in V2 alongside
+                  their other CRUD actions, but nothing ever implemented
+                  IMPORT anywhere in the codebase, and EXPORT only existed
+                  for Campaign/Knowledge Article until now - see
+                  ImportExportService's javadoc for the full picture,
+                  including why its import methods are deliberately NOT
+                  @Transactional (a subtle Spring propagation trap that
+                  would otherwise silently roll back an entire batch's
+                  successes because of one bad row). Ticket support was
+                  added after the fact with no change to that design - one
+                  more headers constant, one more export/import method
+                  pair, one more row-builder
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security,
                   plus security.apikey - the X-Api-Key request filter
@@ -191,8 +201,8 @@ src/main/java/com/aitrainercrm/platform/
 ```
 
 Every owner-scoped CRM module (`account`/`contact`/`opportunity`/`lead`/
-`activity`/`quote`) follows the same shape: `entity` + `repository` +
-`service` + `controller` + `dto`, record-level OWN/TEAM/DEPARTMENT/
+`activity`/`quote`/`ticket`) follows the same shape: `entity` + `repository`
++ `service` + `controller` + `dto`, record-level OWN/TEAM/DEPARTMENT/
 ORGANIZATION authorization via `security.authorization.ScopeAuthorizationService`,
 and a permission catalog already seeded in `V2__seed_permission_catalog.sql`.
 `workflow` and `dashboard` follow the same owner-scoped shape too, minus
@@ -211,10 +221,9 @@ transitions are plain `UPDATE`, and they instead get an `EXPORT` action -
 `CampaignController#export`/`KnowledgeArticleController#export` were the
 first two endpoints in the codebase to actually implement it (see
 `common.util.CsvWriter`); `importexport/` (below) later added EXPORT *and*
-IMPORT for Account, Contact, and Lead using the same `CsvWriter` plus its
-new counterpart `common.util.CsvParser`. Opportunity, Activity, Quote, and
-Ticket still have IMPORT/EXPORT seeded but unbuilt, same as every other
-resource waited its turn earlier in this project.
+IMPORT for Account, Contact, Lead, and Ticket using the same `CsvWriter`
+plus its new counterpart `common.util.CsvParser`. Opportunity, Activity,
+and Quote still have IMPORT/EXPORT seeded but unbuilt.
 `report` is a different kind of exception: it's read-only and has no
 owner-scoped record of its own, so it uses
 `ScopeAuthorizationService#visibleOwnerIds` directly against the REPORT
@@ -238,15 +247,16 @@ viewing a dashboard's numbers requires the caller to hold both DASHBOARD:
 READ (the shell) and some level of REPORT:READ (each widget's data), not a
 single all-encompassing DASHBOARD permission.
 
-Correction to a claim in an earlier version of this file: it isn't quite
-true that *every* resource in `V2__seed_permission_catalog.sql` has a
-module built on top of it - `TICKET` is seeded with a full CRUD/EXPORT/
-IMPORT/ASSIGN permission set (same as LEAD/CONTACT/ACCOUNT/OPPORTUNITY/
-ACTIVITY/QUOTE) but has no `ticket/` package, no entity, and no
-controller anywhere in this codebase. It's the one seeded-but-unbuilt
-resource left; every other resource either has a full module or, for
-IMPORT/EXPORT specifically, at least a real implementation for the three
-entities (`account`/`contact`/`lead`) users most commonly bulk-load.
+An earlier version of this file incorrectly claimed every resource in
+`V2__seed_permission_catalog.sql` had a module built on top of it -
+`TICKET` was the one exception, seeded with a full CRUD/EXPORT/IMPORT/
+ASSIGN permission set but no `ticket/` package, entity, or controller
+anywhere. That gap is now closed (see `ticket/` above): every resource
+seeded in `V2__seed_permission_catalog.sql` genuinely does have a module
+built on top of it as of this commit, and IMPORT/EXPORT specifically has a
+real implementation for four of the seven resources that got it seeded
+(`account`/`contact`/`lead`/`ticket`) - Opportunity, Activity, and Quote
+still have it modeled but unbuilt.
 
 See the root `README.md` for the RBAC model, multi-tenancy rules, and the
 overall system architecture.

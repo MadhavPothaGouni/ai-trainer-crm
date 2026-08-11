@@ -26,12 +26,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * CSV import/export for Account, Contact, and Lead - see {@link ImportExportService}'s javadoc for
- * why this exists as its own module rather than three extra methods bolted onto {@code
- * AccountController}/{@code ContactController}/{@code LeadController}: it's genuinely
- * cross-cutting (the import-job history endpoints at the bottom span all three entity types), and
- * keeping it separate means AccountController et al. never need to know {@code MultipartFile}
- * exists.
+ * CSV import/export for Account, Contact, Lead, and Ticket - see {@link ImportExportService}'s
+ * javadoc for why this exists as its own module rather than extra methods bolted onto {@code
+ * AccountController}/{@code ContactController}/{@code LeadController}/{@code TicketController}:
+ * it's genuinely cross-cutting (the import-job history endpoints at the bottom span all four
+ * entity types), and keeping it separate means those controllers never need to know {@code
+ * MultipartFile} exists.
  *
  * <p>Export endpoints follow the exact convention {@code CampaignController#export} established:
  * a raw {@code ResponseEntity<byte[]>} download, not the usual {@code ApiResponse} envelope. Import
@@ -83,17 +83,31 @@ public class ImportExportController {
         return ApiResponse.ok(toDto(job), "Import finished: %d succeeded, %d failed".formatted(job.getSuccessCount(), job.getErrorCount()));
     }
 
+    @GetMapping("/api/v1/tickets/export")
+    @PreAuthorize("hasAnyAuthority('TICKET:EXPORT:OWN','TICKET:EXPORT:TEAM','TICKET:EXPORT:DEPARTMENT','TICKET:EXPORT:ORGANIZATION')")
+    public ResponseEntity<byte[]> exportTickets(@AuthenticationPrincipal UserPrincipal principal) {
+        return csvDownload(importExportService.exportTickets(principal), "tickets.csv");
+    }
+
+    @PostMapping("/api/v1/tickets/import")
+    @PreAuthorize("hasAnyAuthority('TICKET:IMPORT:OWN','TICKET:IMPORT:TEAM','TICKET:IMPORT:DEPARTMENT','TICKET:IMPORT:ORGANIZATION')")
+    public ApiResponse<ImportJobDto> importTickets(@RequestParam MultipartFile file, @AuthenticationPrincipal UserPrincipal principal) {
+        ImportJob job = importExportService.importTickets(principal, file);
+        return ApiResponse.ok(toDto(job), "Import finished: %d succeeded, %d failed".formatted(job.getSuccessCount(), job.getErrorCount()));
+    }
+
     /**
-     * History spans all three entity types, so this is gated on holding IMPORT for at least one of
+     * History spans all four entity types, so this is gated on holding IMPORT for at least one of
      * them rather than a single resource's authority list - a caller who can only import Leads
-     * should still be able to see their own lead-import history, without needing ACCOUNT/CONTACT
-     * permissions they don't hold.
+     * should still be able to see their own lead-import history, without needing ACCOUNT/CONTACT/
+     * TICKET permissions they don't hold.
      */
     @GetMapping("/api/v1/import-jobs")
     @PreAuthorize("hasAnyAuthority("
             + "'ACCOUNT:IMPORT:OWN','ACCOUNT:IMPORT:TEAM','ACCOUNT:IMPORT:DEPARTMENT','ACCOUNT:IMPORT:ORGANIZATION',"
             + "'CONTACT:IMPORT:OWN','CONTACT:IMPORT:TEAM','CONTACT:IMPORT:DEPARTMENT','CONTACT:IMPORT:ORGANIZATION',"
-            + "'LEAD:IMPORT:OWN','LEAD:IMPORT:TEAM','LEAD:IMPORT:DEPARTMENT','LEAD:IMPORT:ORGANIZATION')")
+            + "'LEAD:IMPORT:OWN','LEAD:IMPORT:TEAM','LEAD:IMPORT:DEPARTMENT','LEAD:IMPORT:ORGANIZATION',"
+            + "'TICKET:IMPORT:OWN','TICKET:IMPORT:TEAM','TICKET:IMPORT:DEPARTMENT','TICKET:IMPORT:ORGANIZATION')")
     public ApiResponse<PageResponse<ImportJobDto>> listJobs(Pageable pageable, @AuthenticationPrincipal UserPrincipal principal) {
         Page<ImportJob> page = importExportService.listJobs(principal, pageable);
         return ApiResponse.ok(PageResponse.from(page, page.getContent().stream().map(j -> ImportJobDto.from(j, List.of())).toList()));
@@ -103,7 +117,8 @@ public class ImportExportController {
     @PreAuthorize("hasAnyAuthority("
             + "'ACCOUNT:IMPORT:OWN','ACCOUNT:IMPORT:TEAM','ACCOUNT:IMPORT:DEPARTMENT','ACCOUNT:IMPORT:ORGANIZATION',"
             + "'CONTACT:IMPORT:OWN','CONTACT:IMPORT:TEAM','CONTACT:IMPORT:DEPARTMENT','CONTACT:IMPORT:ORGANIZATION',"
-            + "'LEAD:IMPORT:OWN','LEAD:IMPORT:TEAM','LEAD:IMPORT:DEPARTMENT','LEAD:IMPORT:ORGANIZATION')")
+            + "'LEAD:IMPORT:OWN','LEAD:IMPORT:TEAM','LEAD:IMPORT:DEPARTMENT','LEAD:IMPORT:ORGANIZATION',"
+            + "'TICKET:IMPORT:OWN','TICKET:IMPORT:TEAM','TICKET:IMPORT:DEPARTMENT','TICKET:IMPORT:ORGANIZATION')")
     public ApiResponse<ImportJobDto> getJob(@PathVariable UUID jobId, @AuthenticationPrincipal UserPrincipal principal) {
         ImportJob job = importExportService.getJob(principal, jobId);
         return ApiResponse.ok(toDto(job));
