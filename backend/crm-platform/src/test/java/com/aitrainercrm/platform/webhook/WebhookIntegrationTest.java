@@ -64,12 +64,29 @@ class WebhookIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void creatingAnAccount_deliversASignedWebhook_toAMatchingSubscriptionOnly() throws Exception {
+        // The subscription below listens for *every* event, so it also receives
+        // its own creation, the second subscription's creation, and the teammate
+        // invite - all of which reach this server before the Account_CREATED
+        // event we actually care about. Only complete the future on the event
+        // this test is asserting about; every other delivery still gets a 200
+        // (so it's a legitimate successful delivery, just not the one we're
+        // waiting for) but doesn't resolve the future early.
         CompletableFuture<CapturedRequest> captured = new CompletableFuture<>();
         server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
         server.createContext("/hook", exchange -> {
             byte[] body = exchange.getRequestBody().readAllBytes();
             String signature = exchange.getRequestHeaders().getFirst("X-Webhook-Signature");
-            captured.complete(new CapturedRequest(new String(body, StandardCharsets.UTF_8), signature));
+            String bodyText = new String(body, StandardCharsets.UTF_8);
+            if (!captured.isDone()) {
+                try {
+                    JsonNode node = objectMapper.readTree(bodyText);
+                    if ("Account_CREATED".equals(node.path("event").asText())) {
+                        captured.complete(new CapturedRequest(bodyText, signature));
+                    }
+                } catch (Exception ignored) {
+                    // Not JSON this test cares about distinguishing - fall through and still ack it.
+                }
+            }
             exchange.sendResponseHeaders(200, -1);
             exchange.close();
         });
