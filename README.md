@@ -266,7 +266,23 @@ every user's team was null and those two scope levels sat unreachable
 behind unit tests. `TeamController` (CRUD) and a new `PATCH
 /api/v1/users/{id}/team` endpoint close that gap - see
 `backend/crm-platform/README.md`'s module layout for `organization`/`user`
-and `ScopeAuthorizationService`'s javadoc for the full backstory.
+and `ScopeAuthorizationService`'s javadoc for the full backstory. The Team
+frontend (a Team Groups admin page, plus a Team picker added to each
+teammate's profile page) landed right behind it.
+
+Most recently, in-app notifications: a `notification/inbox` module (a
+teammate's own read/unread mail, optionally tied to a CRM record) that is
+deliberately *not* shaped like any prior module. Every resource from
+Ticket (V14) through Team (V16) either widens visibility with role
+(owner-scoped) or has one fixed org-wide scope everyone shares
+(shared-org-resource/platform-administration) - a notification does
+neither. It's exactly one person's mail, and no role should ever let a
+second person read it, so `NOTIFICATION` was never added to the permission
+catalog at all; `NotificationService` checks `recipientUserId == caller`
+directly instead of calling `ScopeAuthorizationService`. See
+`backend/crm-platform/README.md`'s module layout for `notification` and
+`Notification`'s own javadoc for the reasoning, including why - unlike
+every other table in this schema - it has no `deleted_at` column.
 
 The RBAC model was designed up front for the platform's eventual full
 shape, and every resource seeded in `V2__seed_permission_catalog.sql` now
@@ -289,10 +305,10 @@ version of this file incorrectly claimed this was already true while
 for that correction and how the gap was found.
 
 Not yet built, roughly in the order planned:
-- A frontend for Team management (`TeamController` CRUD, the
-  `PATCH .../users/{id}/team` assignment endpoint, and a team picker on the
-  Team page) - the backend module landed first, same order every prior
-  module has followed in this project
+- A frontend for the Notification module (`NotificationController`'s list/
+  unread-count/mark-read/mark-all-read/delete/send endpoints) - the backend
+  module landed first, same order every prior module has followed in this
+  project
 - IMPORT/EXPORT for Opportunity, Activity, and Quote - seeded in the
   catalog like Account/Contact/Lead/Ticket's, not yet built
 - Retry-with-backoff for webhook delivery (today it's a single attempt with

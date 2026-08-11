@@ -203,6 +203,16 @@ src/main/java/com/aitrainercrm/platform/
                   external guest) and its own mutable response status, same
                   reasoning campaign/'s CampaignMember documents. See V15's
                   migration comment and CalendarEventService's javadoc
+  notification/   a teammate's own in-app inbox (notification.inbox package
+                  - distinct from notification.email, the existing
+                  transactional-email abstraction auth/ already used for
+                  verification/reset links). No Permission.Resource, no
+                  ScopeAuthorizationService, no @PreAuthorize scope ladder -
+                  a notification's visibility never widens with role the
+                  way every other resource's does, so NotificationService
+                  just checks recipientUserId == caller directly. See V17's
+                  migration comment and Notification's javadoc for the full
+                  "why this is a fourth access pattern" reasoning
   importexport/   bulk CSV import/export for Account, Contact, Lead, and
                   Ticket - ACCOUNT/CONTACT/LEAD/OPPORTUNITY/ACTIVITY/QUOTE/
                   TICKET all got IMPORT and EXPORT seeded in V2 alongside
@@ -282,6 +292,19 @@ enforces REPORT:READ's own OWN/TEAM/ORGANIZATION scope internally - so
 viewing a dashboard's numbers requires the caller to hold both DASHBOARD:
 READ (the shell) and some level of REPORT:READ (each widget's data), not a
 single all-encompassing DASHBOARD permission.
+`notification` (in `notification/inbox/`) is a fourth kind, simpler than
+all three above: self-scoped, not just unscoped. Platform-administration
+resources (`apikey`/`webhook`/`customfield`/`Team`) have exactly one fixed
+scope (ORGANIZATION) that every holder shares equally - any ADMIN can
+manage any API key. A notification has no such shared scope at all; it is
+one specific person's mail, and nothing - no role, no permission, no scope
+level - should ever let a second person read it. So it skips the
+permission catalog entirely rather than seeding a scope that could only
+ever mean "yourself." See `Notification`'s javadoc and V17's migration
+comment for the full reasoning, including why the table has no
+`deleted_at` (nothing else can ever reference or need to see a
+notification besides its one recipient, unlike every soft-deleted record
+above).
 
 An earlier version of this file incorrectly claimed every resource in
 `V2__seed_permission_catalog.sql` had a module built on top of it -
