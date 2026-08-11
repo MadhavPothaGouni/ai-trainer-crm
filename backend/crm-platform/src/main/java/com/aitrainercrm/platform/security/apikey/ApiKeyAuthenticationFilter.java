@@ -1,7 +1,6 @@
 package com.aitrainercrm.platform.security.apikey;
 
 import com.aitrainercrm.platform.apikey.service.ApiKeyService;
-import com.aitrainercrm.platform.security.userdetails.UserPrincipal;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,6 +24,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * malformed, revoked, or expired key simply leaves the context empty -
  * same "let the security chain's authorization rules decide" behavior as
  * the JWT filter, not an immediate 401 from here.
+ *
+ * <p>{@code ApiKeyService#authenticate} hands back an already-built {@code
+ * UserPrincipal}, not a bare {@code User} - see that method's javadoc for
+ * why building it here instead used to throw {@code
+ * LazyInitializationException} on {@code Role.permissions}.
  */
 @Component
 @RequiredArgsConstructor
@@ -40,7 +44,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
         String rawKey = request.getHeader(API_KEY_HEADER);
         if (rawKey != null && !rawKey.isBlank() && SecurityContextHolder.getContext().getAuthentication() == null) {
-            apiKeyService.authenticate(rawKey.trim()).map(UserPrincipal::new).ifPresent(principal -> {
+            apiKeyService.authenticate(rawKey.trim()).ifPresent(principal -> {
                 var authentication = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);

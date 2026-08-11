@@ -24,10 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Issues and validates programmatic-auth API keys. A key authenticates
- * *as the user who created it* - {@link #authenticate} returns that user,
- * and {@code ApiKeyAuthenticationFilter} builds the exact same
- * {@code UserPrincipal} from it that {@code JwtAuthenticationFilter} would
- * build from that user's own login. That's a deliberate scope trim (a
+ * *as the user who created it* - {@link #authenticate} returns a
+ * {@code UserPrincipal} for that user, built the same way
+ * {@code AuthService#login} builds one from that user's own login. That's a
+ * deliberate scope trim (a
  * fuller implementation would let the creator delegate a subset of their
  * permissions to the key, not all of them) called out in V6's migration
  * comment and the root README's Roadmap - it keeps the RBAC story
@@ -102,9 +102,27 @@ public class ApiKeyService {
      * never against a key that doesn't exist, is revoked, or has expired.
      * On success, best-effort stamps {@code lastUsedAt} (a failed save here
      * shouldn't fail the request it's just trying to timestamp).
+     *
+     * <p>Returns a fully-built {@code UserPrincipal}, not a bare {@code User},
+     * and builds it right here rather than leaving that to the caller. That
+     * matters because {@code UserPrincipal}'s constructor walks every one of
+     * the user's roles and flattens each role's permissions into authorities
+     * - {@code User.roles} is {@code EAGER} so that part's always safe, but
+     * {@code Role.permissions} is deliberately {@code LAZY} (see {@code
+     * Role}'s javadoc - eagerly joining permissions onto every {@code Role}
+     * fetched anywhere, including plain role-management list screens that
+     * never need them, isn't a trade worth making just for this one call
+     * site). Building the principal after this method returns means doing it
+     * outside this method's {@code @Transactional} session, which is exactly
+     * what used to throw {@code LazyInitializationException} here -
+     * {@code ApiKeyAuthenticationFilter} used to do {@code
+     * .map(UserPrincipal::new)} on the result of this call, by which point
+     * the session was already closed. {@code AuthService#login} never hits
+     * this because it already builds its {@code UserPrincipal} before its own
+     * {@code @Transactional} method returns; this does the same thing.
      */
     @Transactional
-    public Optional<User> authenticate(String rawKey) {
+    public Optional<UserPrincipal> authenticate(String rawKey) {
         int separator = rawKey.indexOf('.');
         if (separator < 0) return Optional.empty();
         String prefix = rawKey.substring(0, separator);
@@ -132,7 +150,8 @@ public class ApiKeyService {
                 // a key too.
                 .filter(user -> user.getStatus() != User.Status.SUSPENDED
                         && user.getStatus() != User.Status.DEACTIVATED
-                        && !user.isAccountLocked());
+                        && !user.isAccountLocked())
+                .map(UserPrincipal::new);
     }
 
     private String randomUrlSafeToken(int byteLength) {
