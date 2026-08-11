@@ -149,6 +149,14 @@ src/main/java/com/aitrainercrm/platform/
                   values are a classic EAV table, stored as text and
                   parsed/validated against each field's declared FieldType
                   in CustomFieldService#parseAndValidate
+  workflow/       automation: fires when a Lead/Contact/Account/Opportunity
+                  is created/updated/deleted (matched against the same
+                  CrmAuditEvents webhook/audit already consume) and creates
+                  a follow-up Activity task - see WorkflowEngineListener's
+                  javadoc. Unlike campaign/knowledgearticle/customfield,
+                  this IS owner-scoped (OWN/TEAM/ORGANIZATION, no
+                  DEPARTMENT) - a workflow belongs to whoever created it,
+                  same shape as account/contact/lead/opportunity
   apikey/         programmatic-auth API keys - only a bcrypt hash of the
                   secret is ever stored; a key authenticates as whoever
                   created it (see ApiKeyService's javadoc)
@@ -168,6 +176,10 @@ Every owner-scoped CRM module (`account`/`contact`/`opportunity`/`lead`/
 `service` + `controller` + `dto`, record-level OWN/TEAM/DEPARTMENT/
 ORGANIZATION authorization via `security.authorization.ScopeAuthorizationService`,
 and a permission catalog already seeded in `V2__seed_permission_catalog.sql`.
+`workflow` follows the same owner-scoped shape too, minus DEPARTMENT (not
+seeded for WORKFLOW - see V2's own comment) - see `workflow`'s module
+comment above for why it, unlike this session's other two modules, gets an
+`ownerId`.
 `product`, `order`, `invoice`, `payment`, `campaign`, and
 `knowledgearticle` are shared-org-resource exceptions to that shape - see
 `product`'s module comment above; no `ownerId` column, no
@@ -196,8 +208,8 @@ per-record ownership concept at all - see `ApiKeyController`'s,
 deliberately gates reading/writing a *value on a standard entity's record*
 (e.g. an Account) on `CUSTOM_FIELD:*:ORGANIZATION` rather than
 `ACCOUNT:UPDATE` - a documented simplification, not an oversight. The
-catalog also seeds a few resources (`WORKFLOW`, `DASHBOARD`) that don't
-have a module built on top of them yet; see the root README's Roadmap.
+catalog seeds exactly one resource left with no module built on top of it -
+`DASHBOARD` (a saved-report builder); see the root README's Roadmap.
 
 See the root `README.md` for the RBAC model, multi-tenancy rules, and the
 overall system architecture.

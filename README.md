@@ -208,23 +208,32 @@ a Name field plus whatever Custom Fields are attached) and Custom Fields
 Account/Contact/Lead/Opportunity/Campaign - never both, values stored as a
 classic EAV table and parsed/validated against each field's declared type -
 NUMBER/DATE/BOOLEAN/PICKLIST/TEXT/TEXT_AREA) - see
-`backend/crm-platform/README.md`'s module layout for `customfield`.
+`backend/crm-platform/README.md`'s module layout for `customfield`. Most
+recently, Workflow automation: a rule fires when a Lead/Contact/Account/
+Opportunity is created/updated/deleted (matched against the same
+`CrmAuditEvents` webhook delivery and the audit log already consume) and
+creates a follow-up Activity task, assigned to either a configured user or
+whoever owns the record that triggered it - with a full run history
+(succeeded/failed, per fire) and a manual "run now" for testing a workflow
+before switching it on. Unlike Campaign/Knowledge Article/Custom Field/
+Custom Object, Workflow is owner-scoped (OWN/TEAM/ORGANIZATION) - see
+`backend/crm-platform/README.md`'s module layout for `workflow`.
 
-The permission catalog seeded in `V2__seed_permission_catalog.sql` still
-covers two resources with no module built on top of them yet -
-`WORKFLOW`/`DASHBOARD` (automation/a saved-report builder). That's
-deliberate: the RBAC model was designed up front for the platform's
-eventual full shape, and each of those becomes an
+The permission catalog seeded in `V2__seed_permission_catalog.sql` now
+covers exactly one resource with no module built on top of it -
+`DASHBOARD` (a saved-report builder). That's deliberate: the RBAC model was
+designed up front for the platform's eventual full shape, and it becomes an
 `entity`/`repository`/`service`/`controller`/`dto` module following the
 same pattern as `account`/`contact`/`opportunity`/`lead`/`activity`/
 `product`/`quote`/`order`/`invoice`/`payment`/`campaign`/
-`knowledgearticle`/`customfield`, plus a corresponding frontend page,
-whenever it gets built. `report`, `apikey`, `webhook`, and `customfield`
-are exceptions already built without a normal owner-scoped entity of their
-own - see `backend/crm-platform/README.md`'s module layout for why.
+`knowledgearticle`/`customfield`/`workflow`, plus a corresponding frontend
+page, whenever it gets built. `report`, `apikey`, `webhook`, and
+`customfield` are exceptions already built without a normal owner-scoped
+entity of their own - see `backend/crm-platform/README.md`'s module layout
+for why.
 
 Not yet built, roughly in the order planned:
-- Automation (Workflow/a saved-report Dashboard builder)
+- A saved-report Dashboard builder
 - Retry-with-backoff for webhook delivery (today it's a single attempt with
   a short timeout - see `WebhookDispatchListener`'s javadoc for the
   reasoning) and scoped/delegated API keys (today a key inherits its
