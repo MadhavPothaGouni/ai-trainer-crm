@@ -13,8 +13,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -89,12 +87,9 @@ public class SecurityConfig {
         return source;
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        // Strength 12: noticeably slower than the (default 10) to brute-force
-        // offline, still well under 200ms/hash on typical hardware.
-        return new BCryptPasswordEncoder(12);
-    }
+    // PasswordEncoder used to be defined here, but moved to the standalone
+    // PasswordEncoderConfig - see that class's javadoc for why (breaking a
+    // circular bean-creation cycle introduced by the apikey module).
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
