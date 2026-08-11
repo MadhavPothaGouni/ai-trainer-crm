@@ -114,8 +114,15 @@ src/main/java/com/aitrainercrm/platform/
                   javadoc for why it has a second, report-only repository
                   interface per aggregated entity instead of adding these
                   queries onto OpportunityRepository/LeadRepository
+  apikey/         programmatic-auth API keys - only a bcrypt hash of the
+                  secret is ever stored; a key authenticates as whoever
+                  created it (see ApiKeyService's javadoc)
+  webhook/        webhook subscriptions, HMAC-signed and dispatched off the
+                  exact same CrmAuditEvents the audit module listens to -
+                  see WebhookDispatchListener's javadoc
   audit/          domain events -> @Async listener -> audit_events table
-  security/       JWT issuing/parsing, UserPrincipal, method security
+  security/       JWT issuing/parsing, UserPrincipal, method security,
+                  plus security.apikey - the X-Api-Key request filter
   common/         BaseEntity, exception hierarchy, ApiResponse/ErrorResponse/
                   PageResponse envelopes
   config/         SecurityConfig, CORS, OpenAPI, properties classes
@@ -131,9 +138,15 @@ a different kind of exception: it's read-only and has no owner-scoped
 record of its own, so it uses `ScopeAuthorizationService#visibleOwnerIds`
 directly against the REPORT permission to filter its aggregate queries by
 owner, rather than the record-level `assertCanAccess` pattern the CRUD
-modules use. The catalog also seeds several resources (`ORDER`, `INVOICE`,
-`PAYMENT`, `CAMPAIGN`, `WORKFLOW`, `DASHBOARD`, ...) that don't have a
-module built on top of them yet; see the root README's Roadmap.
+modules use. `apikey` and `webhook` are a third kind: platform
+administration, gated entirely by `API_KEY:*:ORGANIZATION` /
+`INTEGRATION:*:ORGANIZATION` (no OWN/TEAM/DEPARTMENT variant exists for
+either resource), with no per-record ownership concept at all - see
+`ApiKeyController`'s and `WebhookSubscriptionController`'s javadoc. The
+catalog also seeds several resources (`ORDER`, `INVOICE`, `PAYMENT`,
+`CAMPAIGN`, `WORKFLOW`, `DASHBOARD`, `CUSTOM_FIELD`, `CUSTOM_OBJECT`, ...)
+that don't have a module built on top of them yet; see the root README's
+Roadmap.
 
 See the root `README.md` for the RBAC model, multi-tenancy rules, and the
 overall system architecture.

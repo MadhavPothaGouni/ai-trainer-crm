@@ -525,6 +525,52 @@ export interface RepLeaderboardEntryDto {
   lostCount: number;
 }
 
+// ---- Platform: API keys ----
+
+export interface ApiKeyDto {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  createdByUserId: string;
+  lastUsedAt: string | null;
+  expiresAt: string | null;
+  revokedAt: string | null;
+  createdAt: string;
+  /** Only ever populated on the response to POST /api/v1/api-keys - see the backend ApiKeyDto's javadoc. */
+  rawKey?: string | null;
+}
+
+export interface CreateApiKeyRequest {
+  name: string;
+  expiresAt?: string | null;
+}
+
+// ---- Platform: webhooks ----
+
+export interface WebhookSubscriptionDto {
+  id: string;
+  url: string;
+  eventType: string | null;
+  secret: string;
+  active: boolean;
+  createdByUserId: string;
+  lastTriggeredAt: string | null;
+  lastResponseStatus: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateWebhookSubscriptionRequest {
+  url: string;
+  eventType?: string | null;
+}
+
+export interface UpdateWebhookSubscriptionRequest {
+  url: string;
+  eventType?: string | null;
+  active: boolean;
+}
+
 // ---- CRM: shared ----
 
 export interface AssignOwnerRequest {

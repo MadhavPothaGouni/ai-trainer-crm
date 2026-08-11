@@ -227,3 +227,16 @@ export const changePasswordFormSchema = z
     path: ["confirmPassword"],
   });
 export type ChangePasswordFormValues = z.infer<typeof changePasswordFormSchema>;
+
+// ---- Platform: API keys & webhooks ----
+
+export const createApiKeySchema = z.object({
+  name: z.string().min(1, "Name is required").max(200),
+});
+export type CreateApiKeyFormValues = z.infer<typeof createApiKeySchema>;
+
+export const createWebhookSchema = z.object({
+  url: z.string().min(1, "URL is required").max(500).url("Enter a valid URL"),
+  eventType: z.string().max(100).optional().or(z.literal("")),
+});
+export type CreateWebhookFormValues = z.infer<typeof createWebhookSchema>;

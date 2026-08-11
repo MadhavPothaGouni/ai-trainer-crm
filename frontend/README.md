@@ -40,7 +40,7 @@ npm run test     # Vitest, single run (CI mode)
 src/
   api/            typed wrappers around each backend module (auth, users, organizations,
                    roles, accounts, contacts, opportunities, leads, activities, products,
-                   quotes, reports)
+                   quotes, reports, apiKeys, webhooks)
   auth/           AuthContext/AuthProvider, useAuth hook, ProtectedRoute/PublicOnlyRoute, token storage
   components/
     layout/       AuthLayout (centered card, for /login etc.) and AppLayout (top bar + nav + outlet)
@@ -67,6 +67,12 @@ src/
                    charts plus a rep leaderboard table, all plain CSS-width
                    bars (no charting library); only visible in nav to
                    OWNER/ADMIN, matching who holds REPORT:READ by default
+    apikeys/        ApiKeysPage.tsx - create/list/revoke programmatic-auth
+                   keys; a freshly created key's raw value is shown once,
+                   in-page, and never appears in any response again
+    webhooks/       WebhooksPage.tsx - create/list/pause/delete webhook
+                   subscriptions; shows each one's signing secret and its
+                   most recent delivery status (timestamp + HTTP code)
     users/, roles/ team management (invite/list/roles/status) and role management
                    (built-in roles are read-only, custom roles get a permission picker)
     profile/       ProfilePage.tsx - update name/phone/timezone/locale, change password
@@ -106,11 +112,12 @@ this pass, the auth scaffold, the CRM workspace (accounts/contacts/opportunities
 leads, including lead conversion), team/role management, profile settings, the
 Activity log (calls/emails/meetings/tasks/notes, plus a cross-record "My Tasks"
 view), sales tooling (Product catalog + Quotes, including the inline
-line-item editor and a per-opportunity Quotes list), and a Reports page
-(pipeline-by-stage, lead funnel, rep leaderboard) are all built. What's still
-missing on the frontend specifically: dedicated tests for the Product/Quote
-pages (they have none yet, unlike every other page built so far - including
-Reports), broader test coverage generally beyond the pages/components
-covered so far, an avatar upload flow (`UserDto.avatarUrl` exists but
-nothing sets it), and UI for the backend resources that don't have a
-frontend yet - see the root README.
+line-item editor and a per-opportunity Quotes list), a Reports page
+(pipeline-by-stage, lead funnel, rep leaderboard), and the platform/
+integration pages (API Keys, Webhooks) are all built. What's still missing
+on the frontend specifically: dedicated tests for the Product/Quote pages
+(they have none yet, unlike every other page built so far), broader test
+coverage generally beyond the pages/components covered so far, an avatar
+upload flow (`UserDto.avatarUrl` exists but nothing sets it), and UI for
+the backend resources that don't have a frontend yet - see the root
+README.

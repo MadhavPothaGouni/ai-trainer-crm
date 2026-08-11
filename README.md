@@ -163,41 +163,52 @@ record), sales tooling (a Product catalog and Quotes - priced proposals with
 line items tied to an Opportunity, totals recomputed server-side), a
 Reporting & analytics module (pipeline value by stage, lead conversion
 funnel, and a per-rep leaderboard, backed by real aggregation queries over
-Opportunity/Lead), React auth scaffold (login/register/forgot/reset/
-verify-email pages + protected routing), a CRM workspace UI (list/create/
-detail pages for accounts, contacts, opportunities, and leads, including
-opportunity stage transitions, lead conversion, a per-opportunity Quotes
-list, and a per-record ActivityTimeline on every detail page), Products/
-Quotes pages (including an inline line-item editor with a product picker),
-a Reports page (pipeline-by-stage and lead-funnel charts plus the rep
-leaderboard), a cross-record "My Tasks" view, a team/role management UI
-(invite/list users, assign roles and status, create/edit custom roles
-against the full permission catalog), a "my profile" settings page (update
-name/phone/timezone/locale, change password), a frontend test suite
-(Vitest + React Testing Library), Docker Compose + CI for both halves, and
-a production deploy pipeline (versioned GHCR image publishing + GitHub
-Releases on tag push — see
+Opportunity/Lead), a platform/integration layer (API key management for
+programmatic auth, and webhook subscriptions - HMAC-signed HTTP callbacks
+dispatched off the same domain events the audit log already consumes),
+React auth scaffold (login/register/forgot/reset/verify-email pages +
+protected routing), a CRM workspace UI (list/create/detail pages for
+accounts, contacts, opportunities, and leads, including opportunity stage
+transitions, lead conversion, a per-opportunity Quotes list, and a
+per-record ActivityTimeline on every detail page), Products/Quotes pages
+(including an inline line-item editor with a product picker), a Reports
+page (pipeline-by-stage and lead-funnel charts plus the rep leaderboard),
+API Keys and Webhooks pages (create/list/revoke a key with its raw value
+shown exactly once; create/list/pause/delete a webhook subscription with
+its signing secret and last-delivery status), a cross-record "My Tasks"
+view, a team/role management UI (invite/list users, assign roles and
+status, create/edit custom roles against the full permission catalog), a
+"my profile" settings page (update name/phone/timezone/locale, change
+password), a frontend test suite (Vitest + React Testing Library), Docker
+Compose + CI for both halves, and a production deploy pipeline (versioned
+GHCR image publishing + GitHub Releases on tag push — see
 [Deploying to production](#deploying-to-production)).
 
 The permission catalog seeded in `V2__seed_permission_catalog.sql` already
 covers several resources with no module built on top of them yet -
 `ORDER`/`INVOICE`/`PAYMENT` (deeper sales/finance tooling), `CAMPAIGN`/
 `KNOWLEDGE_ARTICLE` (marketing/support), `WORKFLOW`/`DASHBOARD`
-(automation/a saved-report builder), and `INTEGRATION`/`API_KEY`/
-`CUSTOM_FIELD`/`CUSTOM_OBJECT` (platform extensibility). That's deliberate:
-the RBAC model was designed up front for the platform's eventual full
-shape, and each of those becomes an `entity`/`repository`/`service`/
-`controller`/`dto` module following the same pattern as `account`/
-`contact`/`opportunity`/`lead`/`activity`/`product`/`quote`, plus a
-corresponding frontend page, whenever it gets built. `report` is the one
-exception already built without an entity of its own - see
+(automation/a saved-report builder), and `CUSTOM_FIELD`/`CUSTOM_OBJECT`
+(platform extensibility beyond API keys/webhooks, which are already
+built). That's deliberate: the RBAC model was designed up front for the
+platform's eventual full shape, and each of those becomes an `entity`/
+`repository`/`service`/`controller`/`dto` module following the same
+pattern as `account`/`contact`/`opportunity`/`lead`/`activity`/`product`/
+`quote`, plus a corresponding frontend page, whenever it gets built.
+`report`, `apikey`, and `webhook` are exceptions already built without a
+normal owner-scoped entity of their own - see
 `backend/crm-platform/README.md`'s module layout for why.
 
 Not yet built, roughly in the order planned:
-- Platform/integration: API key management (programmatic auth) and webhook
-  subscriptions dispatched off the existing domain event publisher
+- Deeper sales/finance tooling (Order/Invoice/Payment) and marketing/
+  support (Campaign/Knowledge Article), automation (Workflow), and the
+  remaining platform-extensibility resources (Custom Field/Custom Object)
+- Retry-with-backoff for webhook delivery (today it's a single attempt with
+  a short timeout - see `WebhookDispatchListener`'s javadoc for the
+  reasoning) and scoped/delegated API keys (today a key inherits its
+  creator's full permission set rather than a chosen subset - see
+  `ApiKeyService`'s javadoc)
 - Broader frontend test coverage beyond the pages/components covered so far
-  (the Product/Quote/Reports pages in particular have no dedicated tests
-  yet), and the usual production-hardening items (rate limiting,
-  observability/metrics, avatar upload) that weren't part of the original
-  scope
+  (the Product/Quote pages in particular have no dedicated tests yet), and
+  the usual production-hardening items (rate limiting, observability/
+  metrics, avatar upload) that weren't part of the original scope

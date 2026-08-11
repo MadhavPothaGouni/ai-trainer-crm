@@ -1,5 +1,6 @@
 package com.aitrainercrm.platform.config;
 
+import com.aitrainercrm.platform.security.apikey.ApiKeyAuthenticationFilter;
 import com.aitrainercrm.platform.security.jwt.JwtAuthenticationEntryPoint;
 import com.aitrainercrm.platform.security.jwt.JwtAuthenticationFilter;
 import java.util.List;
@@ -23,12 +24,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 /**
  * The whole platform is a stateless REST API: no server-side HTTP session,
  * no CSRF token (there's no cookie-based session for CSRF to attack -
- * every request authenticates itself via the Authorization header), and
- * every request runs through {@link JwtAuthenticationFilter} before Spring
- * Security's own filters get a look. {@code @EnableMethodSecurity} is what
- * makes {@code @PreAuthorize("hasAuthority(...)")} on service/controller
- * methods actually enforced - that's where the RBAC scope checks live,
- * not here.
+ * every request authenticates itself via the Authorization or X-Api-Key
+ * header), and every request runs through {@link JwtAuthenticationFilter}
+ * and {@link ApiKeyAuthenticationFilter} before Spring Security's own
+ * filters get a look - whichever of the two finds a matching header
+ * populates the SecurityContext, the other is then a no-op (see
+ * ApiKeyAuthenticationFilter's javadoc). {@code @EnableMethodSecurity} is
+ * what makes {@code @PreAuthorize("hasAuthority(...)")} on service/
+ * controller methods actually enforced - that's where the RBAC scope
+ * checks live, not here.
  */
 @Configuration
 @EnableWebSecurity
@@ -37,6 +41,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
     private final CorsProperties corsProperties;
 
@@ -63,7 +68,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

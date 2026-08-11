@@ -11,6 +11,7 @@ import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
 import AccountCreatePage from "./pages/accounts/AccountCreatePage";
 import AccountDetailPage from "./pages/accounts/AccountDetailPage";
 import AccountListPage from "./pages/accounts/AccountListPage";
+import ApiKeysPage from "./pages/apikeys/ApiKeysPage";
 import ContactCreatePage from "./pages/contacts/ContactCreatePage";
 import ContactDetailPage from "./pages/contacts/ContactDetailPage";
 import ContactListPage from "./pages/contacts/ContactListPage";
@@ -35,6 +36,7 @@ import RoleListPage from "./pages/roles/RoleListPage";
 import UserDetailPage from "./pages/users/UserDetailPage";
 import UserInvitePage from "./pages/users/UserInvitePage";
 import UserListPage from "./pages/users/UserListPage";
+import WebhooksPage from "./pages/webhooks/WebhooksPage";
 
 export default function App() {
   return (
@@ -90,6 +92,9 @@ export default function App() {
           <Route path="/roles" element={<RoleListPage />} />
           <Route path="/roles/new" element={<RoleCreatePage />} />
           <Route path="/roles/:roleId" element={<RoleDetailPage />} />
+
+          <Route path="/api-keys" element={<ApiKeysPage />} />
+          <Route path="/webhooks" element={<WebhooksPage />} />
 
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
