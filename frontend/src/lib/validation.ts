@@ -140,6 +140,15 @@ export const convertLeadSchema = z.object({
 });
 export type ConvertLeadFormValues = z.infer<typeof convertLeadSchema>;
 
+export const createTicketSchema = z.object({
+  subject: z.string().min(1, "Subject is required").max(200),
+  description: z.string().max(2000).optional().or(z.literal("")),
+  priority: z.string().min(1, "Priority is required"),
+  accountId: z.string().optional().or(z.literal("")),
+  contactId: z.string().optional().or(z.literal("")),
+});
+export type CreateTicketFormValues = z.infer<typeof createTicketSchema>;
+
 /** Turns "" into undefined - use when mapping an optional select/text field onto a request DTO. */
 export function blankToUndefined(value: string | undefined | null): string | undefined {
   return value === "" || value === null || value === undefined ? undefined : value;

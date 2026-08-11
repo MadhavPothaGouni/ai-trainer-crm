@@ -11,6 +11,7 @@ const ENTITY_LABELS: Record<ImportEntityType, string> = {
   ACCOUNT: "Accounts",
   CONTACT: "Contacts",
   LEAD: "Leads",
+  TICKET: "Tickets",
 };
 
 const PAGE_SIZE = 10;

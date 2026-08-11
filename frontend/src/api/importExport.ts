@@ -12,18 +12,21 @@ const EXPORT_PATH: Record<ImportEntityType, string> = {
   ACCOUNT: "/api/v1/accounts/export",
   CONTACT: "/api/v1/contacts/export",
   LEAD: "/api/v1/leads/export",
+  TICKET: "/api/v1/tickets/export",
 };
 
 const IMPORT_PATH: Record<ImportEntityType, string> = {
   ACCOUNT: "/api/v1/accounts/import",
   CONTACT: "/api/v1/contacts/import",
   LEAD: "/api/v1/leads/import",
+  TICKET: "/api/v1/tickets/import",
 };
 
 const EXPORT_FILENAME: Record<ImportEntityType, string> = {
   ACCOUNT: "accounts.csv",
   CONTACT: "contacts.csv",
   LEAD: "leads.csv",
+  TICKET: "tickets.csv",
 };
 
 /**

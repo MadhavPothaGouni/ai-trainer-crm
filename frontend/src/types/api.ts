@@ -366,6 +366,56 @@ export interface LeadConversionResult {
   opportunityId: string | null;
 }
 
+// ---- CRM: Ticket ----
+// The resource that had a full permission set seeded (V2__seed_permission_catalog.sql) but no
+// module anywhere until this session found the gap while building bulk import/export - see
+// backend/crm-platform/README.md's module layout for `ticket`. Status is a free (non-linear)
+// transition, unlike Lead's one-way CONVERTED - reopening a resolved ticket is normal, so there's
+// no REASSIGNABLE_STATUSES-style filtered subset the way LeadDetailPage needs for CONVERTED.
+
+export type TicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+
+export const TICKET_STATUSES: TicketStatus[] = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"];
+
+export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+
+export const TICKET_PRIORITIES: TicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
+
+export interface TicketDto {
+  id: string;
+  accountId: string | null;
+  contactId: string | null;
+  subject: string;
+  description: string | null;
+  status: TicketStatus;
+  priority: TicketPriority;
+  ownerId: string;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTicketRequest {
+  subject: string;
+  description?: string | null;
+  priority: TicketPriority;
+  accountId?: string | null;
+  contactId?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateTicketRequest {
+  subject: string;
+  description?: string | null;
+  priority: TicketPriority;
+  accountId?: string | null;
+  contactId?: string | null;
+}
+
+export interface UpdateTicketStatusRequest {
+  status: TicketStatus;
+}
+
 // ---- CRM: Activity ----
 
 export type ActivityType = "CALL" | "EMAIL" | "MEETING" | "TASK" | "NOTE";
@@ -1011,9 +1061,9 @@ export interface DashboardDataDto {
 // grants CREATE/READ/UPDATE), so this lives in AppLayout's admin-only nav
 // group, same reasoning as Reports/Workflows/Dashboards.
 
-export type ImportEntityType = "ACCOUNT" | "CONTACT" | "LEAD";
+export type ImportEntityType = "ACCOUNT" | "CONTACT" | "LEAD" | "TICKET";
 
-export const IMPORT_ENTITY_TYPES: ImportEntityType[] = ["ACCOUNT", "CONTACT", "LEAD"];
+export const IMPORT_ENTITY_TYPES: ImportEntityType[] = ["ACCOUNT", "CONTACT", "LEAD", "TICKET"];
 
 export type ImportJobStatus = "COMPLETED" | "FAILED";
 

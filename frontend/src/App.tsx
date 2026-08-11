@@ -48,6 +48,9 @@ import QuoteDetailPage from "./pages/quotes/QuoteDetailPage";
 import QuoteListPage from "./pages/quotes/QuoteListPage";
 import ReportsPage from "./pages/reports/ReportsPage";
 import MyTasksPage from "./pages/tasks/MyTasksPage";
+import TicketCreatePage from "./pages/tickets/TicketCreatePage";
+import TicketDetailPage from "./pages/tickets/TicketDetailPage";
+import TicketListPage from "./pages/tickets/TicketListPage";
 import LeadCreatePage from "./pages/leads/LeadCreatePage";
 import LeadDetailPage from "./pages/leads/LeadDetailPage";
 import LeadListPage from "./pages/leads/LeadListPage";
@@ -98,6 +101,10 @@ export default function App() {
           <Route path="/leads" element={<LeadListPage />} />
           <Route path="/leads/new" element={<LeadCreatePage />} />
           <Route path="/leads/:leadId" element={<LeadDetailPage />} />
+
+          <Route path="/tickets" element={<TicketListPage />} />
+          <Route path="/tickets/new" element={<TicketCreatePage />} />
+          <Route path="/tickets/:ticketId" element={<TicketDetailPage />} />
 
           <Route path="/products" element={<ProductListPage />} />
           <Route path="/products/new" element={<ProductCreatePage />} />
