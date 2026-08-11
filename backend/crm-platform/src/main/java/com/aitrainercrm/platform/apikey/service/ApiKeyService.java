@@ -119,7 +119,20 @@ public class ApiKeyService {
                     apiKeyRepository.save(apiKey);
                     return userRepository.findActiveById(apiKey.getCreatedByUserId());
                 })
-                .filter(user -> user.getStatus() == User.Status.ACTIVE && !user.isAccountLocked());
+                // Deliberately not requiring Status.ACTIVE here: a freshly-registered
+                // owner is PENDING_VERIFICATION until they log in once (see
+                // AuthService#login), and JwtAuthenticationFilter never gates on status
+                // at all - it authenticates PENDING_VERIFICATION users just fine, as
+                // every other request in ApiKeyIntegrationTest itself demonstrates. An
+                // API key should authenticate exactly as much as its creator's own JWT
+                // does, no more and no less; requiring ACTIVE here made key auth
+                // *stricter* than the login it's supposed to stand in for. SUSPENDED
+                // and DEACTIVATED are the two statuses AuthService#login itself treats
+                // as hard blocks, so those (plus a locked account) are what disqualify
+                // a key too.
+                .filter(user -> user.getStatus() != User.Status.SUSPENDED
+                        && user.getStatus() != User.Status.DEACTIVATED
+                        && !user.isAccountLocked());
     }
 
     private String randomUrlSafeToken(int byteLength) {

@@ -156,7 +156,16 @@ class WebhookIntegrationTest extends AbstractIntegrationTest {
         boolean anyContactSubscriptionFired = false;
         for (JsonNode subscription : subscriptions) {
             if ("Contact_CREATED".equals(textOrNull(subscription.get("eventType")))) {
-                anyContactSubscriptionFired = !subscription.get("lastTriggeredAt").isNull();
+                // lastTriggeredAt is never-set here, and the response DTO is
+                // @JsonInclude(NON_NULL), so the field is entirely absent from
+                // the JSON rather than present-and-null - get() returns a real
+                // Java null (not a NullNode) in that case, and calling .isNull()
+                // on that null throws. path() would dodge the NPE too, but its
+                // MissingNode.isNull() returns false, which would flip this
+                // exact assertion to the wrong answer - so check for absence
+                // explicitly instead of leaning on either shortcut.
+                JsonNode lastTriggeredAt = subscription.get("lastTriggeredAt");
+                anyContactSubscriptionFired = lastTriggeredAt != null && !lastTriggeredAt.isNull();
             }
         }
         assertThat(anyContactSubscriptionFired).isFalse();
