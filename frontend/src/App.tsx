@@ -15,9 +15,15 @@ import ApiKeysPage from "./pages/apikeys/ApiKeysPage";
 import CampaignCreatePage from "./pages/campaigns/CampaignCreatePage";
 import CampaignDetailPage from "./pages/campaigns/CampaignDetailPage";
 import CampaignListPage from "./pages/campaigns/CampaignListPage";
+import CalendarEventCreatePage from "./pages/calendar/CalendarEventCreatePage";
+import CalendarEventDetailPage from "./pages/calendar/CalendarEventDetailPage";
+import CalendarEventListPage from "./pages/calendar/CalendarEventListPage";
 import ContactCreatePage from "./pages/contacts/ContactCreatePage";
 import ContactDetailPage from "./pages/contacts/ContactDetailPage";
 import ContactListPage from "./pages/contacts/ContactListPage";
+import EmailCreatePage from "./pages/emails/EmailCreatePage";
+import EmailDetailPage from "./pages/emails/EmailDetailPage";
+import EmailListPage from "./pages/emails/EmailListPage";
 import DashboardCreatePage from "./pages/dashboards/DashboardCreatePage";
 import DashboardDetailPage from "./pages/dashboards/DashboardDetailPage";
 import DashboardListPage from "./pages/dashboards/DashboardListPage";
@@ -105,6 +111,14 @@ export default function App() {
           <Route path="/tickets" element={<TicketListPage />} />
           <Route path="/tickets/new" element={<TicketCreatePage />} />
           <Route path="/tickets/:ticketId" element={<TicketDetailPage />} />
+
+          <Route path="/emails" element={<EmailListPage />} />
+          <Route path="/emails/new" element={<EmailCreatePage />} />
+          <Route path="/emails/:emailId" element={<EmailDetailPage />} />
+
+          <Route path="/calendar" element={<CalendarEventListPage />} />
+          <Route path="/calendar/new" element={<CalendarEventCreatePage />} />
+          <Route path="/calendar/:eventId" element={<CalendarEventDetailPage />} />
 
           <Route path="/products" element={<ProductListPage />} />
           <Route path="/products/new" element={<ProductCreatePage />} />

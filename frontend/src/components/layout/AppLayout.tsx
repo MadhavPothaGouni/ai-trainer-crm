@@ -10,6 +10,8 @@ const CRM_NAV_LINKS = [
   { to: "/opportunities", label: "Opportunities", end: false },
   { to: "/leads", label: "Leads", end: false },
   { to: "/tickets", label: "Tickets", end: false },
+  { to: "/emails", label: "Emails", end: false },
+  { to: "/calendar", label: "Calendar", end: false },
   { to: "/quotes", label: "Quotes", end: false },
   { to: "/products", label: "Products", end: false },
   { to: "/orders", label: "Orders", end: false },

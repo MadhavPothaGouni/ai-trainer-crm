@@ -149,6 +149,57 @@ export const createTicketSchema = z.object({
 });
 export type CreateTicketFormValues = z.infer<typeof createTicketSchema>;
 
+// ---- CRM: Email & Calendar ----
+
+// fromAddress/toAddresses are plain required strings, not z.string().email() -
+// toAddresses in particular is a comma-separated list of addresses (see
+// LogEmailRequest's javadoc for why that's a plain column, not an array
+// column or a child table), so a single-address email() check would reject
+// every valid multi-recipient value.
+export const logEmailSchema = z.object({
+  direction: z.string().min(1, "Direction is required"),
+  subject: z.string().min(1, "Subject is required").max(500),
+  body: z.string().max(10000).optional().or(z.literal("")),
+  fromAddress: z.string().min(1, "From address is required").max(255),
+  toAddresses: z.string().min(1, "At least one recipient is required").max(2000),
+  ccAddresses: z.string().max(2000).optional().or(z.literal("")),
+  relatedToType: z.string().min(1, "Related record type is required"),
+  relatedToId: z.string().min(1, "Related record is required"),
+  sentAt: z.string().optional().or(z.literal("")),
+});
+export type LogEmailFormValues = z.infer<typeof logEmailSchema>;
+
+// relatedToType/relatedToId are optional here, unlike logEmailSchema's required
+// pair - see CreateCalendarEventRequest's javadoc for why (not every event is
+// about a CRM record).
+export const createCalendarEventSchema = z
+  .object({
+    title: z.string().min(1, "Title is required").max(300),
+    description: z.string().max(2000).optional().or(z.literal("")),
+    location: z.string().max(255).optional().or(z.literal("")),
+    startAt: z.string().min(1, "Start time is required"),
+    endAt: z.string().min(1, "End time is required"),
+    allDay: z.boolean().optional(),
+    relatedToType: z.string().optional().or(z.literal("")),
+    relatedToId: z.string().optional().or(z.literal("")),
+  })
+  .refine((data) => data.endAt >= data.startAt, {
+    message: "End time cannot be before start time",
+    path: ["endAt"],
+  });
+export type CreateCalendarEventFormValues = z.infer<typeof createCalendarEventSchema>;
+
+export const addAttendeeSchema = z
+  .object({
+    userId: z.string().optional().or(z.literal("")),
+    externalEmail: z.string().email("Enter a valid email address").optional().or(z.literal("")),
+  })
+  .refine((data) => Boolean(data.userId) !== Boolean(data.externalEmail), {
+    message: "Choose exactly one of a teammate or an external email",
+    path: ["externalEmail"],
+  });
+export type AddAttendeeFormValues = z.infer<typeof addAttendeeSchema>;
+
 /** Turns "" into undefined - use when mapping an optional select/text field onto a request DTO. */
 export function blankToUndefined(value: string | undefined | null): string | undefined {
   return value === "" || value === null || value === undefined ? undefined : value;

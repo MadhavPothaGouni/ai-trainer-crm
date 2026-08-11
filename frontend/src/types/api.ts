@@ -463,6 +463,109 @@ export interface UpdateActivityStatusRequest {
   status: ActivityStatus;
 }
 
+// ---- CRM: Email & Calendar ----
+//
+// EMAIL_MESSAGE/CALENDAR_EVENT are a genuinely new permission-catalog
+// resource pair (seeded in V15, not a pre-existing gap like Ticket) that
+// coexist with Activity's own EMAIL/MEETING types rather than replace them -
+// see backend/crm-platform/README.md's module layout for `email`/`calendar`.
+// CrmRecordType is the same idea as RelatedToType above but with TICKET
+// added, since both new modules can be logged against a Ticket and
+// Activity's RelatedToType predates the Ticket module entirely.
+
+export type CrmRecordType = "ACCOUNT" | "CONTACT" | "OPPORTUNITY" | "LEAD" | "TICKET";
+
+export const CRM_RECORD_TYPES: CrmRecordType[] = ["ACCOUNT", "CONTACT", "OPPORTUNITY", "LEAD", "TICKET"];
+
+export type EmailDirection = "INBOUND" | "OUTBOUND";
+
+export const EMAIL_DIRECTIONS: EmailDirection[] = ["INBOUND", "OUTBOUND"];
+
+export interface EmailMessageDto {
+  id: string;
+  direction: EmailDirection;
+  subject: string;
+  body: string | null;
+  fromAddress: string;
+  toAddresses: string;
+  ccAddresses: string | null;
+  relatedToType: CrmRecordType;
+  relatedToId: string;
+  sentAt: string;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Backs both create (POST) and update (PUT) on the backend - see LogEmailRequest's javadoc. */
+export interface LogEmailRequest {
+  direction: EmailDirection;
+  subject: string;
+  body?: string | null;
+  fromAddress: string;
+  toAddresses: string;
+  ccAddresses?: string | null;
+  relatedToType: CrmRecordType;
+  relatedToId: string;
+  sentAt?: string | null;
+  ownerId?: string | null;
+}
+
+export type CalendarAttendeeResponseStatus = "NEEDS_ACTION" | "ACCEPTED" | "DECLINED" | "TENTATIVE";
+
+export const CALENDAR_ATTENDEE_RESPONSE_STATUSES: CalendarAttendeeResponseStatus[] = [
+  "NEEDS_ACTION",
+  "ACCEPTED",
+  "DECLINED",
+  "TENTATIVE",
+];
+
+export interface CalendarEventAttendeeDto {
+  id: string;
+  userId: string | null;
+  externalEmail: string | null;
+  responseStatus: CalendarAttendeeResponseStatus;
+}
+
+export interface CalendarEventDto {
+  id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  startAt: string;
+  endAt: string;
+  allDay: boolean;
+  relatedToType: CrmRecordType | null;
+  relatedToId: string | null;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCalendarEventRequest {
+  title: string;
+  description?: string | null;
+  location?: string | null;
+  startAt: string;
+  endAt: string;
+  allDay: boolean;
+  relatedToType?: CrmRecordType | null;
+  relatedToId?: string | null;
+  ownerId?: string | null;
+}
+
+export type UpdateCalendarEventRequest = Omit<CreateCalendarEventRequest, "ownerId">;
+
+/** Exactly one of userId/externalEmail - see AddAttendeeRequest's javadoc. */
+export interface AddAttendeeRequest {
+  userId?: string | null;
+  externalEmail?: string | null;
+}
+
+export interface UpdateAttendeeResponseRequest {
+  responseStatus: CalendarAttendeeResponseStatus;
+}
+
 // ---- Sales: Product ----
 
 export interface ProductDto {
