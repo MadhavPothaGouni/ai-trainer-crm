@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAccount } from "../../api/accounts";
 import { deleteOpportunity, getOpportunity, updateOpportunityStage } from "../../api/opportunities";
+import { listQuotes } from "../../api/quotes";
 import { ActivityTimeline } from "../../components/activities/ActivityTimeline";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { Select } from "../../components/ui/Select";
 import { ApiError } from "../../lib/apiClient";
-import { OPPORTUNITY_STAGES, type OpportunityDto } from "../../types/api";
+import { OPPORTUNITY_STAGES, type OpportunityDto, type QuoteDto } from "../../types/api";
 import { StageBadge } from "./OpportunityListPage";
+import { QuoteStatusBadge } from "../quotes/QuoteListPage";
 
 export default function OpportunityDetailPage() {
   const { opportunityId } = useParams<{ opportunityId: string }>();
@@ -132,7 +134,47 @@ export default function OpportunityDetailPage() {
         </div>
       )}
 
+      <OpportunityQuotes opportunityId={opportunity.id} />
+
       <ActivityTimeline relatedToType="OPPORTUNITY" relatedToId={opportunity.id} />
+    </div>
+  );
+}
+
+function OpportunityQuotes({ opportunityId }: { opportunityId: string }) {
+  const [quotes, setQuotes] = useState<QuoteDto[] | null>(null);
+
+  useEffect(() => {
+    listQuotes({ opportunityId, size: 50, sort: "createdAt,desc" })
+      .then((res) => setQuotes(res.content))
+      .catch(() => setQuotes([]));
+  }, [opportunityId]);
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-medium text-slate-500">Quotes</h2>
+        <Link to={`/quotes/new?opportunityId=${opportunityId}`}>
+          <Button variant="secondary">New quote</Button>
+        </Link>
+      </div>
+      <ul className="mt-3 flex flex-col gap-2">
+        {quotes === null && <li className="text-sm text-slate-400">Loading...</li>}
+        {quotes !== null && quotes.length === 0 && <li className="text-sm text-slate-400">No quotes yet.</li>}
+        {quotes?.map((quote) => (
+          <li key={quote.id} className="flex items-center justify-between gap-4 border-t border-slate-100 pt-2 text-sm first:border-t-0 first:pt-0">
+            <Link to={`/quotes/${quote.id}`} className="font-medium text-slate-900 hover:underline">
+              {quote.name}
+            </Link>
+            <div className="flex items-center gap-3">
+              <span className="text-slate-600">
+                {quote.totalAmount.toLocaleString()} {quote.currency ?? ""}
+              </span>
+              <QuoteStatusBadge status={quote.status} />
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

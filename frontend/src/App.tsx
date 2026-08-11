@@ -17,7 +17,13 @@ import ContactListPage from "./pages/contacts/ContactListPage";
 import OpportunityCreatePage from "./pages/opportunities/OpportunityCreatePage";
 import OpportunityDetailPage from "./pages/opportunities/OpportunityDetailPage";
 import OpportunityListPage from "./pages/opportunities/OpportunityListPage";
+import ProductCreatePage from "./pages/products/ProductCreatePage";
+import ProductDetailPage from "./pages/products/ProductDetailPage";
+import ProductListPage from "./pages/products/ProductListPage";
 import ProfilePage from "./pages/profile/ProfilePage";
+import QuoteCreatePage from "./pages/quotes/QuoteCreatePage";
+import QuoteDetailPage from "./pages/quotes/QuoteDetailPage";
+import QuoteListPage from "./pages/quotes/QuoteListPage";
 import MyTasksPage from "./pages/tasks/MyTasksPage";
 import LeadCreatePage from "./pages/leads/LeadCreatePage";
 import LeadDetailPage from "./pages/leads/LeadDetailPage";
@@ -65,6 +71,14 @@ export default function App() {
           <Route path="/leads" element={<LeadListPage />} />
           <Route path="/leads/new" element={<LeadCreatePage />} />
           <Route path="/leads/:leadId" element={<LeadDetailPage />} />
+
+          <Route path="/products" element={<ProductListPage />} />
+          <Route path="/products/new" element={<ProductCreatePage />} />
+          <Route path="/products/:productId" element={<ProductDetailPage />} />
+
+          <Route path="/quotes" element={<QuoteListPage />} />
+          <Route path="/quotes/new" element={<QuoteCreatePage />} />
+          <Route path="/quotes/:quoteId" element={<QuoteDetailPage />} />
 
           <Route path="/users" element={<UserListPage />} />
           <Route path="/users/invite" element={<UserInvitePage />} />

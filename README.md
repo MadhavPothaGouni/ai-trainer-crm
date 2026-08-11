@@ -159,35 +159,40 @@ reset/email verification), organizations/users/RBAC modules, the CRM domain
 itself (Account/Contact/Opportunity/Lead, including lead conversion and
 record-level OWN/TEAM/DEPARTMENT/ORGANIZATION scope authorization), an
 Activity module (calls/emails/meetings/tasks/notes logged against any CRM
-record), React auth scaffold (login/register/forgot/reset/verify-email pages
-+ protected routing), a CRM workspace UI (list/create/detail pages for
-accounts, contacts, opportunities, and leads, including opportunity stage
-transitions, lead conversion, and a per-record ActivityTimeline on every
-detail page), a cross-record "My Tasks" view, a team/role management UI
-(invite/list users, assign roles and status, create/edit custom roles
-against the full permission catalog), a "my profile" settings page (update
-name/phone/timezone/locale, change password), a frontend test suite (Vitest
-+ React Testing Library), Docker Compose + CI for both halves, and a
-production deploy pipeline (versioned GHCR image publishing + GitHub
-Releases on tag push — see [Deploying to production](#deploying-to-production)).
+record), sales tooling (a Product catalog and Quotes - priced proposals with
+line items tied to an Opportunity, totals recomputed server-side), React
+auth scaffold (login/register/forgot/reset/verify-email pages + protected
+routing), a CRM workspace UI (list/create/detail pages for accounts,
+contacts, opportunities, and leads, including opportunity stage transitions,
+lead conversion, a per-opportunity Quotes list, and a per-record
+ActivityTimeline on every detail page), Products/Quotes pages (including an
+inline line-item editor with a product picker), a cross-record "My Tasks"
+view, a team/role management UI (invite/list users, assign roles and
+status, create/edit custom roles against the full permission catalog), a
+"my profile" settings page (update name/phone/timezone/locale, change
+password), a frontend test suite (Vitest + React Testing Library), Docker
+Compose + CI for both halves, and a production deploy pipeline (versioned
+GHCR image publishing + GitHub Releases on tag push — see
+[Deploying to production](#deploying-to-production)).
 
 The permission catalog seeded in `V2__seed_permission_catalog.sql` already
 covers several resources with no module built on top of them yet -
-`PRODUCT`/`QUOTE`/`ORDER`/`INVOICE`/`PAYMENT` (sales tooling), `CAMPAIGN`/
+`ORDER`/`INVOICE`/`PAYMENT` (deeper sales/finance tooling), `CAMPAIGN`/
 `KNOWLEDGE_ARTICLE` (marketing/support), `WORKFLOW`/`REPORT`/`DASHBOARD`
 (automation/analytics), and `INTEGRATION`/`API_KEY`/`CUSTOM_FIELD`/
 `CUSTOM_OBJECT` (platform extensibility). That's deliberate: the RBAC model
 was designed up front for the platform's eventual full shape, and each of
 those becomes an `entity`/`repository`/`service`/`controller`/`dto` module
 following the same pattern as `account`/`contact`/`opportunity`/`lead`/
-`activity`, plus a corresponding frontend page, whenever it gets built.
+`activity`/`product`/`quote`, plus a corresponding frontend page, whenever
+it gets built.
 
 Not yet built, roughly in the order planned:
-- Sales tooling: a Product catalog and Quotes (line items tied to an Opportunity)
 - Reporting & analytics: pipeline value by stage, lead conversion funnel, rep
   leaderboard, backed by real aggregation queries
 - Platform/integration: API key management (programmatic auth) and webhook
   subscriptions dispatched off the existing domain event publisher
-- Broader frontend test coverage beyond the pages/components covered so far,
-  and the usual production-hardening items (rate limiting, observability/
+- Broader frontend test coverage beyond the pages/components covered so far
+  (the Product/Quote pages in particular have no dedicated tests yet), and
+  the usual production-hardening items (rate limiting, observability/
   metrics, avatar upload) that weren't part of the original scope

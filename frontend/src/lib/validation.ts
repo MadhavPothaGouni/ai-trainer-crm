@@ -63,6 +63,23 @@ export function toOptionalNumber(value: string | undefined): number | undefined 
   return value === undefined || value === "" ? undefined : Number(value);
 }
 
+// Same input/output-type-must-match reasoning as optionalNumberString, for a field that's
+// always required (unlike an optional amount) - Product.unitPrice, a line item's unitPrice.
+const requiredNumberString = z
+  .string()
+  .min(1, "This field is required")
+  .refine((value) => !Number.isNaN(Number(value)), "Must be a number");
+
+const requiredPositiveIntegerString = z
+  .string()
+  .min(1, "Required")
+  .refine((value) => Number.isInteger(Number(value)) && Number(value) >= 1, "Must be a whole number of at least 1");
+
+/** Converts a form's required numeric-string field into a number for the API request. */
+export function toRequiredNumber(value: string): number {
+  return Number(value);
+}
+
 export const createAccountSchema = z.object({
   name: z.string().min(1, "Account name is required").max(200),
   industry: z.string().max(100).optional().or(z.literal("")),
@@ -165,6 +182,39 @@ export const createActivitySchema = z.object({
   dueAt: z.string().optional().or(z.literal("")),
 });
 export type CreateActivityFormValues = z.infer<typeof createActivitySchema>;
+
+// ---- Sales: products & quotes ----
+
+export const createProductSchema = z.object({
+  name: z.string().min(1, "Product name is required").max(200),
+  sku: z.string().max(100).optional().or(z.literal("")),
+  description: z.string().max(2000).optional().or(z.literal("")),
+  unitPrice: requiredNumberString,
+  currency: z.string().max(3).optional().or(z.literal("")),
+});
+export type CreateProductFormValues = z.infer<typeof createProductSchema>;
+
+export const createQuoteSchema = z.object({
+  opportunityId: z.string().min(1, "Opportunity is required"),
+  name: z.string().min(1, "Quote name is required").max(200),
+  currency: z.string().max(3).optional().or(z.literal("")),
+  validUntil: z.string().optional().or(z.literal("")),
+  discountAmount: optionalNumberString,
+  taxAmount: optionalNumberString,
+});
+export type CreateQuoteFormValues = z.infer<typeof createQuoteSchema>;
+
+/** Same fields as createQuoteSchema minus opportunityId - see Quote's javadoc for why it's immutable after creation. */
+export const updateQuoteSchema = createQuoteSchema.omit({ opportunityId: true });
+export type UpdateQuoteFormValues = z.infer<typeof updateQuoteSchema>;
+
+export const quoteLineItemSchema = z.object({
+  productId: z.string().optional().or(z.literal("")),
+  description: z.string().min(1, "Description is required").max(500),
+  quantity: requiredPositiveIntegerString,
+  unitPrice: requiredNumberString,
+});
+export type QuoteLineItemFormValues = z.infer<typeof quoteLineItemSchema>;
 
 export const changePasswordFormSchema = z
   .object({

@@ -39,7 +39,8 @@ npm run test     # Vitest, single run (CI mode)
 ```
 src/
   api/            typed wrappers around each backend module (auth, users, organizations,
-                   roles, accounts, contacts, opportunities, leads, activities)
+                   roles, accounts, contacts, opportunities, leads, activities, products,
+                   quotes)
   auth/           AuthContext/AuthProvider, useAuth hook, ProtectedRoute/PublicOnlyRoute, token storage
   components/
     layout/       AuthLayout (centered card, for /login etc.) and AppLayout (top bar + nav + outlet)
@@ -55,8 +56,13 @@ src/
     auth/         LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage
     accounts/, contacts/, opportunities/, leads/
                    list/create/detail pages for the CRM domain - opportunity detail
-                   includes a stage-change control, lead detail includes the
-                   convert-lead flow, and every detail page embeds an ActivityTimeline
+                   includes a stage-change control and its own embedded Quotes list,
+                   lead detail includes the convert-lead flow, and every detail page
+                   embeds an ActivityTimeline
+    products/, quotes/
+                   Product catalog pages, and Quote pages including an inline
+                   line-item editor (add/edit/remove, with a product picker that
+                   auto-fills description/unit price) and server-computed totals
     users/, roles/ team management (invite/list/roles/status) and role management
                    (built-in roles are read-only, custom roles get a permission picker)
     profile/       ProfilePage.tsx - update name/phone/timezone/locale, change password
@@ -93,9 +99,12 @@ for watch mode during development.
 
 See the root README's Roadmap for the current state of the whole project. As of
 this pass, the auth scaffold, the CRM workspace (accounts/contacts/opportunities/
-leads, including lead conversion), team/role management, profile settings, and
-the Activity log (calls/emails/meetings/tasks/notes, plus a cross-record "My
-Tasks" view) are all built. What's still missing on the frontend specifically:
-broader test coverage beyond the pages/components covered so far, an avatar
+leads, including lead conversion), team/role management, profile settings, the
+Activity log (calls/emails/meetings/tasks/notes, plus a cross-record "My Tasks"
+view), and sales tooling (Product catalog + Quotes, including the inline
+line-item editor and a per-opportunity Quotes list) are all built. What's still
+missing on the frontend specifically: dedicated tests for the Product/Quote
+pages (they have none yet, unlike every earlier CRM module), broader test
+coverage generally beyond the pages/components covered so far, an avatar
 upload flow (`UserDto.avatarUrl` exists but nothing sets it), and UI for the
 backend resources that don't have a frontend yet - see the root README.

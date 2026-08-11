@@ -413,6 +413,95 @@ export interface UpdateActivityStatusRequest {
   status: ActivityStatus;
 }
 
+// ---- Sales: Product ----
+
+export interface ProductDto {
+  id: string;
+  name: string;
+  sku: string | null;
+  description: string | null;
+  unitPrice: number;
+  currency: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProductRequest {
+  name: string;
+  sku?: string | null;
+  description?: string | null;
+  unitPrice: number;
+  currency?: string | null;
+}
+
+export interface UpdateProductRequest extends CreateProductRequest {
+  active: boolean;
+}
+
+// ---- Sales: Quote ----
+
+export type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED";
+
+export const QUOTE_STATUSES: QuoteStatus[] = ["DRAFT", "SENT", "ACCEPTED", "REJECTED"];
+
+export interface QuoteLineItemDto {
+  id: string;
+  productId: string | null;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
+export interface QuoteDto {
+  id: string;
+  opportunityId: string;
+  name: string;
+  status: QuoteStatus;
+  currency: string | null;
+  validUntil: string | null;
+  subtotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+  lineItems: QuoteLineItemDto[];
+}
+
+export interface CreateQuoteRequest {
+  opportunityId: string;
+  name: string;
+  currency?: string | null;
+  validUntil?: string | null;
+  discountAmount?: number | null;
+  taxAmount?: number | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateQuoteRequest {
+  name: string;
+  currency?: string | null;
+  validUntil?: string | null;
+  discountAmount?: number | null;
+  taxAmount?: number | null;
+}
+
+export interface UpdateQuoteStatusRequest {
+  status: QuoteStatus;
+}
+
+export interface CreateQuoteLineItemRequest {
+  productId?: string | null;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export type UpdateQuoteLineItemRequest = CreateQuoteLineItemRequest;
+
 // ---- CRM: shared ----
 
 export interface AssignOwnerRequest {
