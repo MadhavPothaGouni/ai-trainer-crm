@@ -842,6 +842,74 @@ export interface SetCustomFieldValuesRequest {
   values: Record<string, string | null>;
 }
 
+// ---- Automation: workflows ----
+// WORKFLOW is owner-scoped (OWN/TEAM/ORGANIZATION, no DEPARTMENT) - unlike
+// Campaign/KnowledgeArticle/CustomField/CustomObject above, a workflow
+// belongs to whoever created it, same shape as Account/Contact/Lead/
+// Opportunity (see the backend's Workflow entity javadoc).
+
+export type WorkflowTriggerResource = "LEAD" | "CONTACT" | "ACCOUNT" | "OPPORTUNITY";
+
+export const WORKFLOW_TRIGGER_RESOURCES: WorkflowTriggerResource[] = ["LEAD", "CONTACT", "ACCOUNT", "OPPORTUNITY"];
+
+export type WorkflowTriggerEvent = "CREATED" | "UPDATED" | "DELETED";
+
+export const WORKFLOW_TRIGGER_EVENTS: WorkflowTriggerEvent[] = ["CREATED", "UPDATED", "DELETED"];
+
+export type WorkflowActionType = "CREATE_TASK";
+
+export interface WorkflowDto {
+  id: string;
+  ownerId: string;
+  name: string;
+  description: string | null;
+  triggerResource: WorkflowTriggerResource;
+  triggerEvent: WorkflowTriggerEvent;
+  actionType: WorkflowActionType;
+  taskSubject: string;
+  taskAssigneeUserId: string | null;
+  active: boolean;
+  runCount: number;
+  lastRunAt: string | null;
+  createdAt: string;
+}
+
+export interface CreateWorkflowRequest {
+  name: string;
+  description?: string | null;
+  triggerResource: WorkflowTriggerResource;
+  triggerEvent: WorkflowTriggerEvent;
+  taskSubject: string;
+  taskAssigneeUserId?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateWorkflowRequest {
+  name: string;
+  description?: string | null;
+  taskSubject: string;
+  taskAssigneeUserId?: string | null;
+}
+
+export interface SetWorkflowActiveRequest {
+  active: boolean;
+}
+
+export interface RunWorkflowRequest {
+  resourceId: string;
+}
+
+export type WorkflowRunStatus = "SUCCEEDED" | "FAILED";
+
+export interface WorkflowRunDto {
+  id: string;
+  resourceId: string;
+  createdActivityId: string | null;
+  status: WorkflowRunStatus;
+  errorMessage: string | null;
+  ranAt: string;
+}
+
 // ---- Reporting ----
 
 export interface PipelineStageSummaryDto {

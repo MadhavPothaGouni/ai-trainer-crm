@@ -359,6 +359,27 @@ export function toPicklistValues(value: string | undefined): string[] {
   return [...new Set(value.split(",").map((option) => option.trim()).filter((option) => option.length > 0))];
 }
 
+// ---- Automation: workflows ----
+
+export const createWorkflowSchema = z.object({
+  name: z.string().min(1, "Name is required").max(200),
+  description: z.string().max(2000).optional().or(z.literal("")),
+  triggerResource: z.string().min(1, "Trigger resource is required"),
+  triggerEvent: z.string().min(1, "Trigger event is required"),
+  taskSubject: z.string().min(1, "Task subject is required").max(200),
+  taskAssigneeUserId: z.string().optional().or(z.literal("")),
+});
+export type CreateWorkflowFormValues = z.infer<typeof createWorkflowSchema>;
+
+// triggerResource/triggerEvent are immutable after creation (see UpdateWorkflowRequest) - the edit form omits them.
+export const updateWorkflowSchema = createWorkflowSchema.omit({ triggerResource: true, triggerEvent: true });
+export type UpdateWorkflowFormValues = z.infer<typeof updateWorkflowSchema>;
+
+export const runWorkflowSchema = z.object({
+  resourceId: z.string().min(1, "A record id is required"),
+});
+export type RunWorkflowFormValues = z.infer<typeof runWorkflowSchema>;
+
 export const changePasswordFormSchema = z
   .object({
     currentPassword: z.string().min(1, "Current password is required"),

@@ -54,6 +54,9 @@ import UserDetailPage from "./pages/users/UserDetailPage";
 import UserInvitePage from "./pages/users/UserInvitePage";
 import UserListPage from "./pages/users/UserListPage";
 import WebhooksPage from "./pages/webhooks/WebhooksPage";
+import WorkflowCreatePage from "./pages/workflows/WorkflowCreatePage";
+import WorkflowDetailPage from "./pages/workflows/WorkflowDetailPage";
+import WorkflowListPage from "./pages/workflows/WorkflowListPage";
 
 export default function App() {
   return (
@@ -135,6 +138,10 @@ export default function App() {
 
           <Route path="/api-keys" element={<ApiKeysPage />} />
           <Route path="/webhooks" element={<WebhooksPage />} />
+
+          <Route path="/workflows" element={<WorkflowListPage />} />
+          <Route path="/workflows/new" element={<WorkflowCreatePage />} />
+          <Route path="/workflows/:workflowId" element={<WorkflowDetailPage />} />
 
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
