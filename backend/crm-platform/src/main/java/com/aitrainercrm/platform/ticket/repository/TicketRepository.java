@@ -16,6 +16,9 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
     @Query("select t from Ticket t where t.id = :id and t.organizationId = :organizationId and t.deletedAt is null")
     Optional<Ticket> findActiveByIdAndOrganizationId(@Param("id") UUID id, @Param("organizationId") UUID organizationId);
 
+    /** Added for EmailMessageService/CalendarEventService#validateRelatedTo - TICKET is now a valid relatedToType for both, same existence-check shape AccountRepository/ContactRepository/OpportunityRepository/LeadRepository already had. */
+    boolean existsByIdAndOrganizationIdAndDeletedAtIsNull(UUID id, UUID organizationId);
+
     Page<Ticket> findByOrganizationIdAndDeletedAtIsNull(UUID organizationId, Pageable pageable);
 
     Page<Ticket> findByOrganizationIdAndOwnerIdInAndDeletedAtIsNull(UUID organizationId, Set<UUID> ownerIds, Pageable pageable);

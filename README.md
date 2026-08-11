@@ -242,7 +242,21 @@ Lead/Order's one-way state machines, since reopening a resolved support
 ticket is a completely normal workflow - `importexport` was then extended
 to cover Ticket too, using the exact same engine already built for Account/
 Contact/Lead - see `backend/crm-platform/README.md`'s module layout for
-`ticket`.
+`ticket`. Most recently, email logging and calendar scheduling: an
+`email` module (`EmailMessage` - direction, subject, from/to/cc, tied to an
+Account/Contact/Opportunity/Lead/Ticket) and a `calendar` module
+(`CalendarEvent` plus a real `CalendarEventAttendee` child table, since an
+attendee - internal user or external guest - has its own mutable response
+status the way a plain email address never needs). Unlike Ticket, these
+aren't a permission-catalog gap - `EMAIL_MESSAGE`/`CALENDAR_EVENT` didn't
+exist in the catalog at all until this change added them (in `V15`)
+alongside their modules in the same migration, so there was never a window
+where they were seeded but unbuilt. Both coexist with `activity`'s existing
+EMAIL/MEETING types rather than replacing them - Activity logs "an email/
+meeting happened" against a record; these two modules capture the actual
+structured data (who it went to, which direction, start/end time, who's
+attending) that Activity was never meant to hold - see
+`backend/crm-platform/README.md`'s module layout for `email`/`calendar`.
 
 The RBAC model was designed up front for the platform's eventual full
 shape, and every resource seeded in `V2__seed_permission_catalog.sql` now
@@ -250,7 +264,10 @@ has a full `entity`/`repository`/`service`/`controller`/`dto` module built
 on top of it (following the same pattern as `account`/`contact`/
 `opportunity`/`lead`/`activity`/`product`/`quote`/`order`/`invoice`/
 `payment`/`campaign`/`knowledgearticle`/`customfield`/`workflow`/
-`dashboard`/`ticket`, plus a corresponding frontend page where one applies)
+`dashboard`/`ticket`, plus a corresponding frontend page where one applies).
+`email`/`calendar` (`EMAIL_MESSAGE`/`CALENDAR_EVENT`) extend the catalog
+itself rather than fill a pre-existing gap - they were seeded and built in
+the same change
 as it got built out, rather than all at once. `report`, `apikey`,
 `webhook`, `customfield`, and `dashboard` are exceptions built without a
 normal owner-scoped entity of their own (or, for `dashboard`, with one but
@@ -261,6 +278,9 @@ version of this file incorrectly claimed this was already true while
 for that correction and how the gap was found.
 
 Not yet built, roughly in the order planned:
+- Frontend pages for `email`/`calendar` - the backend modules landed first,
+  same order every prior module (including Ticket) has followed in this
+  project
 - IMPORT/EXPORT for Opportunity, Activity, and Quote - seeded in the
   catalog like Account/Contact/Lead/Ticket's, not yet built
 - Retry-with-backoff for webhook delivery (today it's a single attempt with

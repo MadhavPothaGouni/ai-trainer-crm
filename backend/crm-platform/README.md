@@ -178,6 +178,22 @@ src/main/java/com/aitrainercrm/platform/
                   owner-scoped shape exactly, with a free (non-linear)
                   status transition rather than Lead/Order's one-way state
                   machines - see V14's migration comment and Ticket's javadoc
+  email/          logged emails (inbound/outbound) against an Account/
+                  Contact/Opportunity/Lead/Ticket - EMAIL_MESSAGE is a
+                  genuinely new permission-catalog resource added in V15,
+                  not a gap like Ticket was (V2 seeded nothing for it).
+                  Coexists with activity/'s existing EMAIL type rather than
+                  replacing it - Activity logs "an email happened",
+                  EmailMessage captures the structured from/to/direction/
+                  sent-at data Activity was never meant to hold. See
+                  EmailMessageService's javadoc
+  calendar/       scheduled events, optionally tied to a CRM record like
+                  email/ - plus CalendarEventAttendee, a real child table
+                  (unlike email's comma-separated to/cc addresses) since an
+                  attendee has independent identity (internal user vs.
+                  external guest) and its own mutable response status, same
+                  reasoning campaign/'s CampaignMember documents. See V15's
+                  migration comment and CalendarEventService's javadoc
   importexport/   bulk CSV import/export for Account, Contact, Lead, and
                   Ticket - ACCOUNT/CONTACT/LEAD/OPPORTUNITY/ACTIVITY/QUOTE/
                   TICKET all got IMPORT and EXPORT seeded in V2 alongside
@@ -201,10 +217,17 @@ src/main/java/com/aitrainercrm/platform/
 ```
 
 Every owner-scoped CRM module (`account`/`contact`/`opportunity`/`lead`/
-`activity`/`quote`/`ticket`) follows the same shape: `entity` + `repository`
-+ `service` + `controller` + `dto`, record-level OWN/TEAM/DEPARTMENT/
-ORGANIZATION authorization via `security.authorization.ScopeAuthorizationService`,
-and a permission catalog already seeded in `V2__seed_permission_catalog.sql`.
+`activity`/`quote`/`ticket`/`email`/`calendar`) follows the same shape:
+`entity` + `repository` + `service` + `controller` + `dto`, record-level
+OWN/TEAM/DEPARTMENT/ORGANIZATION authorization via
+`security.authorization.ScopeAuthorizationService`. The first seven have
+their permission catalog seeded in `V2__seed_permission_catalog.sql`;
+`email`/`calendar` (EMAIL_MESSAGE/CALENDAR_EVENT) are seeded in `V15` instead
+- new resources added alongside their module in the same migration, not a
+catalog-then-module gap like Ticket's - and skip IMPORT (bulk-CSV-importing
+a sent-email log or a calendar schedule isn't a real workflow the way
+importing a contact list is), so their action set is CREATE/READ/UPDATE/
+DELETE/EXPORT/ASSIGN, one action short of the other seven.
 `workflow` and `dashboard` follow the same owner-scoped shape too, minus
 DEPARTMENT (not seeded for WORKFLOW/DASHBOARD - see V2's own comment) -
 see their module comments above for why they, unlike this session's other
@@ -256,7 +279,11 @@ seeded in `V2__seed_permission_catalog.sql` genuinely does have a module
 built on top of it as of this commit, and IMPORT/EXPORT specifically has a
 real implementation for four of the seven resources that got it seeded
 (`account`/`contact`/`lead`/`ticket`) - Opportunity, Activity, and Quote
-still have it modeled but unbuilt.
+still have it modeled but unbuilt. `EMAIL_MESSAGE`/`CALENDAR_EVENT` (see
+`email`/`calendar` above) are a different case from that gap entirely -
+they were added to the permission catalog and given a module in the same
+migration (`V15`), so there was never a window where they were seeded but
+unimplemented the way Ticket was.
 
 See the root `README.md` for the RBAC model, multi-tenancy rules, and the
 overall system architecture.
