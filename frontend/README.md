@@ -57,6 +57,9 @@ src/
                    convert-lead flow
     users/, roles/ team management (invite/list/roles/status) and role management
                    (built-in roles are read-only, custom roles get a permission picker)
+    profile/       ProfilePage.tsx - update name/phone/timezone/locale, change password
+                   (change-password signs the current session out too - the backend
+                   revokes every refresh token for the account, not just other sessions)
     DashboardPage.tsx  authenticated landing page (org + account summary)
     NotFoundPage.tsx
   test/setup.ts   Vitest setup: jest-dom matchers + RTL cleanup after every test
@@ -86,7 +89,7 @@ for watch mode during development.
 
 See the root README's Roadmap for the current state of the whole project. As of
 this pass, the auth scaffold, the CRM workspace (accounts/contacts/opportunities/
-leads, including lead conversion), and team/role management are all built. What's
-still missing on the frontend specifically: a "my profile" settings page (the
-`PATCH /users/me` API exists but no page consumes it yet), and broader test
-coverage beyond the pages/components covered so far.
+leads, including lead conversion), team/role management, and profile settings
+are all built. What's still missing on the frontend specifically: broader test
+coverage beyond the pages/components covered so far, and an avatar upload flow
+(`UserDto.avatarUrl` exists but nothing sets it).

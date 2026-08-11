@@ -163,12 +163,14 @@ routing), a CRM workspace UI (list/create/detail pages for accounts,
 contacts, opportunities, and leads, including opportunity stage transitions
 and lead conversion from the UI), a team/role management UI (invite/list
 users, assign roles and status, create/edit custom roles against the full
-permission catalog), a frontend test suite (Vitest + React Testing Library),
-Docker Compose + CI for both halves, and a production deploy pipeline
-(versioned GHCR image publishing + GitHub Releases on tag push — see
-[Deploying to production](#deploying-to-production)).
+permission catalog), a "my profile" settings page (update name/phone/
+timezone/locale, change password), a frontend test suite (Vitest + React
+Testing Library), Docker Compose + CI for both halves, and a production
+deploy pipeline (versioned GHCR image publishing + GitHub Releases on tag
+push — see [Deploying to production](#deploying-to-production)).
 
-Not yet built:
-- A "my profile" settings page on the frontend (the `PATCH /users/me` API
-  exists but no page consumes it yet)
-- Broader frontend test coverage beyond the pages/components covered so far
+Every page-level feature on both frontend and backend now has at least one
+consumer end to end. What's left is depth, not breadth: broader frontend
+test coverage beyond the pages/components covered so far, and the usual
+production-hardening items (rate limiting, observability/metrics, avatar
+upload) that weren't part of the original scope.

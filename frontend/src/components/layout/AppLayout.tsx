@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
 import { Button } from "../ui/Button";
 
@@ -39,9 +39,9 @@ export function AppLayout() {
           </div>
           <div className="flex items-center gap-3">
             {user && (
-              <span className="text-sm text-slate-600">
+              <Link to="/profile" className="text-sm text-slate-600 hover:text-slate-900 hover:underline">
                 {user.fullName} <span className="text-slate-400">&middot; {user.roles.join(", ")}</span>
-              </span>
+              </Link>
             )}
             <Button variant="secondary" onClick={() => void logout()}>
               Sign out

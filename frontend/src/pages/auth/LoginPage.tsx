@@ -12,6 +12,7 @@ import { loginSchema, type LoginFormValues } from "../../lib/validation";
 
 interface LocationState {
   from?: Location;
+  passwordChanged?: boolean;
 }
 
 export default function LoginPage() {
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [formError, setFormError] = useState<string | null>(null);
+  const locationState = location.state as LocationState | null;
 
   const {
     register,
@@ -31,8 +33,7 @@ export default function LoginPage() {
     setFormError(null);
     try {
       await login(values);
-      const state = location.state as LocationState | null;
-      navigate(state?.from?.pathname ?? "/", { replace: true });
+      navigate(locationState?.from?.pathname ?? "/", { replace: true });
     } catch (error) {
       setFormError(applyServerErrors(error, setError));
     }
@@ -52,6 +53,9 @@ export default function LoginPage() {
       }
     >
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+        {locationState?.passwordChanged && (
+          <Alert variant="success">Your password was changed. Sign in with your new password.</Alert>
+        )}
         {formError && <Alert variant="error">{formError}</Alert>}
 
         <TextField

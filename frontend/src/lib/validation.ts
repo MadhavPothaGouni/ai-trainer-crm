@@ -142,3 +142,27 @@ export const inviteUserSchema = z.object({
   lastName: z.string().min(1, "Last name is required").max(100),
 });
 export type InviteUserFormValues = z.infer<typeof inviteUserSchema>;
+
+// ---- Profile settings ----
+
+// Mirrors UpdateProfileRequest's @Size constraints (user/dto/UpdateProfileRequest.java).
+export const profileFormSchema = z.object({
+  firstName: z.string().min(1, "First name is required").max(100),
+  lastName: z.string().min(1, "Last name is required").max(100),
+  phone: z.string().max(30).optional().or(z.literal("")),
+  timezone: z.string().max(60).optional().or(z.literal("")),
+  locale: z.string().max(20).optional().or(z.literal("")),
+});
+export type ProfileFormValues = z.infer<typeof profileFormSchema>;
+
+export const changePasswordFormSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, "Please confirm your new password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+export type ChangePasswordFormValues = z.infer<typeof changePasswordFormSchema>;

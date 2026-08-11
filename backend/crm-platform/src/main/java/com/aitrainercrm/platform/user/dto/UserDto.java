@@ -15,6 +15,8 @@ public record UserDto(
         String fullName,
         String phone,
         String avatarUrl,
+        String timezone,
+        String locale,
         String status,
         boolean emailVerified,
         boolean mfaEnabled,
@@ -33,6 +35,8 @@ public record UserDto(
                 .fullName(user.getFullName())
                 .phone(user.getPhone())
                 .avatarUrl(user.getAvatarUrl())
+                .timezone(user.getTimezone())
+                .locale(user.getLocale())
                 .status(user.getStatus().name())
                 .emailVerified(user.isEmailVerified())
                 .mfaEnabled(user.isMfaEnabled())

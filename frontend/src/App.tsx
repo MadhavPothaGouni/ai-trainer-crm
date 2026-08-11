@@ -17,6 +17,7 @@ import ContactListPage from "./pages/contacts/ContactListPage";
 import OpportunityCreatePage from "./pages/opportunities/OpportunityCreatePage";
 import OpportunityDetailPage from "./pages/opportunities/OpportunityDetailPage";
 import OpportunityListPage from "./pages/opportunities/OpportunityListPage";
+import ProfilePage from "./pages/profile/ProfilePage";
 import LeadCreatePage from "./pages/leads/LeadCreatePage";
 import LeadDetailPage from "./pages/leads/LeadDetailPage";
 import LeadListPage from "./pages/leads/LeadListPage";
@@ -69,6 +70,8 @@ export default function App() {
           <Route path="/roles" element={<RoleListPage />} />
           <Route path="/roles/new" element={<RoleCreatePage />} />
           <Route path="/roles/:roleId" element={<RoleDetailPage />} />
+
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Route>
 

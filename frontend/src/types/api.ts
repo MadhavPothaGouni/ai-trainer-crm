@@ -114,6 +114,8 @@ export interface UserDto {
   fullName: string;
   phone: string | null;
   avatarUrl: string | null;
+  timezone: string | null;
+  locale: string | null;
   status: UserStatus;
   emailVerified: boolean;
   mfaEnabled: boolean;
