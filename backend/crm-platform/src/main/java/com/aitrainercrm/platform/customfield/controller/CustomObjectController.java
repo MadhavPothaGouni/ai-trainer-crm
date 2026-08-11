@@ -91,6 +91,13 @@ public class CustomObjectController {
         return ApiResponse.ok(PageResponse.from(page, page.getContent().stream().map(CustomObjectRecordDto::from).toList()));
     }
 
+    @GetMapping("/{customObjectId}/records/{recordId}")
+    @PreAuthorize("hasAuthority('CUSTOM_OBJECT:READ:ORGANIZATION')")
+    public ApiResponse<CustomObjectRecordDto> getRecord(
+            @PathVariable UUID customObjectId, @PathVariable UUID recordId, @AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(CustomObjectRecordDto.from(customObjectService.getRecord(principal, customObjectId, recordId)));
+    }
+
     @PostMapping("/{customObjectId}/records")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAuthority('CUSTOM_OBJECT:CREATE:ORGANIZATION')")

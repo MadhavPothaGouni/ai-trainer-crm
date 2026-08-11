@@ -739,6 +739,109 @@ export interface CreateKnowledgeArticleRequest {
 
 export type UpdateKnowledgeArticleRequest = CreateKnowledgeArticleRequest;
 
+// ---- Platform extensibility: Custom Objects/Fields ----
+// CUSTOM_FIELD/CUSTOM_OBJECT are ORGANIZATION-scope-only permissions (see
+// V10's migration comment on the backend) - there's no OWN/TEAM/DEPARTMENT
+// variant, so unlike Campaign/KnowledgeArticle these pages don't need to
+// account for a caller lacking access at some scopes but not others.
+
+export interface CustomObjectDto {
+  id: string;
+  apiName: string;
+  label: string;
+  pluralLabel: string;
+  description: string | null;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface CreateCustomObjectRequest {
+  apiName: string;
+  label: string;
+  pluralLabel: string;
+  description?: string | null;
+}
+
+export interface UpdateCustomObjectRequest {
+  label: string;
+  pluralLabel: string;
+  description?: string | null;
+  active: boolean;
+}
+
+export interface CustomObjectRecordDto {
+  id: string;
+  customObjectId: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  values: CustomFieldValueDto[];
+}
+
+export interface CreateCustomObjectRecordRequest {
+  name: string;
+  values?: Record<string, string>;
+}
+
+export interface UpdateCustomObjectRecordRequest {
+  name: string;
+}
+
+/** A fixed allow-list on the backend (CustomField.StandardEntityType) - a custom field can attach to one of these, or to a CustomObject, never both. */
+export type StandardEntityType = "ACCOUNT" | "CONTACT" | "LEAD" | "OPPORTUNITY" | "CAMPAIGN";
+
+export const STANDARD_ENTITY_TYPES: StandardEntityType[] = ["ACCOUNT", "CONTACT", "LEAD", "OPPORTUNITY", "CAMPAIGN"];
+
+export type CustomFieldType = "TEXT" | "TEXT_AREA" | "NUMBER" | "DATE" | "BOOLEAN" | "PICKLIST";
+
+export const CUSTOM_FIELD_TYPES: CustomFieldType[] = ["TEXT", "TEXT_AREA", "NUMBER", "DATE", "BOOLEAN", "PICKLIST"];
+
+export interface CustomFieldDto {
+  id: string;
+  standardEntityType: StandardEntityType | null;
+  customObjectId: string | null;
+  apiName: string;
+  label: string;
+  fieldType: CustomFieldType;
+  required: boolean;
+  displayOrder: number;
+  active: boolean;
+  picklistValues: string[];
+}
+
+export interface CreateCustomFieldRequest {
+  standardEntityType?: StandardEntityType | null;
+  customObjectId?: string | null;
+  apiName: string;
+  label: string;
+  fieldType: CustomFieldType;
+  required?: boolean;
+  displayOrder?: number;
+  picklistValues?: string[];
+}
+
+export interface UpdateCustomFieldRequest {
+  label: string;
+  required: boolean;
+  displayOrder: number;
+  active: boolean;
+  picklistValues?: string[];
+}
+
+/** One field definition joined with its (possibly absent) value on the record just fetched - what CustomFieldValueForm renders one row from. */
+export interface CustomFieldValueDto {
+  customFieldId: string;
+  apiName: string;
+  label: string;
+  fieldType: CustomFieldType;
+  required: boolean;
+  value: string | null;
+}
+
+export interface SetCustomFieldValuesRequest {
+  values: Record<string, string | null>;
+}
+
 // ---- Reporting ----
 
 export interface PipelineStageSummaryDto {

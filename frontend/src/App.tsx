@@ -18,6 +18,12 @@ import CampaignListPage from "./pages/campaigns/CampaignListPage";
 import ContactCreatePage from "./pages/contacts/ContactCreatePage";
 import ContactDetailPage from "./pages/contacts/ContactDetailPage";
 import ContactListPage from "./pages/contacts/ContactListPage";
+import CustomFieldCreatePage from "./pages/customfields/CustomFieldCreatePage";
+import CustomFieldListPage from "./pages/customfields/CustomFieldListPage";
+import CustomObjectCreatePage from "./pages/customobjects/CustomObjectCreatePage";
+import CustomObjectDetailPage from "./pages/customobjects/CustomObjectDetailPage";
+import CustomObjectListPage from "./pages/customobjects/CustomObjectListPage";
+import CustomObjectRecordDetailPage from "./pages/customobjects/CustomObjectRecordDetailPage";
 import InvoiceDetailPage from "./pages/invoices/InvoiceDetailPage";
 import InvoiceListPage from "./pages/invoices/InvoiceListPage";
 import KnowledgeArticleCreatePage from "./pages/knowledge/KnowledgeArticleCreatePage";
@@ -108,6 +114,14 @@ export default function App() {
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />
           <Route path="/knowledge-articles/:articleId" element={<KnowledgeArticleDetailPage />} />
+
+          <Route path="/custom-objects" element={<CustomObjectListPage />} />
+          <Route path="/custom-objects/new" element={<CustomObjectCreatePage />} />
+          <Route path="/custom-objects/:customObjectId" element={<CustomObjectDetailPage />} />
+          <Route path="/custom-objects/:customObjectId/records/:recordId" element={<CustomObjectRecordDetailPage />} />
+
+          <Route path="/custom-fields" element={<CustomFieldListPage />} />
+          <Route path="/custom-fields/new" element={<CustomFieldCreatePage />} />
 
           <Route path="/reports" element={<ReportsPage />} />
 

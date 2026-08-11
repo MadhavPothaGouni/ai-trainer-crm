@@ -305,6 +305,60 @@ export function toTagList(value: string | undefined): string[] {
   return [...new Set(value.split(",").map((tag) => tag.trim()).filter((tag) => tag.length > 0))];
 }
 
+// ---- Platform extensibility: custom objects/fields ----
+
+const apiNamePattern = /^[a-z][a-z0-9_]*$/;
+
+export const createCustomObjectSchema = z.object({
+  apiName: z
+    .string()
+    .min(1, "API name is required")
+    .max(80)
+    .regex(apiNamePattern, "Lowercase letters, numbers, and underscores only, starting with a letter"),
+  label: z.string().min(1, "Label is required").max(150),
+  pluralLabel: z.string().min(1, "Plural label is required").max(150),
+  description: z.string().max(500).optional().or(z.literal("")),
+});
+export type CreateCustomObjectFormValues = z.infer<typeof createCustomObjectSchema>;
+
+export const updateCustomObjectSchema = createCustomObjectSchema.omit({ apiName: true }).extend({
+  active: z.boolean(),
+});
+export type UpdateCustomObjectFormValues = z.infer<typeof updateCustomObjectSchema>;
+
+export const createCustomFieldSchema = z
+  .object({
+    standardEntityType: z.string().optional().or(z.literal("")),
+    customObjectId: z.string().optional().or(z.literal("")),
+    apiName: z
+      .string()
+      .min(1, "API name is required")
+      .max(80)
+      .regex(apiNamePattern, "Lowercase letters, numbers, and underscores only, starting with a letter"),
+    label: z.string().min(1, "Label is required").max(150),
+    fieldType: z.string().min(1, "Field type is required"),
+    required: z.boolean(),
+    // Same string-in/string-out reasoning as optionalNumberString above - converted via
+    // toRequiredNumber at submit time, not coerced here.
+    displayOrder: z
+      .string()
+      .optional()
+      .refine((value) => value === undefined || value === "" || Number.isInteger(Number(value)), "Must be a whole number"),
+    // Comma-separated in the form; only meaningful (and required) when fieldType is PICKLIST - split/validated at submit time.
+    picklistValues: z.string().optional().or(z.literal("")),
+  })
+  .refine((data) => Boolean(data.standardEntityType) !== Boolean(data.customObjectId), {
+    message: "Choose exactly one of a standard entity or a custom object",
+    path: ["customObjectId"],
+  });
+export type CreateCustomFieldFormValues = z.infer<typeof createCustomFieldSchema>;
+
+/** Splits a comma-separated picklist-options field into a trimmed, de-duplicated, non-empty string array - same shape as toTagList. */
+export function toPicklistValues(value: string | undefined): string[] {
+  if (!value) return [];
+  return [...new Set(value.split(",").map((option) => option.trim()).filter((option) => option.length > 0))];
+}
+
 export const changePasswordFormSchema = z
   .object({
     currentPassword: z.string().min(1, "Current password is required"),
