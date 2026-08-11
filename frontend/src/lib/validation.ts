@@ -214,6 +214,18 @@ export function blankToUndefined(value: string | undefined | null): string | und
   return value === "" || value === null || value === undefined ? undefined : value;
 }
 
+// ---- Notification ----
+
+export const createNotificationSchema = z.object({
+  recipientUserId: z.string().min(1, "Choose a teammate to notify"),
+  type: z.string().min(1, "Type is required"),
+  title: z.string().min(1, "Title is required").max(200),
+  body: z.string().max(2000).optional().or(z.literal("")),
+  relatedToType: z.string().optional().or(z.literal("")),
+  relatedToId: z.string().optional().or(z.literal("")),
+});
+export type CreateNotificationFormValues = z.infer<typeof createNotificationSchema>;
+
 // ---- Team / role management ----
 
 export const roleFormSchema = z.object({

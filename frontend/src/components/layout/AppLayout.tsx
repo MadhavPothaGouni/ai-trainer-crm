@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
 import { Button } from "../ui/Button";
+import { NotificationBell } from "./NotificationBell";
 
 const CRM_NAV_LINKS = [
   { to: "/", label: "Dashboard", end: true },
@@ -71,6 +72,7 @@ export function AppLayout() {
             <span className="text-sm font-medium text-slate-900">AI-Trainer CRM</span>
           </div>
           <div className="flex items-center gap-3">
+            <NotificationBell />
             {user && (
               <Link to="/profile" className="text-sm text-slate-600 hover:text-slate-900 hover:underline">
                 {user.fullName} <span className="text-slate-400">&middot; {user.roles.join(", ")}</span>

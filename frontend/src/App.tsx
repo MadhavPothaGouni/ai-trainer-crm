@@ -39,6 +39,7 @@ import InvoiceListPage from "./pages/invoices/InvoiceListPage";
 import KnowledgeArticleCreatePage from "./pages/knowledge/KnowledgeArticleCreatePage";
 import KnowledgeArticleDetailPage from "./pages/knowledge/KnowledgeArticleDetailPage";
 import KnowledgeArticleListPage from "./pages/knowledge/KnowledgeArticleListPage";
+import NotificationsPage from "./pages/notifications/NotificationsPage";
 import OpportunityCreatePage from "./pages/opportunities/OpportunityCreatePage";
 import OpportunityDetailPage from "./pages/opportunities/OpportunityDetailPage";
 import OpportunityListPage from "./pages/opportunities/OpportunityListPage";
@@ -180,6 +181,8 @@ export default function App() {
           <Route path="/workflows" element={<WorkflowListPage />} />
           <Route path="/workflows/new" element={<WorkflowCreatePage />} />
           <Route path="/workflows/:workflowId" element={<WorkflowDetailPage />} />
+
+          <Route path="/notifications" element={<NotificationsPage />} />
 
           <Route path="/profile" element={<ProfilePage />} />
         </Route>

@@ -1266,3 +1266,43 @@ export interface UpdateWebhookSubscriptionRequest {
 export interface AssignOwnerRequest {
   ownerId: string;
 }
+
+// ---- Notification ----
+//
+// A fourth, simpler access pattern than everything above - see
+// backend/crm-platform/README.md's module layout for `notification` and
+// Notification's javadoc. There is no owner/scope concept here at all: the
+// backend hard-scopes every read/write to "recipientUserId == the caller,"
+// so NotificationDto never even includes a recipientUserId field - it's
+// always implicitly "mine," the same way a fetched UserDto from /users/me
+// doesn't need to say whose profile it is.
+
+export type NotificationType = "ASSIGNMENT" | "MENTION" | "REMINDER" | "GENERAL";
+
+export const NOTIFICATION_TYPES: NotificationType[] = ["ASSIGNMENT", "MENTION", "REMINDER", "GENERAL"];
+
+export interface NotificationDto {
+  id: string;
+  senderUserId: string | null;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  relatedToType: CrmRecordType | null;
+  relatedToId: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
+
+/** Sends a notification to a teammate - relatedToType/relatedToId are optional, both-null-or-both-set, same shape as CreateCalendarEventRequest's. */
+export interface CreateNotificationRequest {
+  recipientUserId: string;
+  type: NotificationType;
+  title: string;
+  body?: string | null;
+  relatedToType?: CrmRecordType | null;
+  relatedToId?: string | null;
+}
+
+export interface UnreadCountResponse {
+  unreadCount: number;
+}
