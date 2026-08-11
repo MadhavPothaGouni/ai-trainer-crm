@@ -107,6 +107,18 @@ src/main/java/com/aitrainercrm/platform/
   quote/          priced proposals tied to one Opportunity, plus their line
                   items; totals are recomputed server-side on every line
                   item add/edit/remove (QuoteService#recomputeTotals)
+  order/          confirmed sales, optionally converted from a Quote
+                  (OrderService#createFromQuote clones its line items
+                  verbatim); DRAFT -> CONFIRMED is gated on ORDER:APPROVE,
+                  a separate permission from plain ORDER:UPDATE - see
+                  Order's javadoc
+  invoice/        bills generated from exactly one Order
+                  (InvoiceService#generateFromOrder); DRAFT -> SENT is
+                  gated on INVOICE:APPROVE; SENT -> PAID happens
+                  automatically, driven by payment/ - never set directly
+  payment/        payments recorded against an Invoice; every record/delete
+                  recomputes the parent invoice's amountPaid and flips its
+                  status once fully covered (InvoiceService#applyAmountPaid)
   report/         read-only aggregation queries over Opportunity/Lead -
                   pipeline value by stage, the lead conversion funnel, and
                   a per-rep leaderboard. No entity of its own (a report is
@@ -133,20 +145,25 @@ Every owner-scoped CRM module (`account`/`contact`/`opportunity`/`lead`/
 `service` + `controller` + `dto`, record-level OWN/TEAM/DEPARTMENT/
 ORGANIZATION authorization via `security.authorization.ScopeAuthorizationService`,
 and a permission catalog already seeded in `V2__seed_permission_catalog.sql`.
-`product` is the one exception - see its module's comment above. `report` is
-a different kind of exception: it's read-only and has no owner-scoped
-record of its own, so it uses `ScopeAuthorizationService#visibleOwnerIds`
-directly against the REPORT permission to filter its aggregate queries by
-owner, rather than the record-level `assertCanAccess` pattern the CRUD
-modules use. `apikey` and `webhook` are a third kind: platform
-administration, gated entirely by `API_KEY:*:ORGANIZATION` /
-`INTEGRATION:*:ORGANIZATION` (no OWN/TEAM/DEPARTMENT variant exists for
-either resource), with no per-record ownership concept at all - see
-`ApiKeyController`'s and `WebhookSubscriptionController`'s javadoc. The
-catalog also seeds several resources (`ORDER`, `INVOICE`, `PAYMENT`,
-`CAMPAIGN`, `WORKFLOW`, `DASHBOARD`, `CUSTOM_FIELD`, `CUSTOM_OBJECT`, ...)
-that don't have a module built on top of them yet; see the root README's
-Roadmap.
+`product`, `order`, `invoice`, and `payment` are shared-org-resource
+exceptions to that shape - see `product`'s module comment above; no
+`ownerId` column, no `ScopeAuthorizationService` call, static
+`@PreAuthorize` at TEAM/DEPARTMENT/ORGANIZATION scope only (no OWN), and an
+extra `APPROVE` action used by `order`/`invoice` for their "sign off on it"
+transitions (`ORDER:APPROVE` on confirm, `INVOICE:APPROVE` on issue).
+`report` is a different kind of exception: it's read-only and has no
+owner-scoped record of its own, so it uses
+`ScopeAuthorizationService#visibleOwnerIds` directly against the REPORT
+permission to filter its aggregate queries by owner, rather than the
+record-level `assertCanAccess` pattern the CRUD modules use. `apikey` and
+`webhook` are a third kind: platform administration, gated entirely by
+`API_KEY:*:ORGANIZATION` / `INTEGRATION:*:ORGANIZATION` (no OWN/TEAM/
+DEPARTMENT variant exists for either resource), with no per-record
+ownership concept at all - see `ApiKeyController`'s and
+`WebhookSubscriptionController`'s javadoc. The catalog also seeds several
+resources (`CAMPAIGN`, `WORKFLOW`, `DASHBOARD`, `CUSTOM_FIELD`,
+`CUSTOM_OBJECT`, ...) that don't have a module built on top of them yet;
+see the root README's Roadmap.
 
 See the root `README.md` for the RBAC model, multi-tenancy rules, and the
 overall system architecture.

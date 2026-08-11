@@ -180,29 +180,38 @@ view, a team/role management UI (invite/list users, assign roles and
 status, create/edit custom roles against the full permission catalog), a
 "my profile" settings page (update name/phone/timezone/locale, change
 password), a frontend test suite (Vitest + React Testing Library), Docker
-Compose + CI for both halves, and a production deploy pipeline (versioned
+Compose + CI for both halves, a production deploy pipeline (versioned
 GHCR image publishing + GitHub Releases on tag push — see
-[Deploying to production](#deploying-to-production)).
+[Deploying to production](#deploying-to-production)), and the order-to-cash
+backend: Orders (optionally converted from a Quote, with a DRAFT ->
+CONFIRMED -> FULFILLED lifecycle and a CANCELLED escape hatch), Invoices
+(generated from an Order, DRAFT -> SENT -> PAID, PAID driven automatically
+by recorded payments rather than settable directly), and Payments (recorded
+against an Invoice, each one recomputing the invoice's amountPaid and
+flipping its status once fully covered) - see
+`backend/crm-platform/README.md`'s module layout for `order`/`invoice`/
+`payment`.
 
 The permission catalog seeded in `V2__seed_permission_catalog.sql` already
 covers several resources with no module built on top of them yet -
-`ORDER`/`INVOICE`/`PAYMENT` (deeper sales/finance tooling), `CAMPAIGN`/
-`KNOWLEDGE_ARTICLE` (marketing/support), `WORKFLOW`/`DASHBOARD`
+`CAMPAIGN`/`KNOWLEDGE_ARTICLE` (marketing/support), `WORKFLOW`/`DASHBOARD`
 (automation/a saved-report builder), and `CUSTOM_FIELD`/`CUSTOM_OBJECT`
 (platform extensibility beyond API keys/webhooks, which are already
 built). That's deliberate: the RBAC model was designed up front for the
 platform's eventual full shape, and each of those becomes an `entity`/
 `repository`/`service`/`controller`/`dto` module following the same
 pattern as `account`/`contact`/`opportunity`/`lead`/`activity`/`product`/
-`quote`, plus a corresponding frontend page, whenever it gets built.
-`report`, `apikey`, and `webhook` are exceptions already built without a
-normal owner-scoped entity of their own - see
+`quote`/`order`/`invoice`/`payment`, plus a corresponding frontend page,
+whenever it gets built. `report`, `apikey`, and `webhook` are exceptions
+already built without a normal owner-scoped entity of their own - see
 `backend/crm-platform/README.md`'s module layout for why.
 
 Not yet built, roughly in the order planned:
-- Deeper sales/finance tooling (Order/Invoice/Payment) and marketing/
-  support (Campaign/Knowledge Article), automation (Workflow), and the
-  remaining platform-extensibility resources (Custom Field/Custom Object)
+- Order/Invoice/Payment frontend (the backend module and its integration
+  tests are done - see `OrderInvoicePaymentIntegrationTest` - but there's no
+  UI yet), then marketing/support (Campaign/Knowledge Article), automation
+  (Workflow), and the remaining platform-extensibility resources (Custom
+  Field/Custom Object)
 - Retry-with-backoff for webhook delivery (today it's a single attempt with
   a short timeout - see `WebhookDispatchListener`'s javadoc for the
   reasoning) and scoped/delegated API keys (today a key inherits its
