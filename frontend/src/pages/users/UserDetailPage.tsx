@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { listRoles } from "../../api/roles";
-import { getUser, removeUser, updateUserRoles, updateUserStatus } from "../../api/users";
+import { listTeams } from "../../api/teams";
+import { getUser, removeUser, updateUserRoles, updateUserStatus, updateUserTeam } from "../../api/users";
 import { useAuth } from "../../auth/useAuth";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { Select } from "../../components/ui/Select";
 import { ApiError } from "../../lib/apiClient";
-import type { RoleDto, UserDto, UserStatus } from "../../types/api";
+import type { RoleDto, TeamDto, UserDto, UserStatus } from "../../types/api";
 import { UserStatusBadge } from "./UserListPage";
 
 const STATUS_OPTIONS: UserStatus[] = ["PENDING_VERIFICATION", "ACTIVE", "SUSPENDED", "DEACTIVATED"];
@@ -18,10 +19,12 @@ export default function UserDetailPage() {
   const { user: currentUser } = useAuth();
   const [user, setUser] = useState<UserDto | null>(null);
   const [roles, setRoles] = useState<RoleDto[]>([]);
+  const [teams, setTeams] = useState<TeamDto[]>([]);
   const [selectedRoleIds, setSelectedRoleIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [isSavingRoles, setIsSavingRoles] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isUpdatingTeam, setIsUpdatingTeam] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
 
   useEffect(() => {
@@ -38,6 +41,14 @@ export default function UserDetailPage() {
       .catch((err: unknown) => {
         if (!cancelled) setError(err instanceof ApiError ? err.message : "Could not load this teammate.");
       });
+    // TEAM:READ:ORGANIZATION is only granted to OWNER/ADMIN by default (see RoleService), same as
+    // USER:READ:ORGANIZATION already gates this whole page - if it 403s for some custom role that
+    // can see teammates but not teams, the picker below just stays empty rather than erroring the page.
+    listTeams({ size: 100 })
+      .then((res) => {
+        if (!cancelled) setTeams(res.content);
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -80,6 +91,20 @@ export default function UserDetailPage() {
       setError(err instanceof ApiError ? err.message : "Could not update status.");
     } finally {
       setIsUpdatingStatus(false);
+    }
+  }
+
+  async function handleTeamChange(teamId: string) {
+    if (!userId) return;
+    setIsUpdatingTeam(true);
+    setError(null);
+    try {
+      const updated = await updateUserTeam(userId, { teamId: teamId === "" ? null : teamId });
+      setUser(updated);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not update team.");
+    } finally {
+      setIsUpdatingTeam(false);
     }
   }
 
@@ -155,6 +180,21 @@ export default function UserDetailPage() {
               value={user.status}
               disabled={isSelf || isUpdatingStatus}
               onChange={(event) => void handleStatusChange(event.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-slate-200 bg-white p-5">
+          <h2 className="text-sm font-medium text-slate-500">Team</h2>
+          <p className="mt-1 text-xs text-slate-400">Determines TEAM/DEPARTMENT-scope visibility for this teammate's records.</p>
+          <div className="mt-3">
+            <Select
+              label="Team"
+              placeholder="Unassigned"
+              options={teams.map((team) => ({ value: team.id, label: team.name }))}
+              value={user.teamId ?? ""}
+              disabled={isUpdatingTeam}
+              onChange={(event) => void handleTeamChange(event.target.value)}
             />
           </div>
         </div>

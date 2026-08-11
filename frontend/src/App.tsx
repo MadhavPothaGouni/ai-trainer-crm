@@ -63,6 +63,9 @@ import LeadListPage from "./pages/leads/LeadListPage";
 import RoleCreatePage from "./pages/roles/RoleCreatePage";
 import RoleDetailPage from "./pages/roles/RoleDetailPage";
 import RoleListPage from "./pages/roles/RoleListPage";
+import TeamCreatePage from "./pages/teams/TeamCreatePage";
+import TeamDetailPage from "./pages/teams/TeamDetailPage";
+import TeamListPage from "./pages/teams/TeamListPage";
 import UserDetailPage from "./pages/users/UserDetailPage";
 import UserInvitePage from "./pages/users/UserInvitePage";
 import UserListPage from "./pages/users/UserListPage";
@@ -166,6 +169,10 @@ export default function App() {
           <Route path="/roles" element={<RoleListPage />} />
           <Route path="/roles/new" element={<RoleCreatePage />} />
           <Route path="/roles/:roleId" element={<RoleDetailPage />} />
+
+          <Route path="/teams" element={<TeamListPage />} />
+          <Route path="/teams/new" element={<TeamCreatePage />} />
+          <Route path="/teams/:teamId" element={<TeamDetailPage />} />
 
           <Route path="/api-keys" element={<ApiKeysPage />} />
           <Route path="/webhooks" element={<WebhooksPage />} />

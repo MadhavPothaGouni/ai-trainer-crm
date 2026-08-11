@@ -41,6 +41,11 @@ const ADMIN_NAV_LINKS = [
   { to: "/dashboards", label: "Dashboards", end: false },
   { to: "/import-export", label: "Import / Export", end: false },
   { to: "/users", label: "Team", end: false },
+  // Deliberately not labeled "Teams" - "/users" above is already labeled "Team" (the whole
+  // teammate roster) and the two would be confusable. This is the literal Team entity
+  // (Sales/Marketing/Support/... sub-groupings) TEAM/DEPARTMENT-scoped permissions resolve
+  // against - see backend/crm-platform/README.md's module layout for `organization`.
+  { to: "/teams", label: "Team Groups", end: false },
   { to: "/roles", label: "Roles", end: false },
   { to: "/api-keys", label: "API Keys", end: false },
   { to: "/webhooks", label: "Webhooks", end: false },

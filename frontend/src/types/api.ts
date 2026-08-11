@@ -149,6 +149,35 @@ export interface UpdateUserStatusRequest {
   status: UserStatus;
 }
 
+/** teamId is deliberately optional/nullable, not required - null unassigns rather than being rejected as missing input. See UpdateUserTeamRequest's backend javadoc. */
+export interface UpdateUserTeamRequest {
+  teamId?: string | null;
+}
+
+// ---- Organization: Team ----
+//
+// Team/teams.team_id existed since the platform's very first migration
+// purely so ScopeAuthorizationService had something to resolve TEAM/
+// DEPARTMENT-scope visibility against - there was no management API for a
+// long time, so in practice no user ever had a team. TeamController (CRUD)
+// and PATCH /users/{id}/team (assignment, above) closed that gap - see
+// backend/crm-platform/README.md's module layout for `organization`/`user`.
+
+export interface TeamDto {
+  id: string;
+  name: string;
+  department: string | null;
+  leadUserId: string | null;
+}
+
+export interface CreateTeamRequest {
+  name: string;
+  department?: string | null;
+  leadUserId?: string | null;
+}
+
+export type UpdateTeamRequest = CreateTeamRequest;
+
 // ---- Role / Permission ----
 
 export interface PermissionDto {

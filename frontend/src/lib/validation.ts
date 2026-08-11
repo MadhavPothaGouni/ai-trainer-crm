@@ -200,6 +200,15 @@ export const addAttendeeSchema = z
   });
 export type AddAttendeeFormValues = z.infer<typeof addAttendeeSchema>;
 
+// ---- Organization: Team ----
+
+export const createTeamSchema = z.object({
+  name: z.string().min(1, "Team name is required").max(150),
+  department: z.string().max(100).optional().or(z.literal("")),
+  leadUserId: z.string().optional().or(z.literal("")),
+});
+export type CreateTeamFormValues = z.infer<typeof createTeamSchema>;
+
 /** Turns "" into undefined - use when mapping an optional select/text field onto a request DTO. */
 export function blankToUndefined(value: string | undefined | null): string | undefined {
   return value === "" || value === null || value === undefined ? undefined : value;

@@ -5,6 +5,7 @@ import type {
   UpdateProfileRequest,
   UpdateUserRolesRequest,
   UpdateUserStatusRequest,
+  UpdateUserTeamRequest,
   UserDto,
 } from "../types/api";
 
@@ -40,6 +41,10 @@ export function updateUserRoles(userId: string, request: UpdateUserRolesRequest)
 
 export function updateUserStatus(userId: string, request: UpdateUserStatusRequest): Promise<UserDto> {
   return unwrap(apiClient.patch(`/api/v1/users/${userId}/status`, request));
+}
+
+export function updateUserTeam(userId: string, request: UpdateUserTeamRequest): Promise<UserDto> {
+  return unwrap(apiClient.patch(`/api/v1/users/${userId}/team`, request));
 }
 
 export function removeUser(userId: string): Promise<null> {
