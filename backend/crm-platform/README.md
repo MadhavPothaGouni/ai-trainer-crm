@@ -119,6 +119,19 @@ src/main/java/com/aitrainercrm/platform/
   payment/        payments recorded against an Invoice; every record/delete
                   recomputes the parent invoice's amountPaid and flips its
                   status once fully covered (InvoiceService#applyAmountPaid)
+  campaign/       marketing campaigns plus Campaign Members - a Lead or a
+                  Contact (never both, enforced by a DB check constraint)
+                  tracked through an engagement funnel; CampaignController
+                  is the first real implementation of the :EXPORT
+                  permission anywhere in this codebase (CSV, via
+                  common.util.CsvWriter)
+  knowledgearticle/ support/help-center articles: auto-generated unique
+                  slugs, tags (@ElementCollection, deliberately EAGER -
+                  see the entity's javadoc for why that's the right call
+                  here and not the LazyInitializationException trap
+                  ApiKeyService hit earlier), a DRAFT -> PUBLISHED ->
+                  ARCHIVED lifecycle, and a view counter that increments on
+                  every read
   report/         read-only aggregation queries over Opportunity/Lead -
                   pipeline value by stage, the lead conversion funnel, and
                   a per-rep leaderboard. No entity of its own (a report is
@@ -145,12 +158,19 @@ Every owner-scoped CRM module (`account`/`contact`/`opportunity`/`lead`/
 `service` + `controller` + `dto`, record-level OWN/TEAM/DEPARTMENT/
 ORGANIZATION authorization via `security.authorization.ScopeAuthorizationService`,
 and a permission catalog already seeded in `V2__seed_permission_catalog.sql`.
-`product`, `order`, `invoice`, and `payment` are shared-org-resource
-exceptions to that shape - see `product`'s module comment above; no
-`ownerId` column, no `ScopeAuthorizationService` call, static
-`@PreAuthorize` at TEAM/DEPARTMENT/ORGANIZATION scope only (no OWN), and an
-extra `APPROVE` action used by `order`/`invoice` for their "sign off on it"
-transitions (`ORDER:APPROVE` on confirm, `INVOICE:APPROVE` on issue).
+`product`, `order`, `invoice`, `payment`, `campaign`, and
+`knowledgearticle` are shared-org-resource exceptions to that shape - see
+`product`'s module comment above; no `ownerId` column, no
+`ScopeAuthorizationService` call, static `@PreAuthorize` at TEAM/
+DEPARTMENT/ORGANIZATION scope only (no OWN). `order`/`invoice` additionally
+get an `APPROVE` action for their "sign off on it" transitions
+(`ORDER:APPROVE` on confirm, `INVOICE:APPROVE` on issue); `campaign`/
+`knowledgearticle` don't have APPROVE seeded, so all of their status
+transitions are plain `UPDATE`, and they instead get an `EXPORT` action -
+`CampaignController#export`/`KnowledgeArticleController#export` are the
+only two endpoints in the whole codebase that actually implement it (see
+`common.util.CsvWriter`); every other `:EXPORT`-seeded resource still has
+the permission modeled but unbuilt.
 `report` is a different kind of exception: it's read-only and has no
 owner-scoped record of its own, so it uses
 `ScopeAuthorizationService#visibleOwnerIds` directly against the REPORT
