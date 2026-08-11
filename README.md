@@ -201,25 +201,30 @@ tags, a DRAFT -> PUBLISHED -> ARCHIVED lifecycle, and a view counter) - see
 `backend/crm-platform/README.md`'s module layout for `campaign`/
 `knowledgearticle`. Campaigns and Knowledge Articles are also the first
 resources in the whole platform with a real `:EXPORT` implementation (a CSV
-download) rather than just a seeded-but-unbuilt permission.
+download) rather than just a seeded-but-unbuilt permission. Most recently,
+platform extensibility: Custom Objects (admin-defined generic entities -
+a Name field plus whatever Custom Fields are attached) and Custom Fields
+(attachable to a Custom Object or to a fixed set of standard entities -
+Account/Contact/Lead/Opportunity/Campaign - never both, values stored as a
+classic EAV table and parsed/validated against each field's declared type -
+NUMBER/DATE/BOOLEAN/PICKLIST/TEXT/TEXT_AREA) - see
+`backend/crm-platform/README.md`'s module layout for `customfield`.
 
-The permission catalog seeded in `V2__seed_permission_catalog.sql` already
-covers several resources with no module built on top of them yet -
-`WORKFLOW`/`DASHBOARD` (automation/a saved-report builder) and
-`CUSTOM_FIELD`/`CUSTOM_OBJECT` (platform extensibility beyond API keys/
-webhooks, which are already built). That's deliberate: the RBAC model was
-designed up front for the platform's eventual full shape, and each of
-those becomes an `entity`/`repository`/`service`/`controller`/`dto` module
-following the same pattern as `account`/`contact`/`opportunity`/`lead`/
-`activity`/`product`/`quote`/`order`/`invoice`/`payment`/`campaign`/
-`knowledgearticle`, plus a corresponding frontend page, whenever it gets
-built. `report`, `apikey`, and `webhook` are exceptions already built
-without a normal owner-scoped entity of their own - see
-`backend/crm-platform/README.md`'s module layout for why.
+The permission catalog seeded in `V2__seed_permission_catalog.sql` still
+covers two resources with no module built on top of them yet -
+`WORKFLOW`/`DASHBOARD` (automation/a saved-report builder). That's
+deliberate: the RBAC model was designed up front for the platform's
+eventual full shape, and each of those becomes an
+`entity`/`repository`/`service`/`controller`/`dto` module following the
+same pattern as `account`/`contact`/`opportunity`/`lead`/`activity`/
+`product`/`quote`/`order`/`invoice`/`payment`/`campaign`/
+`knowledgearticle`/`customfield`, plus a corresponding frontend page,
+whenever it gets built. `report`, `apikey`, `webhook`, and `customfield`
+are exceptions already built without a normal owner-scoped entity of their
+own - see `backend/crm-platform/README.md`'s module layout for why.
 
 Not yet built, roughly in the order planned:
-- Automation (Workflow/a saved-report Dashboard builder) and the remaining
-  platform-extensibility resources (Custom Field/Custom Object)
+- Automation (Workflow/a saved-report Dashboard builder)
 - Retry-with-backoff for webhook delivery (today it's a single attempt with
   a short timeout - see `WebhookDispatchListener`'s javadoc for the
   reasoning) and scoped/delegated API keys (today a key inherits its

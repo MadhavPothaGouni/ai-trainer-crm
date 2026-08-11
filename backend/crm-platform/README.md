@@ -139,6 +139,16 @@ src/main/java/com/aitrainercrm/platform/
                   javadoc for why it has a second, report-only repository
                   interface per aggregated entity instead of adding these
                   queries onto OpportunityRepository/LeadRepository
+  customfield/    platform extensibility: Custom Objects (admin-defined
+                  generic entities - one built-in Name field, everything
+                  else comes from attached fields) and Custom Fields
+                  (attachable to a Custom Object OR to a fixed allow-list of
+                  standard entities - ACCOUNT/CONTACT/LEAD/OPPORTUNITY/
+                  CAMPAIGN - never both, same exactly-one-of-target
+                  polymorphism CampaignMember introduced for lead/contact);
+                  values are a classic EAV table, stored as text and
+                  parsed/validated against each field's declared FieldType
+                  in CustomFieldService#parseAndValidate
   apikey/         programmatic-auth API keys - only a bcrypt hash of the
                   secret is ever stored; a key authenticates as whoever
                   created it (see ApiKeyService's javadoc)
@@ -175,15 +185,19 @@ the permission modeled but unbuilt.
 owner-scoped record of its own, so it uses
 `ScopeAuthorizationService#visibleOwnerIds` directly against the REPORT
 permission to filter its aggregate queries by owner, rather than the
-record-level `assertCanAccess` pattern the CRUD modules use. `apikey` and
-`webhook` are a third kind: platform administration, gated entirely by
-`API_KEY:*:ORGANIZATION` / `INTEGRATION:*:ORGANIZATION` (no OWN/TEAM/
-DEPARTMENT variant exists for either resource), with no per-record
-ownership concept at all - see `ApiKeyController`'s and
-`WebhookSubscriptionController`'s javadoc. The catalog also seeds several
-resources (`CAMPAIGN`, `WORKFLOW`, `DASHBOARD`, `CUSTOM_FIELD`,
-`CUSTOM_OBJECT`, ...) that don't have a module built on top of them yet;
-see the root README's Roadmap.
+record-level `assertCanAccess` pattern the CRUD modules use. `apikey`,
+`webhook`, and `customfield` are a third kind: platform administration,
+gated entirely by `API_KEY:*:ORGANIZATION` / `INTEGRATION:*:ORGANIZATION` /
+`CUSTOM_FIELD:*:ORGANIZATION` / `CUSTOM_OBJECT:*:ORGANIZATION` (no OWN/
+TEAM/DEPARTMENT variant exists for any of these four resources), with no
+per-record ownership concept at all - see `ApiKeyController`'s,
+`WebhookSubscriptionController`'s, and `CustomFieldController`'s/
+`CustomObjectController`'s javadoc. Note `CustomFieldController#/values`
+deliberately gates reading/writing a *value on a standard entity's record*
+(e.g. an Account) on `CUSTOM_FIELD:*:ORGANIZATION` rather than
+`ACCOUNT:UPDATE` - a documented simplification, not an oversight. The
+catalog also seeds a few resources (`WORKFLOW`, `DASHBOARD`) that don't
+have a module built on top of them yet; see the root README's Roadmap.
 
 See the root `README.md` for the RBAC model, multi-tenancy rules, and the
 overall system architecture.
