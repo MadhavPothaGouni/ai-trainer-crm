@@ -15,9 +15,14 @@ import ApiKeysPage from "./pages/apikeys/ApiKeysPage";
 import ContactCreatePage from "./pages/contacts/ContactCreatePage";
 import ContactDetailPage from "./pages/contacts/ContactDetailPage";
 import ContactListPage from "./pages/contacts/ContactListPage";
+import InvoiceDetailPage from "./pages/invoices/InvoiceDetailPage";
+import InvoiceListPage from "./pages/invoices/InvoiceListPage";
 import OpportunityCreatePage from "./pages/opportunities/OpportunityCreatePage";
 import OpportunityDetailPage from "./pages/opportunities/OpportunityDetailPage";
 import OpportunityListPage from "./pages/opportunities/OpportunityListPage";
+import OrderCreatePage from "./pages/orders/OrderCreatePage";
+import OrderDetailPage from "./pages/orders/OrderDetailPage";
+import OrderListPage from "./pages/orders/OrderListPage";
 import ProductCreatePage from "./pages/products/ProductCreatePage";
 import ProductDetailPage from "./pages/products/ProductDetailPage";
 import ProductListPage from "./pages/products/ProductListPage";
@@ -82,6 +87,13 @@ export default function App() {
           <Route path="/quotes" element={<QuoteListPage />} />
           <Route path="/quotes/new" element={<QuoteCreatePage />} />
           <Route path="/quotes/:quoteId" element={<QuoteDetailPage />} />
+
+          <Route path="/orders" element={<OrderListPage />} />
+          <Route path="/orders/new" element={<OrderCreatePage />} />
+          <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+
+          <Route path="/invoices" element={<InvoiceListPage />} />
+          <Route path="/invoices/:invoiceId" element={<InvoiceDetailPage />} />
 
           <Route path="/reports" element={<ReportsPage />} />
 

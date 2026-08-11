@@ -183,14 +183,17 @@ password), a frontend test suite (Vitest + React Testing Library), Docker
 Compose + CI for both halves, a production deploy pipeline (versioned
 GHCR image publishing + GitHub Releases on tag push — see
 [Deploying to production](#deploying-to-production)), and the order-to-cash
-backend: Orders (optionally converted from a Quote, with a DRAFT ->
-CONFIRMED -> FULFILLED lifecycle and a CANCELLED escape hatch), Invoices
+module end to end: Orders (optionally converted from a Quote, with a DRAFT
+-> CONFIRMED -> FULFILLED lifecycle and a CANCELLED escape hatch), Invoices
 (generated from an Order, DRAFT -> SENT -> PAID, PAID driven automatically
 by recorded payments rather than settable directly), and Payments (recorded
 against an Invoice, each one recomputing the invoice's amountPaid and
-flipping its status once fully covered) - see
+flipping its status once fully covered) on the backend - see
 `backend/crm-platform/README.md`'s module layout for `order`/`invoice`/
-`payment`.
+`payment` - plus Orders/Invoices pages (an order's detail page has both a
+"convert this quote" entry point and a "generate an invoice" card once
+confirmed; an invoice's detail page locks its header/line items once
+issued and grows a payment ledger with a record-payment form once sent).
 
 The permission catalog seeded in `V2__seed_permission_catalog.sql` already
 covers several resources with no module built on top of them yet -
@@ -207,9 +210,7 @@ already built without a normal owner-scoped entity of their own - see
 `backend/crm-platform/README.md`'s module layout for why.
 
 Not yet built, roughly in the order planned:
-- Order/Invoice/Payment frontend (the backend module and its integration
-  tests are done - see `OrderInvoicePaymentIntegrationTest` - but there's no
-  UI yet), then marketing/support (Campaign/Knowledge Article), automation
+- Marketing/support tooling (Campaign/Knowledge Article), automation
   (Workflow), and the remaining platform-extensibility resources (Custom
   Field/Custom Object)
 - Retry-with-backoff for webhook delivery (today it's a single attempt with

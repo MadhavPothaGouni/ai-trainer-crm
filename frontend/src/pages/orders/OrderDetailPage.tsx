@@ -2,18 +2,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { createOrderFromQuote } from "../../api/orders";
-import { getOpportunity } from "../../api/opportunities";
-import { listProducts } from "../../api/products";
+import { generateInvoiceFromOrder } from "../../api/invoices";
 import {
-  addQuoteLineItem,
-  deleteQuote,
-  getQuote,
-  removeQuoteLineItem,
-  updateQuote,
-  updateQuoteLineItem,
-  updateQuoteStatus,
-} from "../../api/quotes";
+  addOrderLineItem,
+  confirmOrder,
+  deleteOrder,
+  getOrder,
+  removeOrderLineItem,
+  updateOrder,
+  updateOrderLineItem,
+  updateOrderStatus,
+} from "../../api/orders";
+import { listProducts } from "../../api/products";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { Select } from "../../components/ui/Select";
@@ -22,28 +22,27 @@ import { ApiError } from "../../lib/apiClient";
 import { applyServerErrors } from "../../lib/formErrors";
 import {
   blankToUndefined,
-  createOrderFromQuoteSchema,
-  quoteLineItemSchema,
+  createOrderSchema,
+  generateInvoiceSchema,
+  orderLineItemSchema,
   toOptionalNumber,
   toRequiredNumber,
-  updateQuoteSchema,
-  type CreateOrderFromQuoteFormValues,
-  type QuoteLineItemFormValues,
-  type UpdateQuoteFormValues,
+  type CreateOrderFormValues,
+  type GenerateInvoiceFormValues,
+  type OrderLineItemFormValues,
 } from "../../lib/validation";
-import { QUOTE_STATUSES, type ProductDto, type QuoteDto, type QuoteLineItemDto, type QuoteStatus } from "../../types/api";
-import { QuoteStatusBadge } from "./QuoteListPage";
+import type { OrderDto, OrderLineItemDto, ProductDto } from "../../types/api";
+import { OrderStatusBadge } from "./OrderListPage";
 
-export default function QuoteDetailPage() {
-  const { quoteId } = useParams<{ quoteId: string }>();
+export default function OrderDetailPage() {
+  const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
-  const [quote, setQuote] = useState<QuoteDto | null>(null);
-  const [opportunityName, setOpportunityName] = useState<string | null>(null);
+  const [order, setOrder] = useState<OrderDto | null>(null);
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [editingLineItemId, setEditingLineItemId] = useState<string | null>(null);
   const [pendingLineItemId, setPendingLineItemId] = useState<string | null>(null);
 
@@ -53,25 +52,21 @@ export default function QuoteDetailPage() {
     reset,
     setError: setFieldError,
     formState: { errors, isSubmitting },
-  } = useForm<UpdateQuoteFormValues>({ resolver: zodResolver(updateQuoteSchema) });
+  } = useForm<CreateOrderFormValues>({ resolver: zodResolver(createOrderSchema) });
 
   function reload() {
-    if (!quoteId) return;
-    getQuote(quoteId)
+    if (!orderId) return;
+    getOrder(orderId)
       .then((data) => {
-        setQuote(data);
+        setOrder(data);
         reset({
-          name: data.name,
+          orderNumber: data.orderNumber,
           currency: data.currency ?? "",
-          validUntil: data.validUntil ?? "",
           discountAmount: String(data.discountAmount),
           taxAmount: String(data.taxAmount),
         });
-        getOpportunity(data.opportunityId)
-          .then((opportunity) => setOpportunityName(opportunity.name))
-          .catch(() => undefined);
       })
-      .catch((err: unknown) => setError(err instanceof ApiError ? err.message : "Could not load this quote."));
+      .catch((err: unknown) => setError(err instanceof ApiError ? err.message : "Could not load this order."));
   }
 
   useEffect(() => {
@@ -79,56 +74,67 @@ export default function QuoteDetailPage() {
     listProducts({ size: 100, sort: "name,asc" })
       .then((res) => setProducts(res.content.filter((product) => product.active)))
       .catch(() => undefined);
-  }, [quoteId]);
+  }, [orderId]);
 
   const onSaveHeader = handleSubmit(async (values) => {
-    if (!quoteId) return;
+    if (!orderId) return;
     setFormError(null);
     try {
-      const updated = await updateQuote(quoteId, {
-        name: values.name,
+      const updated = await updateOrder(orderId, {
+        orderNumber: values.orderNumber,
         currency: blankToUndefined(values.currency),
-        validUntil: blankToUndefined(values.validUntil),
         discountAmount: toOptionalNumber(values.discountAmount),
         taxAmount: toOptionalNumber(values.taxAmount),
       });
-      setQuote(updated);
+      setOrder(updated);
     } catch (error) {
       setFormError(applyServerErrors(error, setFieldError));
     }
   });
 
-  async function handleStatusChange(status: string) {
-    if (!quoteId) return;
-    setIsUpdatingStatus(true);
+  async function handleConfirm() {
+    if (!orderId) return;
+    setIsTransitioning(true);
     setError(null);
     try {
-      const updated = await updateQuoteStatus(quoteId, { status: status as QuoteStatus });
-      setQuote(updated);
+      setOrder(await confirmOrder(orderId));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not update the status.");
+      setError(err instanceof ApiError ? err.message : "Could not confirm this order.");
     } finally {
-      setIsUpdatingStatus(false);
+      setIsTransitioning(false);
+    }
+  }
+
+  async function handleStatusChange(status: "FULFILLED" | "CANCELLED") {
+    if (!orderId) return;
+    setIsTransitioning(true);
+    setError(null);
+    try {
+      setOrder(await updateOrderStatus(orderId, { status }));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not update this order's status.");
+    } finally {
+      setIsTransitioning(false);
     }
   }
 
   async function handleDelete() {
-    if (!quoteId || !window.confirm("Delete this quote? This cannot be undone.")) return;
+    if (!orderId || !window.confirm("Delete this order? This cannot be undone.")) return;
     setIsDeleting(true);
     try {
-      await deleteQuote(quoteId);
-      navigate("/quotes");
+      await deleteOrder(orderId);
+      navigate("/orders");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not delete this quote.");
+      setError(err instanceof ApiError ? err.message : "Could not delete this order.");
       setIsDeleting(false);
     }
   }
 
   async function handleRemoveLineItem(lineItemId: string) {
-    if (!quoteId || !window.confirm("Remove this line item?")) return;
+    if (!orderId || !window.confirm("Remove this line item?")) return;
     setPendingLineItemId(lineItemId);
     try {
-      await removeQuoteLineItem(quoteId, lineItemId);
+      await removeOrderLineItem(orderId, lineItemId);
       reload();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not remove this line item.");
@@ -137,11 +143,11 @@ export default function QuoteDetailPage() {
     }
   }
 
-  if (error && !quote) {
+  if (error && !order) {
     return <Alert variant="error">{error}</Alert>;
   }
 
-  if (!quote || !quoteId) {
+  if (!order || !orderId) {
     return <p className="text-sm text-slate-400">Loading...</p>;
   }
 
@@ -149,16 +155,16 @@ export default function QuoteDetailPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <Link to="/quotes" className="text-sm text-slate-500 hover:text-slate-900 hover:underline">
-            &larr; Quotes
+          <Link to="/orders" className="text-sm text-slate-500 hover:text-slate-900 hover:underline">
+            &larr; Orders
           </Link>
           <div className="mt-1 flex items-center gap-3">
-            <h1 className="text-2xl font-semibold text-slate-900">{quote.name}</h1>
-            <QuoteStatusBadge status={quote.status} />
+            <h1 className="text-2xl font-semibold text-slate-900">{order.orderNumber}</h1>
+            <OrderStatusBadge status={order.status} />
           </div>
-          {opportunityName && (
-            <Link to={`/opportunities/${quote.opportunityId}`} className="text-sm text-slate-500 hover:underline">
-              {opportunityName}
+          {order.quoteId && (
+            <Link to={`/quotes/${order.quoteId}`} className="text-sm text-slate-500 hover:underline">
+              Converted from quote
             </Link>
           )}
         </div>
@@ -174,10 +180,9 @@ export default function QuoteDetailPage() {
           <h2 className="text-sm font-medium text-slate-500">Details</h2>
           {formError && <Alert variant="error">{formError}</Alert>}
 
-          <TextField label="Quote name" error={errors.name?.message} {...register("name")} />
+          <TextField label="Order number" error={errors.orderNumber?.message} {...register("orderNumber")} />
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField label="Currency" placeholder="USD" error={errors.currency?.message} {...register("currency")} />
-            <TextField label="Valid until" type="date" error={errors.validUntil?.message} {...register("validUntil")} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField label="Discount" type="number" min={0} step="any" error={errors.discountAmount?.message} {...register("discountAmount")} />
@@ -193,33 +198,49 @@ export default function QuoteDetailPage() {
         <div className="flex flex-col gap-4">
           <div className="rounded-lg border border-slate-200 bg-white p-5">
             <h2 className="text-sm font-medium text-slate-500">Status</h2>
-            <div className="mt-3">
-              <Select
-                label="Status"
-                options={QUOTE_STATUSES.map((status) => ({ value: status, label: status }))}
-                value={quote.status}
-                disabled={isUpdatingStatus}
-                onChange={(event) => void handleStatusChange(event.target.value)}
-              />
+            <div className="mt-3 flex flex-wrap gap-2">
+              {order.status === "DRAFT" && (
+                <>
+                  <Button onClick={() => void handleConfirm()} isLoading={isTransitioning}>
+                    Confirm order
+                  </Button>
+                  <Button variant="secondary" onClick={() => void handleStatusChange("CANCELLED")} isLoading={isTransitioning}>
+                    Cancel order
+                  </Button>
+                </>
+              )}
+              {order.status === "CONFIRMED" && (
+                <>
+                  <Button onClick={() => void handleStatusChange("FULFILLED")} isLoading={isTransitioning}>
+                    Mark fulfilled
+                  </Button>
+                  <Button variant="secondary" onClick={() => void handleStatusChange("CANCELLED")} isLoading={isTransitioning}>
+                    Cancel order
+                  </Button>
+                </>
+              )}
+              {(order.status === "FULFILLED" || order.status === "CANCELLED") && (
+                <p className="text-sm text-slate-400">No further transitions from {order.status}.</p>
+              )}
             </div>
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-white p-5">
             <h2 className="text-sm font-medium text-slate-500">Totals</h2>
             <dl className="mt-3 flex flex-col gap-2 text-sm">
-              <Row label="Subtotal" value={quote.subtotal} currency={quote.currency} />
-              <Row label="Discount" value={quote.discountAmount} currency={quote.currency} />
-              <Row label="Tax" value={quote.taxAmount} currency={quote.currency} />
+              <Row label="Subtotal" value={order.subtotal} currency={order.currency} />
+              <Row label="Discount" value={order.discountAmount} currency={order.currency} />
+              <Row label="Tax" value={order.taxAmount} currency={order.currency} />
               <div className="flex justify-between gap-4 border-t border-slate-100 pt-2 font-medium">
                 <dt className="text-slate-900">Total</dt>
                 <dd className="text-slate-900">
-                  {quote.totalAmount.toLocaleString()} {quote.currency ?? ""}
+                  {order.totalAmount.toLocaleString()} {order.currency ?? ""}
                 </dd>
               </div>
             </dl>
           </div>
 
-          <ConvertToOrderCard quoteId={quoteId} />
+          {(order.status === "CONFIRMED" || order.status === "FULFILLED") && <GenerateInvoiceCard orderId={orderId} />}
         </div>
       </div>
 
@@ -227,12 +248,12 @@ export default function QuoteDetailPage() {
         <h2 className="text-sm font-medium text-slate-500">Line items</h2>
 
         <div className="mt-3 flex flex-col gap-2">
-          {quote.lineItems.length === 0 && <p className="text-sm text-slate-400">No line items yet.</p>}
-          {quote.lineItems.map((lineItem) =>
+          {order.lineItems.length === 0 && <p className="text-sm text-slate-400">No line items yet.</p>}
+          {order.lineItems.map((lineItem) =>
             editingLineItemId === lineItem.id ? (
               <LineItemForm
                 key={lineItem.id}
-                quoteId={quoteId}
+                orderId={orderId}
                 products={products}
                 lineItem={lineItem}
                 onDone={() => {
@@ -267,46 +288,10 @@ export default function QuoteDetailPage() {
         </div>
 
         <div className="mt-4 border-t border-slate-100 pt-4">
-          <LineItemForm quoteId={quoteId} products={products} onDone={reload} />
+          <LineItemForm orderId={orderId} products={products} onDone={reload} />
         </div>
       </div>
     </div>
-  );
-}
-
-/** Converts this quote into a new DRAFT order via OrderService#createFromQuote - clones every line item verbatim. */
-function ConvertToOrderCard({ quoteId }: { quoteId: string }) {
-  const navigate = useNavigate();
-  const [formError, setFormError] = useState<string | null>(null);
-
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors, isSubmitting },
-  } = useForm<CreateOrderFromQuoteFormValues>({ resolver: zodResolver(createOrderFromQuoteSchema) });
-
-  const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
-    try {
-      const order = await createOrderFromQuote(quoteId, { orderNumber: values.orderNumber });
-      navigate(`/orders/${order.id}`);
-    } catch (error) {
-      setFormError(applyServerErrors(error, setError));
-    }
-  });
-
-  return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-5">
-      <h2 className="text-sm font-medium text-slate-500">Convert to order</h2>
-      {formError && <Alert variant="error">{formError}</Alert>}
-      <TextField label="Order number" error={errors.orderNumber?.message} {...register("orderNumber")} />
-      <div className="flex justify-end">
-        <Button type="submit" isLoading={isSubmitting}>
-          Create order
-        </Button>
-      </div>
-    </form>
   );
 }
 
@@ -321,17 +306,61 @@ function Row({ label, value, currency }: { label: string; value: number; currenc
   );
 }
 
+/** Small inline form to generate a DRAFT invoice from this order - only shown once the order is CONFIRMED or FULFILLED. */
+function GenerateInvoiceCard({ orderId }: { orderId: string }) {
+  const navigate = useNavigate();
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<GenerateInvoiceFormValues>({ resolver: zodResolver(generateInvoiceSchema) });
+
+  const onSubmit = handleSubmit(async (values) => {
+    setFormError(null);
+    try {
+      const invoice = await generateInvoiceFromOrder(orderId, {
+        invoiceNumber: values.invoiceNumber,
+        issueDate: blankToUndefined(values.issueDate),
+        dueDate: blankToUndefined(values.dueDate),
+      });
+      navigate(`/invoices/${invoice.id}`);
+    } catch (error) {
+      setFormError(applyServerErrors(error, setError));
+    }
+  });
+
+  return (
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-5">
+      <h2 className="text-sm font-medium text-slate-500">Generate an invoice</h2>
+      {formError && <Alert variant="error">{formError}</Alert>}
+      <TextField label="Invoice number" error={errors.invoiceNumber?.message} {...register("invoiceNumber")} />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <TextField label="Issue date" type="date" placeholder="Today" error={errors.issueDate?.message} {...register("issueDate")} />
+        <TextField label="Due date" type="date" placeholder="+30 days" error={errors.dueDate?.message} {...register("dueDate")} />
+      </div>
+      <div className="flex justify-end">
+        <Button type="submit" isLoading={isSubmitting}>
+          Generate invoice
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 /** Shared form for adding a new line item (no `lineItem` prop) or editing an existing one. */
 function LineItemForm({
-  quoteId,
+  orderId,
   products,
   lineItem,
   onDone,
   onCancel,
 }: {
-  quoteId: string;
+  orderId: string;
   products: ProductDto[];
-  lineItem?: QuoteLineItemDto;
+  lineItem?: OrderLineItemDto;
   onDone: () => void;
   onCancel?: () => void;
 }) {
@@ -344,8 +373,8 @@ function LineItemForm({
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<QuoteLineItemFormValues>({
-    resolver: zodResolver(quoteLineItemSchema),
+  } = useForm<OrderLineItemFormValues>({
+    resolver: zodResolver(orderLineItemSchema),
     defaultValues: lineItem
       ? {
           productId: lineItem.productId ?? "",
@@ -374,9 +403,9 @@ function LineItemForm({
         unitPrice: toRequiredNumber(values.unitPrice),
       };
       if (lineItem) {
-        await updateQuoteLineItem(quoteId, lineItem.id, request);
+        await updateOrderLineItem(orderId, lineItem.id, request);
       } else {
-        await addQuoteLineItem(quoteId, request);
+        await addOrderLineItem(orderId, request);
         reset({ quantity: "1", productId: "", description: "", unitPrice: "" });
       }
       onDone();

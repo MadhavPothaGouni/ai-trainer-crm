@@ -502,6 +502,145 @@ export interface CreateQuoteLineItemRequest {
 
 export type UpdateQuoteLineItemRequest = CreateQuoteLineItemRequest;
 
+// ---- Sales: Order ----
+
+export type OrderStatus = "DRAFT" | "CONFIRMED" | "FULFILLED" | "CANCELLED";
+
+export const ORDER_STATUSES: OrderStatus[] = ["DRAFT", "CONFIRMED", "FULFILLED", "CANCELLED"];
+
+export interface OrderLineItemDto {
+  id: string;
+  productId: string | null;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
+export interface OrderDto {
+  id: string;
+  quoteId: string | null;
+  orderNumber: string;
+  status: OrderStatus;
+  currency: string | null;
+  subtotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  createdAt: string;
+  updatedAt: string;
+  lineItems: OrderLineItemDto[];
+}
+
+export interface CreateOrderRequest {
+  orderNumber: string;
+  currency?: string | null;
+  discountAmount?: number | null;
+  taxAmount?: number | null;
+}
+
+export type UpdateOrderRequest = CreateOrderRequest;
+
+export interface CreateOrderFromQuoteRequest {
+  orderNumber: string;
+}
+
+export interface UpdateOrderStatusRequest {
+  status: OrderStatus;
+}
+
+export interface CreateOrderLineItemRequest {
+  productId?: string | null;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export type UpdateOrderLineItemRequest = CreateOrderLineItemRequest;
+
+// ---- Finance: Invoice ----
+
+export type InvoiceStatus = "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "VOID";
+
+export const INVOICE_STATUSES: InvoiceStatus[] = ["DRAFT", "SENT", "PAID", "OVERDUE", "VOID"];
+
+export interface InvoiceLineItemDto {
+  id: string;
+  productId: string | null;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
+export interface InvoiceDto {
+  id: string;
+  orderId: string;
+  invoiceNumber: string;
+  status: InvoiceStatus;
+  currency: string | null;
+  issueDate: string;
+  dueDate: string;
+  subtotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  amountPaid: number;
+  balanceDue: number;
+  createdAt: string;
+  updatedAt: string;
+  lineItems: InvoiceLineItemDto[];
+}
+
+export interface GenerateInvoiceRequest {
+  invoiceNumber: string;
+  issueDate?: string | null;
+  dueDate?: string | null;
+}
+
+export interface UpdateInvoiceRequest {
+  invoiceNumber: string;
+  currency?: string | null;
+  issueDate: string;
+  dueDate: string;
+  discountAmount?: number | null;
+  taxAmount?: number | null;
+}
+
+export interface CreateInvoiceLineItemRequest {
+  productId?: string | null;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export type UpdateInvoiceLineItemRequest = CreateInvoiceLineItemRequest;
+
+// ---- Finance: Payment ----
+
+export type PaymentMethod = "CREDIT_CARD" | "BANK_TRANSFER" | "CASH" | "CHECK" | "OTHER";
+
+export const PAYMENT_METHODS: PaymentMethod[] = ["CREDIT_CARD", "BANK_TRANSFER", "CASH", "CHECK", "OTHER"];
+
+export interface PaymentDto {
+  id: string;
+  invoiceId: string;
+  amount: number;
+  method: PaymentMethod;
+  reference: string | null;
+  paidAt: string;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface CreatePaymentRequest {
+  amount: number;
+  method: PaymentMethod;
+  reference?: string | null;
+  paidAt?: string | null;
+  notes?: string | null;
+}
+
 // ---- Reporting ----
 
 export interface PipelineStageSummaryDto {

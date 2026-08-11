@@ -11,6 +11,8 @@ const CRM_NAV_LINKS = [
   { to: "/leads", label: "Leads", end: false },
   { to: "/quotes", label: "Quotes", end: false },
   { to: "/products", label: "Products", end: false },
+  { to: "/orders", label: "Orders", end: false },
+  { to: "/invoices", label: "Invoices", end: false },
 ];
 
 // Team/Role management hits USER:READ:ORGANIZATION / ROLE:READ:ORGANIZATION on the

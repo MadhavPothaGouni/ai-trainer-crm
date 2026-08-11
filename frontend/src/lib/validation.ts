@@ -216,6 +216,57 @@ export const quoteLineItemSchema = z.object({
 });
 export type QuoteLineItemFormValues = z.infer<typeof quoteLineItemSchema>;
 
+// ---- Sales/finance: orders, invoices, payments ----
+
+export const createOrderSchema = z.object({
+  orderNumber: z.string().min(1, "Order number is required").max(50),
+  currency: z.string().max(3).optional().or(z.literal("")),
+  discountAmount: optionalNumberString,
+  taxAmount: optionalNumberString,
+});
+export type CreateOrderFormValues = z.infer<typeof createOrderSchema>;
+
+export const createOrderFromQuoteSchema = z.object({
+  orderNumber: z.string().min(1, "Order number is required").max(50),
+});
+export type CreateOrderFromQuoteFormValues = z.infer<typeof createOrderFromQuoteSchema>;
+
+export const orderLineItemSchema = z.object({
+  productId: z.string().optional().or(z.literal("")),
+  description: z.string().min(1, "Description is required").max(500),
+  quantity: requiredPositiveIntegerString,
+  unitPrice: requiredNumberString,
+});
+export type OrderLineItemFormValues = z.infer<typeof orderLineItemSchema>;
+
+export const generateInvoiceSchema = z.object({
+  invoiceNumber: z.string().min(1, "Invoice number is required").max(50),
+  issueDate: z.string().optional().or(z.literal("")),
+  dueDate: z.string().optional().or(z.literal("")),
+});
+export type GenerateInvoiceFormValues = z.infer<typeof generateInvoiceSchema>;
+
+export const updateInvoiceSchema = z.object({
+  invoiceNumber: z.string().min(1, "Invoice number is required").max(50),
+  currency: z.string().max(3).optional().or(z.literal("")),
+  issueDate: z.string().min(1, "Issue date is required"),
+  dueDate: z.string().min(1, "Due date is required"),
+  discountAmount: optionalNumberString,
+  taxAmount: optionalNumberString,
+});
+export type UpdateInvoiceFormValues = z.infer<typeof updateInvoiceSchema>;
+
+export const invoiceLineItemSchema = orderLineItemSchema;
+export type InvoiceLineItemFormValues = z.infer<typeof invoiceLineItemSchema>;
+
+export const recordPaymentSchema = z.object({
+  amount: requiredNumberString,
+  method: z.string().min(1, "Method is required"),
+  reference: z.string().max(200).optional().or(z.literal("")),
+  notes: z.string().max(1000).optional().or(z.literal("")),
+});
+export type RecordPaymentFormValues = z.infer<typeof recordPaymentSchema>;
+
 export const changePasswordFormSchema = z
   .object({
     currentPassword: z.string().min(1, "Current password is required"),
