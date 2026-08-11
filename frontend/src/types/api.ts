@@ -933,6 +933,75 @@ export interface RepLeaderboardEntryDto {
   lostCount: number;
 }
 
+// ---- Dashboards ----
+// DASHBOARD is owner-scoped (OWN/TEAM/ORGANIZATION, no DEPARTMENT) like
+// Workflow above. A widget's `data` shape depends on its reportType - see
+// DashboardWidgetType below - the same discriminated-union-by-tag pattern
+// the backend's DashboardWidgetDataDto javadoc describes.
+
+export type DashboardWidgetReportType = "PIPELINE_BY_STAGE" | "LEAD_FUNNEL" | "LEADERBOARD";
+
+export const DASHBOARD_WIDGET_REPORT_TYPES: DashboardWidgetReportType[] = ["PIPELINE_BY_STAGE", "LEAD_FUNNEL", "LEADERBOARD"];
+
+export interface DashboardWidgetDto {
+  id: string;
+  reportType: DashboardWidgetReportType;
+  title: string;
+  displayOrder: number;
+  width: number;
+  height: number;
+}
+
+export interface DashboardDto {
+  id: string;
+  ownerId: string;
+  name: string;
+  description: string | null;
+  isDefault: boolean;
+  createdAt: string;
+  widgets: DashboardWidgetDto[];
+}
+
+export interface CreateDashboardRequest {
+  name: string;
+  description?: string | null;
+  ownerId?: string | null;
+}
+
+export type UpdateDashboardRequest = Omit<CreateDashboardRequest, "ownerId">;
+
+export interface CreateDashboardWidgetRequest {
+  reportType: DashboardWidgetReportType;
+  title?: string;
+  displayOrder?: number;
+  width?: number;
+  height?: number;
+}
+
+export interface UpdateDashboardWidgetRequest {
+  title?: string;
+  displayOrder: number;
+  width: number;
+  height: number;
+}
+
+/** `data`'s shape depends on `reportType` - PipelineStageSummaryDto[] for PIPELINE_BY_STAGE, LeadFunnelStageDto[] for LEAD_FUNNEL, RepLeaderboardEntryDto[] for LEADERBOARD. Narrow with a switch on reportType before reading it, same as the pages do. */
+export interface DashboardWidgetDataDto {
+  id: string;
+  reportType: DashboardWidgetReportType;
+  title: string;
+  displayOrder: number;
+  width: number;
+  height: number;
+  data: PipelineStageSummaryDto[] | LeadFunnelStageDto[] | RepLeaderboardEntryDto[];
+}
+
+export interface DashboardDataDto {
+  dashboardId: string;
+  name: string;
+  widgets: DashboardWidgetDataDto[];
+}
+
 // ---- Platform: API keys ----
 
 export interface ApiKeyDto {

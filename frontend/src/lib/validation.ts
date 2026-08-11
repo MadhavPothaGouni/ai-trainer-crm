@@ -375,6 +375,28 @@ export type CreateWorkflowFormValues = z.infer<typeof createWorkflowSchema>;
 export const updateWorkflowSchema = createWorkflowSchema.omit({ triggerResource: true, triggerEvent: true });
 export type UpdateWorkflowFormValues = z.infer<typeof updateWorkflowSchema>;
 
+// ---- Dashboards ----
+
+export const createDashboardSchema = z.object({
+  name: z.string().min(1, "Name is required").max(200),
+  description: z.string().max(2000).optional().or(z.literal("")),
+});
+export type CreateDashboardFormValues = z.infer<typeof createDashboardSchema>;
+
+export const addDashboardWidgetSchema = z.object({
+  reportType: z.string().min(1, "Report type is required"),
+  title: z.string().max(200).optional().or(z.literal("")),
+  width: z
+    .string()
+    .optional()
+    .refine((value) => value === undefined || value === "" || Number.isInteger(Number(value)), "Must be a whole number"),
+  height: z
+    .string()
+    .optional()
+    .refine((value) => value === undefined || value === "" || Number.isInteger(Number(value)), "Must be a whole number"),
+});
+export type AddDashboardWidgetFormValues = z.infer<typeof addDashboardWidgetSchema>;
+
 export const runWorkflowSchema = z.object({
   resourceId: z.string().min(1, "A record id is required"),
 });

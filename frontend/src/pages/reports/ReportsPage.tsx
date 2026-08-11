@@ -13,6 +13,11 @@ import type { LeadFunnelStageDto, PipelineStageSummaryDto, RepLeaderboardEntryDt
  * precedent). Every stage/status always has a row (the backend zero-fills
  * them), so a brand-new organization with no data yet still renders a
  * sensible, if empty-looking, chart rather than a blank space.
+ *
+ * <p>PipelineByStageCard/LeadFunnelCard/LeaderboardCard are exported (not
+ * page-local) so DashboardDetailPage can render the exact same widgets
+ * inside a saved dashboard, rather than reimplementing three near-identical
+ * charts.
  */
 export default function ReportsPage() {
   const [pipeline, setPipeline] = useState<PipelineStageSummaryDto[] | null>(null);
@@ -85,7 +90,7 @@ const STAGE_BAR_CLASSES: Record<PipelineStageSummaryDto["stage"], string> = {
   CLOSED_LOST: "bg-red-400",
 };
 
-function PipelineByStageCard({ rows }: { rows: PipelineStageSummaryDto[] }) {
+export function PipelineByStageCard({ rows }: { rows: PipelineStageSummaryDto[] }) {
   const maxAmount = Math.max(1, ...rows.map((row) => row.totalAmount));
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-5">
@@ -118,7 +123,7 @@ const FUNNEL_LABELS: Record<LeadFunnelStageDto["status"], string> = {
   CONVERTED: "Converted",
 };
 
-function LeadFunnelCard({ rows }: { rows: LeadFunnelStageDto[] }) {
+export function LeadFunnelCard({ rows }: { rows: LeadFunnelStageDto[] }) {
   const maxCount = Math.max(1, ...rows.map((row) => row.leadCount));
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-5">
@@ -138,7 +143,7 @@ function LeadFunnelCard({ rows }: { rows: LeadFunnelStageDto[] }) {
   );
 }
 
-function LeaderboardCard({ rows }: { rows: RepLeaderboardEntryDto[] }) {
+export function LeaderboardCard({ rows }: { rows: RepLeaderboardEntryDto[] }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-5">
       <h2 className="text-sm font-medium text-slate-500">Rep leaderboard</h2>

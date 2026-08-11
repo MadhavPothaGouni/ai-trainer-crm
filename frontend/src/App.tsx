@@ -18,6 +18,9 @@ import CampaignListPage from "./pages/campaigns/CampaignListPage";
 import ContactCreatePage from "./pages/contacts/ContactCreatePage";
 import ContactDetailPage from "./pages/contacts/ContactDetailPage";
 import ContactListPage from "./pages/contacts/ContactListPage";
+import DashboardCreatePage from "./pages/dashboards/DashboardCreatePage";
+import DashboardDetailPage from "./pages/dashboards/DashboardDetailPage";
+import DashboardListPage from "./pages/dashboards/DashboardListPage";
 import CustomFieldCreatePage from "./pages/customfields/CustomFieldCreatePage";
 import CustomFieldListPage from "./pages/customfields/CustomFieldListPage";
 import CustomObjectCreatePage from "./pages/customobjects/CustomObjectCreatePage";
@@ -125,6 +128,10 @@ export default function App() {
 
           <Route path="/custom-fields" element={<CustomFieldListPage />} />
           <Route path="/custom-fields/new" element={<CustomFieldCreatePage />} />
+
+          <Route path="/dashboards" element={<DashboardListPage />} />
+          <Route path="/dashboards/new" element={<DashboardCreatePage />} />
+          <Route path="/dashboards/:dashboardId" element={<DashboardDetailPage />} />
 
           <Route path="/reports" element={<ReportsPage />} />
 

@@ -23,14 +23,16 @@ const CRM_NAV_LINKS = [
 // these, but there's no per-permission info on the client to check that precisely, so
 // this hides the links for the common case rather than showing a dead end. Anyone who
 // does have access via a custom role can still reach these pages directly by URL.
-// REPORT/API_KEY/INTEGRATION/CUSTOM_FIELD/CUSTOM_OBJECT/WORKFLOW aren't core CRM resources
-// either (see RoleService#isCoreCrmResource on the backend) - the default MEMBER role holds
-// none of them, only OWNER/ADMIN, so Reports, the platform/integration pages, Custom
-// Objects/Fields, and Workflows all live in this admin-only group too. (Workflow IS
-// owner-scoped like Contact/Lead, unlike the other three - it's grouped here purely
-// because MEMBER doesn't hold it by default, same reasoning as Reports.)
+// REPORT/API_KEY/INTEGRATION/CUSTOM_FIELD/CUSTOM_OBJECT/WORKFLOW/DASHBOARD aren't core CRM
+// resources either (see RoleService#isCoreCrmResource on the backend) - the default MEMBER
+// role holds none of them, only OWNER/ADMIN, so Reports, the platform/integration pages,
+// Custom Objects/Fields, Workflows, and Dashboards all live in this admin-only group too.
+// (Workflow and Dashboard ARE owner-scoped like Contact/Lead, unlike Custom Field/Object -
+// they're grouped here purely because MEMBER doesn't hold them by default, same reasoning
+// as Reports.)
 const ADMIN_NAV_LINKS = [
   { to: "/reports", label: "Reports", end: false },
+  { to: "/dashboards", label: "Dashboards", end: false },
   { to: "/users", label: "Team", end: false },
   { to: "/roles", label: "Roles", end: false },
   { to: "/api-keys", label: "API Keys", end: false },
