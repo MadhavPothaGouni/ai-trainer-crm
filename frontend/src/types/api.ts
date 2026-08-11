@@ -502,6 +502,29 @@ export interface CreateQuoteLineItemRequest {
 
 export type UpdateQuoteLineItemRequest = CreateQuoteLineItemRequest;
 
+// ---- Reporting ----
+
+export interface PipelineStageSummaryDto {
+  stage: OpportunityStage;
+  opportunityCount: number;
+  totalAmount: number;
+}
+
+export interface LeadFunnelStageDto {
+  status: LeadStatus;
+  leadCount: number;
+}
+
+export interface RepLeaderboardEntryDto {
+  ownerId: string;
+  ownerName: string;
+  openCount: number;
+  openAmount: number;
+  wonCount: number;
+  wonAmount: number;
+  lostCount: number;
+}
+
 // ---- CRM: shared ----
 
 export interface AssignOwnerRequest {

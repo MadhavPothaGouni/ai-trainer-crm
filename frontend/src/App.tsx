@@ -24,6 +24,7 @@ import ProfilePage from "./pages/profile/ProfilePage";
 import QuoteCreatePage from "./pages/quotes/QuoteCreatePage";
 import QuoteDetailPage from "./pages/quotes/QuoteDetailPage";
 import QuoteListPage from "./pages/quotes/QuoteListPage";
+import ReportsPage from "./pages/reports/ReportsPage";
 import MyTasksPage from "./pages/tasks/MyTasksPage";
 import LeadCreatePage from "./pages/leads/LeadCreatePage";
 import LeadDetailPage from "./pages/leads/LeadDetailPage";
@@ -79,6 +80,8 @@ export default function App() {
           <Route path="/quotes" element={<QuoteListPage />} />
           <Route path="/quotes/new" element={<QuoteCreatePage />} />
           <Route path="/quotes/:quoteId" element={<QuoteDetailPage />} />
+
+          <Route path="/reports" element={<ReportsPage />} />
 
           <Route path="/users" element={<UserListPage />} />
           <Route path="/users/invite" element={<UserInvitePage />} />

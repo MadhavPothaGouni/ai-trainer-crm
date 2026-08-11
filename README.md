@@ -160,39 +160,44 @@ itself (Account/Contact/Opportunity/Lead, including lead conversion and
 record-level OWN/TEAM/DEPARTMENT/ORGANIZATION scope authorization), an
 Activity module (calls/emails/meetings/tasks/notes logged against any CRM
 record), sales tooling (a Product catalog and Quotes - priced proposals with
-line items tied to an Opportunity, totals recomputed server-side), React
-auth scaffold (login/register/forgot/reset/verify-email pages + protected
-routing), a CRM workspace UI (list/create/detail pages for accounts,
-contacts, opportunities, and leads, including opportunity stage transitions,
-lead conversion, a per-opportunity Quotes list, and a per-record
-ActivityTimeline on every detail page), Products/Quotes pages (including an
-inline line-item editor with a product picker), a cross-record "My Tasks"
-view, a team/role management UI (invite/list users, assign roles and
-status, create/edit custom roles against the full permission catalog), a
-"my profile" settings page (update name/phone/timezone/locale, change
-password), a frontend test suite (Vitest + React Testing Library), Docker
-Compose + CI for both halves, and a production deploy pipeline (versioned
-GHCR image publishing + GitHub Releases on tag push — see
+line items tied to an Opportunity, totals recomputed server-side), a
+Reporting & analytics module (pipeline value by stage, lead conversion
+funnel, and a per-rep leaderboard, backed by real aggregation queries over
+Opportunity/Lead), React auth scaffold (login/register/forgot/reset/
+verify-email pages + protected routing), a CRM workspace UI (list/create/
+detail pages for accounts, contacts, opportunities, and leads, including
+opportunity stage transitions, lead conversion, a per-opportunity Quotes
+list, and a per-record ActivityTimeline on every detail page), Products/
+Quotes pages (including an inline line-item editor with a product picker),
+a Reports page (pipeline-by-stage and lead-funnel charts plus the rep
+leaderboard), a cross-record "My Tasks" view, a team/role management UI
+(invite/list users, assign roles and status, create/edit custom roles
+against the full permission catalog), a "my profile" settings page (update
+name/phone/timezone/locale, change password), a frontend test suite
+(Vitest + React Testing Library), Docker Compose + CI for both halves, and
+a production deploy pipeline (versioned GHCR image publishing + GitHub
+Releases on tag push — see
 [Deploying to production](#deploying-to-production)).
 
 The permission catalog seeded in `V2__seed_permission_catalog.sql` already
 covers several resources with no module built on top of them yet -
 `ORDER`/`INVOICE`/`PAYMENT` (deeper sales/finance tooling), `CAMPAIGN`/
-`KNOWLEDGE_ARTICLE` (marketing/support), `WORKFLOW`/`REPORT`/`DASHBOARD`
-(automation/analytics), and `INTEGRATION`/`API_KEY`/`CUSTOM_FIELD`/
-`CUSTOM_OBJECT` (platform extensibility). That's deliberate: the RBAC model
-was designed up front for the platform's eventual full shape, and each of
-those becomes an `entity`/`repository`/`service`/`controller`/`dto` module
-following the same pattern as `account`/`contact`/`opportunity`/`lead`/
-`activity`/`product`/`quote`, plus a corresponding frontend page, whenever
-it gets built.
+`KNOWLEDGE_ARTICLE` (marketing/support), `WORKFLOW`/`DASHBOARD`
+(automation/a saved-report builder), and `INTEGRATION`/`API_KEY`/
+`CUSTOM_FIELD`/`CUSTOM_OBJECT` (platform extensibility). That's deliberate:
+the RBAC model was designed up front for the platform's eventual full
+shape, and each of those becomes an `entity`/`repository`/`service`/
+`controller`/`dto` module following the same pattern as `account`/
+`contact`/`opportunity`/`lead`/`activity`/`product`/`quote`, plus a
+corresponding frontend page, whenever it gets built. `report` is the one
+exception already built without an entity of its own - see
+`backend/crm-platform/README.md`'s module layout for why.
 
 Not yet built, roughly in the order planned:
-- Reporting & analytics: pipeline value by stage, lead conversion funnel, rep
-  leaderboard, backed by real aggregation queries
 - Platform/integration: API key management (programmatic auth) and webhook
   subscriptions dispatched off the existing domain event publisher
 - Broader frontend test coverage beyond the pages/components covered so far
-  (the Product/Quote pages in particular have no dedicated tests yet), and
-  the usual production-hardening items (rate limiting, observability/
-  metrics, avatar upload) that weren't part of the original scope
+  (the Product/Quote/Reports pages in particular have no dedicated tests
+  yet), and the usual production-hardening items (rate limiting,
+  observability/metrics, avatar upload) that weren't part of the original
+  scope

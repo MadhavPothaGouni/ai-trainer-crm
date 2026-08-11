@@ -19,7 +19,10 @@ const CRM_NAV_LINKS = [
 // these, but there's no per-permission info on the client to check that precisely, so
 // this hides the links for the common case rather than showing a dead end. Anyone who
 // does have access via a custom role can still reach these pages directly by URL.
+// REPORT isn't a core CRM resource either (see RoleService#isCoreCrmResource on the backend) -
+// the default MEMBER role holds none of it, only OWNER/ADMIN, so Reports lives here too.
 const ADMIN_NAV_LINKS = [
+  { to: "/reports", label: "Reports", end: false },
   { to: "/users", label: "Team", end: false },
   { to: "/roles", label: "Roles", end: false },
 ];

@@ -107,6 +107,13 @@ src/main/java/com/aitrainercrm/platform/
   quote/          priced proposals tied to one Opportunity, plus their line
                   items; totals are recomputed server-side on every line
                   item add/edit/remove (QuoteService#recomputeTotals)
+  report/         read-only aggregation queries over Opportunity/Lead -
+                  pipeline value by stage, the lead conversion funnel, and
+                  a per-rep leaderboard. No entity of its own (a report is
+                  a view over other modules' data); see the module's own
+                  javadoc for why it has a second, report-only repository
+                  interface per aggregated entity instead of adding these
+                  queries onto OpportunityRepository/LeadRepository
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security
   common/         BaseEntity, exception hierarchy, ApiResponse/ErrorResponse/
@@ -119,10 +126,14 @@ Every owner-scoped CRM module (`account`/`contact`/`opportunity`/`lead`/
 `service` + `controller` + `dto`, record-level OWN/TEAM/DEPARTMENT/
 ORGANIZATION authorization via `security.authorization.ScopeAuthorizationService`,
 and a permission catalog already seeded in `V2__seed_permission_catalog.sql`.
-`product` is the one exception - see its module's comment above. The catalog
-also seeds several resources (`ORDER`, `INVOICE`, `PAYMENT`, `CAMPAIGN`,
-`REPORT`, `WORKFLOW`, ...) that don't have a module built on top of them yet;
-see the root README's Roadmap.
+`product` is the one exception - see its module's comment above. `report` is
+a different kind of exception: it's read-only and has no owner-scoped
+record of its own, so it uses `ScopeAuthorizationService#visibleOwnerIds`
+directly against the REPORT permission to filter its aggregate queries by
+owner, rather than the record-level `assertCanAccess` pattern the CRUD
+modules use. The catalog also seeds several resources (`ORDER`, `INVOICE`,
+`PAYMENT`, `CAMPAIGN`, `WORKFLOW`, `DASHBOARD`, ...) that don't have a
+module built on top of them yet; see the root README's Roadmap.
 
 See the root `README.md` for the RBAC model, multi-tenancy rules, and the
 overall system architecture.
