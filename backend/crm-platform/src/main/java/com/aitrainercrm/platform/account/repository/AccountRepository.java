@@ -27,4 +27,11 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
 
     /** Existence check that respects tenant + soft-delete, used when another entity (Contact, Opportunity) is asked to link to an account id. */
     boolean existsByIdAndOrganizationIdAndDeletedAtIsNull(UUID id, UUID organizationId);
+
+    /** DuplicateDetectionListener's only candidate search for Account - name is the one field every Account has, so there's no email-vs-name branch here the way Lead/Contact have. */
+    @Query(
+            "select a from Account a where a.organizationId = :organizationId and lower(a.name) = lower(:name) "
+                    + "and a.id <> :excludeId and a.deletedAt is null")
+    List<Account> findDuplicateCandidatesByName(
+            @Param("organizationId") UUID organizationId, @Param("name") String name, @Param("excludeId") UUID excludeId);
 }

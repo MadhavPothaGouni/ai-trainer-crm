@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -31,4 +32,13 @@ public interface CalendarEventRepository extends JpaRepository<CalendarEvent, UU
     List<CalendarEvent> findByOrganizationIdAndDeletedAtIsNullOrderByStartAtAsc(UUID organizationId);
 
     List<CalendarEvent> findByOrganizationIdAndOwnerIdInAndDeletedAtIsNullOrderByStartAtAsc(UUID organizationId, Set<UUID> ownerIds);
+
+    /** See ActivityRepository#reassignRelatedTo's javadoc - the CalendarEvent quarter of DuplicateMatchService#merge's fan-out. */
+    @Modifying
+    @Query(
+            "update CalendarEvent c set c.relatedToId = :survivorId where c.organizationId = :organizationId "
+                    + "and c.relatedToType = :relatedToType and c.relatedToId = :absorbedId")
+    int reassignRelatedTo(
+            @Param("organizationId") UUID organizationId, @Param("relatedToType") CalendarEvent.RelatedToType relatedToType,
+            @Param("absorbedId") UUID absorbedId, @Param("survivorId") UUID survivorId);
 }

@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -24,4 +25,13 @@ public interface ActivityRepository extends JpaRepository<Activity, UUID> {
 
     Page<Activity> findByOrganizationIdAndOwnerIdInAndRelatedToTypeAndRelatedToId(
             UUID organizationId, Set<UUID> ownerIds, Activity.RelatedToType relatedToType, UUID relatedToId, Pageable pageable);
+
+    /** One quarter of DuplicateMatchService#merge's generic relatedTo fan-out, alongside AttachmentRepository/EmailMessageRepository/CalendarEventRepository's identical methods - Activity is the one of the four with no relatedToType=TICKET option, since dedupe only ever merges LEAD/CONTACT/ACCOUNT. */
+    @Modifying
+    @Query(
+            "update Activity a set a.relatedToId = :survivorId where a.organizationId = :organizationId "
+                    + "and a.relatedToType = :relatedToType and a.relatedToId = :absorbedId")
+    int reassignRelatedTo(
+            @Param("organizationId") UUID organizationId, @Param("relatedToType") Activity.RelatedToType relatedToType,
+            @Param("absorbedId") UUID absorbedId, @Param("survivorId") UUID survivorId);
 }

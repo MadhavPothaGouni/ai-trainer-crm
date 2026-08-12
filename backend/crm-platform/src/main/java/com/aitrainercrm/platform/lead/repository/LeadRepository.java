@@ -27,4 +27,21 @@ public interface LeadRepository extends JpaRepository<Lead, UUID> {
 
     /** Existence check that respects tenant + soft-delete - used by ActivityService to validate a related-to reference. */
     boolean existsByIdAndOrganizationIdAndDeletedAtIsNull(UUID id, UUID organizationId);
+
+    /** DuplicateDetectionListener's email-match candidate search - excludes the new lead itself and anything already CONVERTED (a converted lead's identity has effectively moved to its converted Account/Contact/Opportunity, so flagging it as a duplicate of a fresh lead isn't useful). DuplicateDetectionListener always passes Lead.Status.CONVERTED for excludedStatus; it's a parameter rather than a literal purely to sidestep JPQL enum-literal syntax. */
+    @Query(
+            "select l from Lead l where l.organizationId = :organizationId and lower(l.email) = lower(:email) "
+                    + "and l.id <> :excludeId and l.status <> :excludedStatus and l.deletedAt is null")
+    List<Lead> findDuplicateCandidatesByEmail(
+            @Param("organizationId") UUID organizationId, @Param("email") String email, @Param("excludeId") UUID excludeId,
+            @Param("excludedStatus") Lead.Status excludedStatus);
+
+    /** Fallback candidate search when the lead has no email - first+last+company, case-insensitive. See DuplicateDetectionListener's javadoc for why this only runs when email is blank. */
+    @Query(
+            "select l from Lead l where l.organizationId = :organizationId and lower(l.firstName) = lower(:firstName) "
+                    + "and lower(l.lastName) = lower(:lastName) and lower(l.companyName) = lower(:companyName) "
+                    + "and l.id <> :excludeId and l.status <> :excludedStatus and l.deletedAt is null")
+    List<Lead> findDuplicateCandidatesByName(
+            @Param("organizationId") UUID organizationId, @Param("firstName") String firstName, @Param("lastName") String lastName,
+            @Param("companyName") String companyName, @Param("excludeId") UUID excludeId, @Param("excludedStatus") Lead.Status excludedStatus);
 }

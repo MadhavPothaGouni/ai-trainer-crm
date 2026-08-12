@@ -294,6 +294,35 @@ src/main/java/com/aitrainercrm/platform/
                   the rotation cursor. See TerritoryRule's and
                   TerritoryAssignmentListener's javadoc and V21's migration
                   comment for the full reasoning
+  dedupe/         flags likely-duplicate Lead/Contact/Account pairs on
+                  creation (DuplicateDetectionListener, a sixth @EventListener
+                  on the CrmAuditEvents bus) and lets a caller merge or
+                  dismiss the flagged DuplicateMatch. No DUPLICATE_MATCH
+                  permission exists anywhere in the catalog - deliberately:
+                  DuplicateMatchController has no @PreAuthorize at all, and
+                  DuplicateMatchService instead reuses LEAD/CONTACT/ACCOUNT's
+                  own READ (list/get) and UPDATE (merge/dismiss) permissions,
+                  checked against BOTH records a pair names via two separate
+                  ScopeAuthorizationService#assertCanAccess calls - the first
+                  place in this codebase two independent scope checks gate a
+                  single write. A dedicated permission would be a real
+                  security gap, not a simplification: it would let someone
+                  merge two Leads they can't otherwise touch at all. Matching
+                  is email-first, name-fallback only when a record has no
+                  email (see the listener's javadoc for the full per-entity
+                  rule), and - like territory/'s TerritoryAssignmentListener -
+                  fires once, at creation, with no onRecordUpdated handler.
+                  Unlike territory/, this listener is purely additive; the
+                  actual ownerId-changing write happens later, synchronously,
+                  when a human calls merge. Merging fans out through four
+                  shared relatedTo tables (Activity/Attachment/EmailMessage/
+                  CalendarEvent) via one generic reassignGenericRelatedTo
+                  helper, plus entity-specific FKs where they exist
+                  (Contact.accountId/Opportunity.accountId for an Account
+                  merge, Opportunity.primaryContactId for a Contact merge);
+                  the absorbed record is soft-deleted, never hard-deleted.
+                  See V23's migration comment and DuplicateMatchService's
+                  javadoc for the full reasoning
   notification/   a teammate's own in-app inbox (notification.inbox package
                   - distinct from notification.email, the existing
                   transactional-email abstraction auth/ already used for
@@ -448,6 +477,15 @@ default MEMBER role (`RoleService#createDefaultRolesForOrganization`)
 without also widening `ORDER:APPROVE`/`INVOICE:APPROVE` - those two aren't
 in `isCoreCrmResource`, so they never reach the filter that grant applies
 to.
+`dedupe` (in `dedupe/`) is a sixth kind, and the inverse of `notification`'s:
+where `notification` skips the permission catalog because a notification's
+scope can only ever mean "yourself" (narrower than any existing permission
+could express), `dedupe` skips it because a `DuplicateMatch` needs no scope
+of its own at all - it names two existing LEAD/CONTACT/ACCOUNT records, and
+those resources' own READ/UPDATE permissions, checked against *both* named
+records, are already exactly the right gate. Adding `DUPLICATE_MATCH` would
+not add precision, it would remove it - see `DuplicateMatchService`'s
+javadoc and V23's migration comment.
 
 An earlier version of this file incorrectly claimed every resource in
 `V2__seed_permission_catalog.sql` had a module built on top of it -

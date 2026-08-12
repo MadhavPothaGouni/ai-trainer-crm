@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -31,4 +32,13 @@ public interface AttachmentRepository extends JpaRepository<Attachment, UUID> {
     List<Attachment> findByOrganizationIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID organizationId);
 
     List<Attachment> findByOrganizationIdAndOwnerIdInAndDeletedAtIsNullOrderByCreatedAtDesc(UUID organizationId, Set<UUID> ownerIds);
+
+    /** See ActivityRepository#reassignRelatedTo's javadoc - the Attachment quarter of DuplicateMatchService#merge's fan-out. */
+    @Modifying
+    @Query(
+            "update Attachment a set a.relatedToId = :survivorId where a.organizationId = :organizationId "
+                    + "and a.relatedToType = :relatedToType and a.relatedToId = :absorbedId")
+    int reassignRelatedTo(
+            @Param("organizationId") UUID organizationId, @Param("relatedToType") Attachment.RelatedToType relatedToType,
+            @Param("absorbedId") UUID absorbedId, @Param("survivorId") UUID survivorId);
 }
