@@ -23,4 +23,7 @@ public interface QuoteRepository extends JpaRepository<Quote, UUID> {
 
     Page<Quote> findByOrganizationIdAndOwnerIdInAndOpportunityIdAndDeletedAtIsNull(
             UUID organizationId, Set<UUID> ownerIds, UUID opportunityId, Pageable pageable);
+
+    /** Added for ApprovalRequestService#validateRelatedTo - QUOTE is a valid relatedToType for approval requests, same existence-check shape AccountRepository/ContactRepository/.../TicketRepository already had. */
+    boolean existsByIdAndOrganizationIdAndDeletedAtIsNull(UUID id, UUID organizationId);
 }

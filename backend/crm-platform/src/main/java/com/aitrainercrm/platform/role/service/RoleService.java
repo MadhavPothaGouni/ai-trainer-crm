@@ -61,8 +61,16 @@ public class RoleService {
         roleRepository.save(admin);
 
         Role member = new Role(MEMBER, "Standard team member access", organizationId, true);
+        // APPROVE was added here for APPROVAL_REQUEST (V19) specifically - being named as an
+        // approver on someone else's request isn't an elevated-role concept the way ORDER/
+        // INVOICE:APPROVE is (confirming an order, issuing an invoice); it's "were you
+        // personally named," which ApprovalService checks directly regardless of scope (see
+        // its javadoc). Safe to add here without also granting ORDER/INVOICE:APPROVE to every
+        // MEMBER, since those two resources aren't in isCoreCrmResource below and never reach
+        // this filter at all - the two @PreAuthorize gates on OrderController/InvoiceController
+        // are the only thing standing between a MEMBER and confirming an order either way.
         Set<Permission.Action> memberActions = Set.of(
-                Permission.Action.CREATE, Permission.Action.READ, Permission.Action.UPDATE);
+                Permission.Action.CREATE, Permission.Action.READ, Permission.Action.UPDATE, Permission.Action.APPROVE);
         allPermissions.stream()
                 .filter(p -> isCoreCrmResource(p.getResource()))
                 .filter(p -> memberActions.contains(p.getAction()))
@@ -75,7 +83,7 @@ public class RoleService {
 
     private boolean isCoreCrmResource(Permission.Resource resource) {
         return switch (resource) {
-            case LEAD, CONTACT, ACCOUNT, OPPORTUNITY, ACTIVITY, QUOTE, TICKET, EMAIL_MESSAGE, CALENDAR_EVENT, ATTACHMENT -> true;
+            case LEAD, CONTACT, ACCOUNT, OPPORTUNITY, ACTIVITY, QUOTE, TICKET, EMAIL_MESSAGE, CALENDAR_EVENT, ATTACHMENT, APPROVAL_REQUEST -> true;
             default -> false;
         };
     }

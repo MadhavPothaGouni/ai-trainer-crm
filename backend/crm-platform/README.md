@@ -217,6 +217,22 @@ src/main/java/com/aitrainercrm/platform/
                   javadoc for why local disk is a documented limitation
                   (not durable across container replicas/redeploys) rather
                   than a production plan
+  approval/       named, ordered multi-step sign-off chains (ApprovalRequest
+                  + ApprovalStep) requested against a Quote/Order/
+                  Opportunity - a genuinely different concept from order/'s
+                  and invoice/'s existing single-permission-gated APPROVE
+                  status transitions, not a duplicate of them; see V19's
+                  migration comment for how the two coexist. Owner-scoped
+                  off requestedByUserId exactly like ticket/ and attachment/,
+                  plus one carve-out none of the other owner-scoped modules
+                  have: whoever is named as the approver on any step of a
+                  request can always read that request and act on their own
+                  step, full stop, regardless of what scope they hold - the
+                  platform's fifth resource-access shape. See
+                  ApprovalRequestService's javadoc for the full reasoning
+                  and V19's migration comment for why the table has no
+                  deleted_at (status reaching CANCELLED/APPROVED/REJECTED
+                  already carries that meaning)
   notification/   a teammate's own in-app inbox (notification.inbox package
                   - distinct from notification.email, the existing
                   transactional-email abstraction auth/ already used for
@@ -250,18 +266,25 @@ src/main/java/com/aitrainercrm/platform/
 ```
 
 Every owner-scoped CRM module (`account`/`contact`/`opportunity`/`lead`/
-`activity`/`quote`/`ticket`/`email`/`calendar`/`attachment`) follows the same shape:
+`activity`/`quote`/`ticket`/`email`/`calendar`/`attachment`/`approval`) follows the same shape:
 `entity` + `repository` + `service` + `controller` + `dto`, record-level
 OWN/TEAM/DEPARTMENT/ORGANIZATION authorization via
 `security.authorization.ScopeAuthorizationService`. The first seven have
 their permission catalog seeded in `V2__seed_permission_catalog.sql`;
 `email`/`calendar` (EMAIL_MESSAGE/CALENDAR_EVENT) are seeded in `V15` instead,
-and `attachment` (ATTACHMENT) in `V18` - new resources added alongside their
-module in the same migration, not a catalog-then-module gap like Ticket's -
-and all three skip IMPORT (bulk-CSV-importing a sent-email log, a calendar
-schedule, or a set of file uploads isn't a real workflow the way importing a
-contact list is), so their action set is CREATE/READ/UPDATE/DELETE/EXPORT/
-ASSIGN, one action short of the original seven.
+`attachment` (ATTACHMENT) in `V18`, and `approval` (APPROVAL_REQUEST) in
+`V19` - new resources added alongside their module in the same migration,
+not a catalog-then-module gap like Ticket's - and all four skip IMPORT
+(bulk-CSV-importing a sent-email log, a calendar schedule, a set of file
+uploads, or a chain of sign-offs isn't a real workflow the way importing a
+contact list is); `approval` additionally skips EXPORT and ASSIGN (see V19's
+migration comment for why an approval chain has no meaningful "owner
+reassignment" the way a Ticket or Attachment does), so its action set is
+just CREATE/READ/UPDATE/APPROVE - the first module since order/invoice to
+get an APPROVE action at all, though for a completely different reason (see
+the "fifth kind" paragraph below). `email`/`calendar`/`attachment`'s action
+set is CREATE/READ/UPDATE/DELETE/EXPORT/ASSIGN, one action short of the
+original seven.
 `workflow` and `dashboard` follow the same owner-scoped shape too, minus
 DEPARTMENT (not seeded for WORKFLOW/DASHBOARD - see V2's own comment) -
 see their module comments above for why they, unlike this session's other
@@ -320,6 +343,22 @@ comment for the full reasoning, including why the table has no
 `deleted_at` (nothing else can ever reference or need to see a
 notification besides its one recipient, unlike every soft-deleted record
 above).
+`approval` (in `approval/`) is a fifth kind: owner-scoped like the very
+first group above (real `requestedByUserId`, full OWN/TEAM/DEPARTMENT/
+ORGANIZATION ladder, standard `@PreAuthorize` gates), but with one
+carve-out layered on top at the service level that none of those modules
+need - a named approver can always read the one request they're on and act
+on their own step, independent of scope entirely. It's a narrower version
+of `notification`'s "only yourself" rule (self-scope for exactly one
+relationship - being named an approver - rather than for the whole
+resource), which is why it's a variation on the owner-scoped shape instead
+of skipping the permission catalog the way `notification` does. See
+`ApprovalRequestService`'s javadoc and V19's migration comment for the full
+reasoning, including why `APPROVAL_REQUEST:APPROVE` is safe to add to the
+default MEMBER role (`RoleService#createDefaultRolesForOrganization`)
+without also widening `ORDER:APPROVE`/`INVOICE:APPROVE` - those two aren't
+in `isCoreCrmResource`, so they never reach the filter that grant applies
+to.
 
 An earlier version of this file incorrectly claimed every resource in
 `V2__seed_permission_catalog.sql` had a module built on top of it -
@@ -331,11 +370,12 @@ built on top of it as of this commit, and IMPORT/EXPORT specifically has a
 real implementation for four of the seven resources that got it seeded
 (`account`/`contact`/`lead`/`ticket`) - Opportunity, Activity, and Quote
 still have it modeled but unbuilt. `EMAIL_MESSAGE`/`CALENDAR_EVENT` (see
-`email`/`calendar` above) and `ATTACHMENT` (see `attachment` above) are a
-different case from that gap entirely - each was added to the permission
-catalog and given a module in the same migration it was seeded in (`V15`,
-`V18`), so there was never a window where any of them were seeded but
-unimplemented the way Ticket was.
+`email`/`calendar` above), `ATTACHMENT` (see `attachment` above), and
+`APPROVAL_REQUEST` (see `approval` above) are a different case from that gap
+entirely - each was added to the permission catalog and given a module in
+the same migration it was seeded in (`V15`, `V18`, `V19`), so there was
+never a window where any of them were seeded but unimplemented the way
+Ticket was.
 
 See the root `README.md` for the RBAC model, multi-tenancy rules, and the
 overall system architecture.
