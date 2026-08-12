@@ -365,6 +365,26 @@ src/main/java/com/aitrainercrm/platform/
                   style self-scope pattern, reused here instead of invented
                   fresh. See V25's migration comment and SalesGoalService's
                   javadoc for the full reasoning
+  savedviews/     a teammate's own named filter+sort presets (SavedView) for
+                  a standard CRM list page - LEAD/CONTACT/ACCOUNT/
+                  OPPORTUNITY/TICKET. The purest instance yet of the
+                  fourth-kind, notification-style self-scope pattern: no
+                  Permission.Resource, no ScopeAuthorizationService, no
+                  @PreAuthorize anywhere in SavedViewController, and unlike
+                  salesgoals/'s "seventh kind" (which only applies this
+                  pattern to one endpoint out of six), every single action
+                  here - list/create/update/delete/setDefault - is scoped to
+                  ownerUserId with nothing else to check. filters is stored
+                  as an opaque JSON blob, same "the frontend owns the shape"
+                  reasoning attachment/'s storageKey documents - the service
+                  never parses it, only checks it's non-blank. At-most-one-
+                  default-per-owner-per-entity-type is enforced the same way
+                  dashboard/'s Dashboard already does: a partial unique index
+                  (V26) plus SavedViewService#setDefault's unset-then-set-
+                  with-saveAndFlush ordering, reused verbatim rather than
+                  re-derived - see DashboardService#setDefault's javadoc for
+                  why flush order (not setter-call order) is what the unique
+                  index actually cares about
   notification/   a teammate's own in-app inbox (notification.inbox package
                   - distinct from notification.email, the existing
                   transactional-email abstraction auth/ already used for
