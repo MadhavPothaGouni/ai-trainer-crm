@@ -1,24 +1,34 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { listAccounts } from "../../api/accounts";
+import { SavedViewsBar, type SortFieldOption } from "../../components/saved-views/SavedViewsBar";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { Pagination } from "../../components/ui/Pagination";
 import { ApiError } from "../../lib/apiClient";
-import type { AccountDto, PageResponse } from "../../types/api";
+import type { AccountDto, PageResponse, SavedViewSortDirection } from "../../types/api";
 
 const PAGE_SIZE = 20;
+
+const SORT_FIELD_OPTIONS: SortFieldOption[] = [
+  { value: "name", label: "Name" },
+  { value: "createdAt", label: "Date created" },
+  { value: "industry", label: "Industry" },
+];
 
 export default function AccountListPage() {
   const [page, setPage] = useState(0);
   const [result, setResult] = useState<PageResponse<AccountDto> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState("name");
+  const [sortDirection, setSortDirection] = useState<SavedViewSortDirection>("ASC");
 
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
-    listAccounts({ page, size: PAGE_SIZE, sort: "name,asc" })
+    listAccounts({ page, size: PAGE_SIZE, sort: `${sortField},${sortDirection.toLowerCase()}` })
       .then((res) => {
         if (!cancelled) setResult(res);
       })
@@ -31,7 +41,22 @@ export default function AccountListPage() {
     return () => {
       cancelled = true;
     };
-  }, [page]);
+  }, [page, sortField, sortDirection]);
+
+  const visibleAccounts = useMemo(() => {
+    const content = result?.content ?? [];
+    const query = search.trim().toLowerCase();
+    if (!query) return content;
+    return content.filter(
+      (account) => account.name.toLowerCase().includes(query) || (account.industry ?? "").toLowerCase().includes(query),
+    );
+  }, [result, search]);
+
+  function handleSortChange(field: string, direction: SavedViewSortDirection) {
+    setSortField(field);
+    setSortDirection(direction);
+    setPage(0);
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -44,6 +69,16 @@ export default function AccountListPage() {
           <Button>New account</Button>
         </Link>
       </div>
+
+      <SavedViewsBar
+        entityType="ACCOUNT"
+        search={search}
+        onSearchChange={setSearch}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        sortFieldOptions={SORT_FIELD_OPTIONS}
+        onSortChange={handleSortChange}
+      />
 
       {error && <Alert variant="error">{error}</Alert>}
 
@@ -65,14 +100,14 @@ export default function AccountListPage() {
                 </td>
               </tr>
             )}
-            {!isLoading && result?.content.length === 0 && (
+            {!isLoading && visibleAccounts.length === 0 && (
               <tr>
                 <td className="px-4 py-6 text-center text-slate-400" colSpan={4}>
-                  No accounts yet.
+                  {search ? "No accounts match this search." : "No accounts yet."}
                 </td>
               </tr>
             )}
-            {result?.content.map((account) => (
+            {visibleAccounts.map((account) => (
               <tr key={account.id} className="hover:bg-slate-50">
                 <td className="px-4 py-3">
                   <Link to={`/accounts/${account.id}`} className="font-medium text-slate-900 hover:underline">

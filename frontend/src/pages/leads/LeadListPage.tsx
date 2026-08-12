@@ -1,13 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { listLeads } from "../../api/leads";
+import { SavedViewsBar, type SortFieldOption } from "../../components/saved-views/SavedViewsBar";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { Pagination } from "../../components/ui/Pagination";
 import { ApiError } from "../../lib/apiClient";
-import type { LeadDto, LeadStatus, PageResponse } from "../../types/api";
+import type { LeadDto, LeadStatus, PageResponse, SavedViewSortDirection } from "../../types/api";
 
 const PAGE_SIZE = 20;
+
+const SORT_FIELD_OPTIONS: SortFieldOption[] = [
+  { value: "createdAt", label: "Date created" },
+  { value: "fullName", label: "Name" },
+  { value: "companyName", label: "Company" },
+  { value: "score", label: "Score" },
+];
 
 const STATUS_CLASSES: Record<LeadStatus, string> = {
   NEW: "bg-slate-100 text-slate-700",
@@ -26,11 +34,14 @@ export default function LeadListPage() {
   const [result, setResult] = useState<PageResponse<LeadDto> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState("createdAt");
+  const [sortDirection, setSortDirection] = useState<SavedViewSortDirection>("DESC");
 
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
-    listLeads({ page, size: PAGE_SIZE, sort: "createdAt,desc" })
+    listLeads({ page, size: PAGE_SIZE, sort: `${sortField},${sortDirection.toLowerCase()}` })
       .then((res) => {
         if (!cancelled) setResult(res);
       })
@@ -43,7 +54,22 @@ export default function LeadListPage() {
     return () => {
       cancelled = true;
     };
-  }, [page]);
+  }, [page, sortField, sortDirection]);
+
+  const visibleLeads = useMemo(() => {
+    const content = result?.content ?? [];
+    const query = search.trim().toLowerCase();
+    if (!query) return content;
+    return content.filter(
+      (lead) => lead.fullName.toLowerCase().includes(query) || (lead.companyName ?? "").toLowerCase().includes(query),
+    );
+  }, [result, search]);
+
+  function handleSortChange(field: string, direction: SavedViewSortDirection) {
+    setSortField(field);
+    setSortDirection(direction);
+    setPage(0);
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -56,6 +82,16 @@ export default function LeadListPage() {
           <Button>New lead</Button>
         </Link>
       </div>
+
+      <SavedViewsBar
+        entityType="LEAD"
+        search={search}
+        onSearchChange={setSearch}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        sortFieldOptions={SORT_FIELD_OPTIONS}
+        onSortChange={handleSortChange}
+      />
 
       {error && <Alert variant="error">{error}</Alert>}
 
@@ -78,14 +114,14 @@ export default function LeadListPage() {
                 </td>
               </tr>
             )}
-            {!isLoading && result?.content.length === 0 && (
+            {!isLoading && visibleLeads.length === 0 && (
               <tr>
                 <td className="px-4 py-6 text-center text-slate-400" colSpan={5}>
-                  No leads yet.
+                  {search ? "No leads match this search." : "No leads yet."}
                 </td>
               </tr>
             )}
-            {result?.content.map((lead) => (
+            {visibleLeads.map((lead) => (
               <tr key={lead.id} className="hover:bg-slate-50">
                 <td className="px-4 py-3">
                   <Link to={`/leads/${lead.id}`} className="font-medium text-slate-900 hover:underline">

@@ -1,13 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { listOpportunities } from "../../api/opportunities";
+import { SavedViewsBar, type SortFieldOption } from "../../components/saved-views/SavedViewsBar";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { Pagination } from "../../components/ui/Pagination";
 import { ApiError } from "../../lib/apiClient";
-import type { OpportunityDto, OpportunityStage, PageResponse } from "../../types/api";
+import type { OpportunityDto, OpportunityStage, PageResponse, SavedViewSortDirection } from "../../types/api";
 
 const PAGE_SIZE = 20;
+
+const SORT_FIELD_OPTIONS: SortFieldOption[] = [
+  { value: "createdAt", label: "Date created" },
+  { value: "name", label: "Name" },
+  { value: "amount", label: "Amount" },
+  { value: "expectedCloseDate", label: "Expected close" },
+];
 
 const STAGE_CLASSES: Record<OpportunityStage, string> = {
   PROSPECTING: "bg-slate-100 text-slate-700",
@@ -31,11 +39,14 @@ export default function OpportunityListPage() {
   const [result, setResult] = useState<PageResponse<OpportunityDto> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState("createdAt");
+  const [sortDirection, setSortDirection] = useState<SavedViewSortDirection>("DESC");
 
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
-    listOpportunities({ page, size: PAGE_SIZE, sort: "createdAt,desc" })
+    listOpportunities({ page, size: PAGE_SIZE, sort: `${sortField},${sortDirection.toLowerCase()}` })
       .then((res) => {
         if (!cancelled) setResult(res);
       })
@@ -48,7 +59,20 @@ export default function OpportunityListPage() {
     return () => {
       cancelled = true;
     };
-  }, [page]);
+  }, [page, sortField, sortDirection]);
+
+  const visibleOpportunities = useMemo(() => {
+    const content = result?.content ?? [];
+    const query = search.trim().toLowerCase();
+    if (!query) return content;
+    return content.filter((opportunity) => opportunity.name.toLowerCase().includes(query));
+  }, [result, search]);
+
+  function handleSortChange(field: string, direction: SavedViewSortDirection) {
+    setSortField(field);
+    setSortDirection(direction);
+    setPage(0);
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -61,6 +85,16 @@ export default function OpportunityListPage() {
           <Button>New opportunity</Button>
         </Link>
       </div>
+
+      <SavedViewsBar
+        entityType="OPPORTUNITY"
+        search={search}
+        onSearchChange={setSearch}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        sortFieldOptions={SORT_FIELD_OPTIONS}
+        onSortChange={handleSortChange}
+      />
 
       {error && <Alert variant="error">{error}</Alert>}
 
@@ -82,14 +116,14 @@ export default function OpportunityListPage() {
                 </td>
               </tr>
             )}
-            {!isLoading && result?.content.length === 0 && (
+            {!isLoading && visibleOpportunities.length === 0 && (
               <tr>
                 <td className="px-4 py-6 text-center text-slate-400" colSpan={4}>
-                  No opportunities yet.
+                  {search ? "No opportunities match this search." : "No opportunities yet."}
                 </td>
               </tr>
             )}
-            {result?.content.map((opportunity) => (
+            {visibleOpportunities.map((opportunity) => (
               <tr key={opportunity.id} className="hover:bg-slate-50">
                 <td className="px-4 py-3">
                   <Link to={`/opportunities/${opportunity.id}`} className="font-medium text-slate-900 hover:underline">

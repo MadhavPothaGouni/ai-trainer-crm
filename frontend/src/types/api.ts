@@ -1667,3 +1667,46 @@ export interface UpdateSalesGoalRequest {
   periodStart: string;
   periodEnd: string;
 }
+
+// ---- Saved List Views ----
+//
+// A teammate's own named filter+sort preset for one of the standard CRM list pages - see
+// backend/crm-platform/README.md's module layout for `savedviews`. The purest self-scoped module
+// yet: no permission is required for any of these endpoints, every action is implicitly scoped to
+// the caller. `filters` is an opaque JSON string the backend never parses - SavedViewsBar owns its
+// shape (`SavedViewFilters` below) and is responsible for JSON.stringify/JSON.parse on both ends.
+
+export type SavedViewEntityType = "LEAD" | "CONTACT" | "ACCOUNT" | "OPPORTUNITY" | "TICKET";
+export type SavedViewSortDirection = "ASC" | "DESC";
+
+/** The shape SavedViewsBar reads/writes into SavedViewDto#filters via JSON.stringify/JSON.parse. */
+export interface SavedViewFilters {
+  search?: string;
+}
+
+export interface SavedViewDto {
+  id: string;
+  entityType: SavedViewEntityType;
+  name: string;
+  filters: string;
+  sortField: string | null;
+  sortDirection: SavedViewSortDirection | null;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSavedViewRequest {
+  entityType: SavedViewEntityType;
+  name: string;
+  filters: string;
+  sortField?: string | null;
+  sortDirection?: SavedViewSortDirection | null;
+}
+
+export interface UpdateSavedViewRequest {
+  name: string;
+  filters: string;
+  sortField?: string | null;
+  sortDirection?: SavedViewSortDirection | null;
+}

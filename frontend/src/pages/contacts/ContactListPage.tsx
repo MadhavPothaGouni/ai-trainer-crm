@@ -1,24 +1,34 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { listContacts } from "../../api/contacts";
+import { SavedViewsBar, type SortFieldOption } from "../../components/saved-views/SavedViewsBar";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { Pagination } from "../../components/ui/Pagination";
 import { ApiError } from "../../lib/apiClient";
-import type { ContactDto, PageResponse } from "../../types/api";
+import type { ContactDto, PageResponse, SavedViewSortDirection } from "../../types/api";
 
 const PAGE_SIZE = 20;
+
+const SORT_FIELD_OPTIONS: SortFieldOption[] = [
+  { value: "lastName", label: "Last name" },
+  { value: "firstName", label: "First name" },
+  { value: "createdAt", label: "Date created" },
+];
 
 export default function ContactListPage() {
   const [page, setPage] = useState(0);
   const [result, setResult] = useState<PageResponse<ContactDto> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState("lastName");
+  const [sortDirection, setSortDirection] = useState<SavedViewSortDirection>("ASC");
 
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
-    listContacts({ page, size: PAGE_SIZE, sort: "lastName,asc" })
+    listContacts({ page, size: PAGE_SIZE, sort: `${sortField},${sortDirection.toLowerCase()}` })
       .then((res) => {
         if (!cancelled) setResult(res);
       })
@@ -31,7 +41,22 @@ export default function ContactListPage() {
     return () => {
       cancelled = true;
     };
-  }, [page]);
+  }, [page, sortField, sortDirection]);
+
+  const visibleContacts = useMemo(() => {
+    const content = result?.content ?? [];
+    const query = search.trim().toLowerCase();
+    if (!query) return content;
+    return content.filter(
+      (contact) => contact.fullName.toLowerCase().includes(query) || (contact.email ?? "").toLowerCase().includes(query),
+    );
+  }, [result, search]);
+
+  function handleSortChange(field: string, direction: SavedViewSortDirection) {
+    setSortField(field);
+    setSortDirection(direction);
+    setPage(0);
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -44,6 +69,16 @@ export default function ContactListPage() {
           <Button>New contact</Button>
         </Link>
       </div>
+
+      <SavedViewsBar
+        entityType="CONTACT"
+        search={search}
+        onSearchChange={setSearch}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        sortFieldOptions={SORT_FIELD_OPTIONS}
+        onSortChange={handleSortChange}
+      />
 
       {error && <Alert variant="error">{error}</Alert>}
 
@@ -65,14 +100,14 @@ export default function ContactListPage() {
                 </td>
               </tr>
             )}
-            {!isLoading && result?.content.length === 0 && (
+            {!isLoading && visibleContacts.length === 0 && (
               <tr>
                 <td className="px-4 py-6 text-center text-slate-400" colSpan={4}>
-                  No contacts yet.
+                  {search ? "No contacts match this search." : "No contacts yet."}
                 </td>
               </tr>
             )}
-            {result?.content.map((contact) => (
+            {visibleContacts.map((contact) => (
               <tr key={contact.id} className="hover:bg-slate-50">
                 <td className="px-4 py-3">
                   <Link to={`/contacts/${contact.id}`} className="font-medium text-slate-900 hover:underline">
