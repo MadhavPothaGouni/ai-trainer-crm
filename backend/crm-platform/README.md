@@ -342,6 +342,29 @@ src/main/java/com/aitrainercrm/platform/
                   (CREATE/READ/UPDATE/DELETE at ORGANIZATION scope only,
                   seeded fresh in V24), the same third-kind shape SLA_POLICY
                   and TERRITORY_RULE already use
+  salesgoals/     admin-set revenue/deal-count quotas (SalesGoal) for one
+                  period, assigned to exactly one of an individual user or a
+                  team - the same "exactly one of two" constraint
+                  territory_rules/custom_fields established, this time as a
+                  real CHECK constraint (V25) rather than an
+                  application-level check. Progress against a goal is always
+                  computed LIVE from real Opportunity rows (SalesGoalService
+                  #toDto, via a second read-only repository over Opportunity,
+                  the same "the owning module has no reason to know about
+                  this" reasoning report/'s OpportunityAnalyticsRepository
+                  documents) - the inverse of forecast/'s choice to
+                  materialize, and deliberately so: a goal's period is almost
+                  always still open when someone checks it, so there's
+                  nothing yet to snapshot. Two access patterns coexist in one
+                  module for the first time this session: full CRUD is
+                  admin-config (SALES_GOAL:*:ORGANIZATION, the third kind
+                  sla/territory/leadscoring already use), but
+                  GET /sales-goals/mine skips permissions entirely and just
+                  returns the caller's own assigned goals (individually or
+                  via their current team) - the fourth-kind, notification-
+                  style self-scope pattern, reused here instead of invented
+                  fresh. See V25's migration comment and SalesGoalService's
+                  javadoc for the full reasoning
   notification/   a teammate's own in-app inbox (notification.inbox package
                   - distinct from notification.email, the existing
                   transactional-email abstraction auth/ already used for
@@ -420,22 +443,23 @@ permission to filter its aggregate queries by owner, rather than the
 record-level `assertCanAccess` pattern the CRUD modules use. `apikey`,
 `webhook`, `customfield`, `sla` (`SlaPolicyController` specifically - see
 below), `territory` (`TerritoryRuleController` specifically - see below),
-`leadscoring` (`LeadScoringRuleController` specifically - see below), and
+`leadscoring` (`LeadScoringRuleController` specifically - see below),
+`salesgoals` (`SalesGoalController` specifically - see below), and
 Team (in `organization/`) are a third kind: platform
 administration, gated entirely by `API_KEY:*:ORGANIZATION` /
 `INTEGRATION:*:ORGANIZATION` / `CUSTOM_FIELD:*:ORGANIZATION` /
 `CUSTOM_OBJECT:*:ORGANIZATION` / `SLA_POLICY:*:ORGANIZATION` /
 `TERRITORY_RULE:*:ORGANIZATION` / `LEAD_SCORING_RULE:*:ORGANIZATION` /
-`TEAM:*:ORGANIZATION` (no OWN/TEAM/
-DEPARTMENT variant exists for any of these eight resources - a bit of an
+`SALES_GOAL:*:ORGANIZATION` / `TEAM:*:ORGANIZATION` (no OWN/TEAM/
+DEPARTMENT variant exists for any of these nine resources - a bit of an
 irony for `TEAM` specifically, whose entire purpose is backing other
 resources' TEAM/DEPARTMENT scope, but managing *teams themselves* is
 still an org-wide admin action, same as managing users or roles), with no
 per-record ownership concept at all - see `ApiKeyController`'s,
 `WebhookSubscriptionController`'s, `CustomFieldController`'s/
 `CustomObjectController`'s, `SlaPolicyController`'s,
-`TerritoryRuleController`'s, `LeadScoringRuleController`'s, and
-`TeamController`'s
+`TerritoryRuleController`'s, `LeadScoringRuleController`'s,
+`SalesGoalController`'s, and `TeamController`'s
 javadoc. `sla`'s other controller, `TicketSlaController`, is not part of
 this third kind at all - it has no `@PreAuthorize` of its own and instead
 reuses the ticket's own `TICKET:READ` scope check inline
@@ -513,6 +537,18 @@ those resources' own READ/UPDATE permissions, checked against *both* named
 records, are already exactly the right gate. Adding `DUPLICATE_MATCH` would
 not add precision, it would remove it - see `DuplicateMatchService`'s
 javadoc and V23's migration comment.
+`salesgoals` (in `salesgoals/`) is a seventh kind, and the first module this
+session to combine two earlier patterns rather than introduce a new one:
+`SalesGoalController`'s five CRUD-shaped endpoints are a plain instance of
+the third kind (`SALES_GOAL:*:ORGANIZATION`, no `ScopeAuthorizationService`
+call), but `GET /sales-goals/mine` sitting right alongside them is a plain
+instance of the fourth kind (`notification`'s self-scoped, no-permission-
+check shape) - `SalesGoalService#myGoals` just filters on `principal.getId()`
+and their current `teamId`, exactly like `NotificationService` filters on
+`recipientUserId`. Nothing new was invented to let a rep see their own quota
+without an admin permission; the module just reuses the one pattern already
+built for "a user's own thing" and layers admin CRUD on top for everyone
+else's. See V25's migration comment and `SalesGoalService`'s javadoc.
 
 An earlier version of this file incorrectly claimed every resource in
 `V2__seed_permission_catalog.sql` had a module built on top of it -
