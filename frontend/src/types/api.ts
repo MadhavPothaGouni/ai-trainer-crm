@@ -1710,3 +1710,53 @@ export interface UpdateSavedViewRequest {
   sortField?: string | null;
   sortDirection?: SavedViewSortDirection | null;
 }
+
+// ---- Email Templates ----
+//
+// Reusable, organization-wide email templates with {{token}} placeholders - see
+// backend/crm-platform/README.md's module layout for `emailtemplate`. Like Products, there's no
+// ownerId: any teammate holding EMAIL_TEMPLATE:*:{TEAM,DEPARTMENT,ORGANIZATION} (no OWN scope
+// exists) can manage every template in the org. render() is a read-only preview - nothing is
+// persisted server-side - so the frontend calls it live as the user picks a target record.
+
+export type EmailTemplateCategory = "GENERAL" | "SALES" | "SUPPORT" | "MARKETING";
+export const EMAIL_TEMPLATE_CATEGORIES: EmailTemplateCategory[] = ["GENERAL", "SALES", "SUPPORT", "MARKETING"];
+
+export interface EmailTemplateDto {
+  id: string;
+  name: string;
+  category: EmailTemplateCategory;
+  subject: string;
+  body: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateEmailTemplateRequest {
+  name: string;
+  category: EmailTemplateCategory;
+  subject: string;
+  body: string;
+}
+
+export interface UpdateEmailTemplateRequest {
+  name: string;
+  category: EmailTemplateCategory;
+  subject: string;
+  body: string;
+  active: boolean;
+}
+
+export interface RenderEmailTemplateRequest {
+  contactId?: string | null;
+  leadId?: string | null;
+  accountId?: string | null;
+  opportunityId?: string | null;
+}
+
+export interface RenderedEmailDto {
+  subject: string;
+  body: string;
+  unresolvedTokens: string[];
+}

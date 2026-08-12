@@ -26,6 +26,8 @@ import SalesGoalDetailPage from "./pages/salesgoals/SalesGoalDetailPage";
 import SalesGoalListPage from "./pages/salesgoals/SalesGoalListPage";
 import LeadScoringRuleDetailPage from "./pages/leadscoring/LeadScoringRuleDetailPage";
 import LeadScoringRuleListPage from "./pages/leadscoring/LeadScoringRuleListPage";
+import EmailTemplateDetailPage from "./pages/emailtemplates/EmailTemplateDetailPage";
+import EmailTemplateListPage from "./pages/emailtemplates/EmailTemplateListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -179,6 +181,8 @@ export default function App() {
           <Route path="/my-goals" element={<MyGoalsPage />} />
           <Route path="/sales-goals" element={<SalesGoalListPage />} />
           <Route path="/sales-goals/:goalId" element={<SalesGoalDetailPage />} />
+          <Route path="/email-templates" element={<EmailTemplateListPage />} />
+          <Route path="/email-templates/:templateId" element={<EmailTemplateDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />

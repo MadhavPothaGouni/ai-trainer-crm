@@ -640,3 +640,18 @@ export const createWebhookSchema = z.object({
   eventType: z.string().max(100).optional().or(z.literal("")),
 });
 export type CreateWebhookFormValues = z.infer<typeof createWebhookSchema>;
+
+// ---- Email Templates ----
+
+export const createEmailTemplateSchema = z.object({
+  name: z.string().min(1, "Name is required").max(150),
+  category: z.string().min(1, "Choose a category"),
+  subject: z.string().min(1, "Subject is required").max(300),
+  body: z.string().min(1, "Body is required"),
+});
+export type CreateEmailTemplateFormValues = z.infer<typeof createEmailTemplateSchema>;
+
+export const updateEmailTemplateSchema = createEmailTemplateSchema.extend({
+  active: z.boolean(),
+});
+export type UpdateEmailTemplateFormValues = z.infer<typeof updateEmailTemplateSchema>;

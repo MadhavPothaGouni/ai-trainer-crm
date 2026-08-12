@@ -25,6 +25,11 @@ const CRM_NAV_LINKS = [
   { to: "/calendar", label: "Calendar", end: false },
   { to: "/quotes", label: "Quotes", end: false },
   { to: "/products", label: "Products", end: false },
+  // No OWN scope on EMAIL_TEMPLATE, same three-scope-ladder shape as Products above (TEAM/
+  // DEPARTMENT/ORGANIZATION only) - a template is shared organization content, not admin-only
+  // config, so this belongs in the main nav rather than the admin group below. See
+  // backend/crm-platform/README.md's module layout for `emailtemplate`.
+  { to: "/email-templates", label: "Email Templates", end: false },
   { to: "/orders", label: "Orders", end: false },
   { to: "/invoices", label: "Invoices", end: false },
   { to: "/campaigns", label: "Campaigns", end: false },
