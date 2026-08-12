@@ -156,6 +156,21 @@ src/main/java/com/aitrainercrm/platform/
                   live on each read rather than storing/caching any report
                   data itself, so a saved dashboard is a saved view, never
                   a stale snapshot
+  forecast/       the inverse of dashboard/'s design choice, deliberately -
+                  PipelineSnapshotService#captureDaily (this platform's
+                  second real @Scheduled job, after SlaEvaluationService#
+                  sweep, and like it a genuinely cross-tenant single-pass
+                  query) persists one PipelineSnapshot row per (org, date,
+                  owner, stage) once a day, specifically so a trend-over-time
+                  view exists that a live query structurally cannot
+                  reconstruct after the fact - a closed or reassigned deal
+                  no longer looks the way it did the day it was captured. No
+                  entity CRUD anywhere: the only writer is the scheduled
+                  job, and the two read endpoints (GET /forecast/snapshots,
+                  /forecast/trend) reuse REPORT:READ rather than a
+                  permission of their own, exactly like dashboard's own read
+                  path leans on report/'s. See V22's migration comment for
+                  the full "why this isn't a duplicate of report/" reasoning
   customfield/    platform extensibility: Custom Objects (admin-defined
                   generic entities - one built-in Name field, everything
                   else comes from attached fields) and Custom Fields
@@ -393,7 +408,17 @@ dashboard's widget data delegates straight into `ReportService`, which
 enforces REPORT:READ's own OWN/TEAM/ORGANIZATION scope internally - so
 viewing a dashboard's numbers requires the caller to hold both DASHBOARD:
 READ (the shell) and some level of REPORT:READ (each widget's data), not a
-single all-encompassing DASHBOARD permission.
+single all-encompassing DASHBOARD permission. `forecast` goes one step
+further than either of those: unlike `dashboard` (which has its own
+DASHBOARD permission layered on top of REPORT:READ) or `sla`'s
+`TicketSlaController` (which checks TICKET:READ inline, with no
+`@PreAuthorize` of its own), `PipelineSnapshotController` has real
+`@PreAuthorize` annotations, and they name REPORT:READ directly - there is
+no FORECAST resource in the permission catalog at all, because a pipeline
+snapshot is exactly the same data `report`'s live pipeline-by-stage query
+already gates on REPORT:READ, just persisted. Inventing a second
+permission for the persisted copy of the same numbers would be pure
+duplication, not a real access-control distinction.
 `notification` (in `notification/inbox/`) is a fourth kind, simpler than
 all three above: self-scoped, not just unscoped. Platform-administration
 resources (`apikey`/`webhook`/`customfield`/`Team`) have exactly one fixed

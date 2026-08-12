@@ -118,6 +118,13 @@ crm:
   sla:
     sweep-interval-ms: ${SLA_SWEEP_INTERVAL_MS:300000}
 
+  # Backs PipelineSnapshotService#captureDaily, the platform's second real @Scheduled job. Cron,
+  # not a fixed rate like sla.sweep-interval-ms above - a snapshot only means "pipeline as of this
+  # calendar day," so it belongs at a fixed wall-clock time (01:00 by default) rather than on a
+  # recurring interval from application startup.
+  forecast:
+    snapshot-cron: ${FORECAST_SNAPSHOT_CRON:0 0 1 * * *}
+
 logging:
   level:
     root: INFO
