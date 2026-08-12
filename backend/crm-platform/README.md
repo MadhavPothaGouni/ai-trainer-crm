@@ -385,6 +385,32 @@ src/main/java/com/aitrainercrm/platform/
                   re-derived - see DashboardService#setDefault's javadoc for
                   why flush order (not setter-call order) is what the unique
                   index actually cares about
+  emailtemplate/  reusable, organization-wide {{token}}-placeholder email
+                  templates, mail-merged against a real Contact/Lead/
+                  Account/Opportunity by EmailTemplateService#render. Like
+                  product/'s Product, there's no ownerId - EMAIL_TEMPLATE is
+                  seeded (V27) at TEAM/DEPARTMENT/ORGANIZATION scope only
+                  (no OWN), and EmailTemplateService does no
+                  ScopeAuthorizationService check at all, the second time
+                  this "shared catalog, permission-gated-but-no-record-
+                  scope" shape has appeared this session. Token
+                  substitution itself lives in its own dependency-free
+                  emailtemplate.render.TemplateRenderer class (unit-tested
+                  with zero Spring context) so EmailTemplateService's only
+                  job is resolving which of the caller-supplied contactId/
+                  leadId/accountId/opportunityId actually exist in this org
+                  and building the flat token-name -> value map
+                  TemplateRenderer merges against subject/body. An
+                  unresolved token (wrong id, template typo, entity type
+                  never supplied) is left in the output exactly as written
+                  rather than silently blanked or rejected - see
+                  TemplateRenderer's javadoc for why. render() is
+                  read-only and ephemeral: nothing is persisted, and a
+                  target id is only ever looked up with a real
+                  organization-scoped query, never authorized against the
+                  target entity's own OWN/TEAM/DEPARTMENT/ORGANIZATION
+                  permission ladder - the same trust boundary REPORT:READ
+                  already extends across a whole org's aggregate numbers
   notification/   a teammate's own in-app inbox (notification.inbox package
                   - distinct from notification.email, the existing
                   transactional-email abstraction auth/ already used for
