@@ -262,6 +262,23 @@ export const decideApprovalStepSchema = z.object({
 });
 export type DecideApprovalStepFormValues = z.infer<typeof decideApprovalStepSchema>;
 
+// ---- SLA & Escalation ----
+
+export const createSlaPolicySchema = z.object({
+  name: z.string().min(1, "Name is required").max(150),
+  priority: z.string().min(1, "Priority is required"),
+  responseTargetMinutes: requiredPositiveIntegerString,
+  resolutionTargetMinutes: requiredPositiveIntegerString,
+  escalateToUserId: z.string().optional().or(z.literal("")),
+});
+export type CreateSlaPolicyFormValues = z.infer<typeof createSlaPolicySchema>;
+
+/** Same fields as createSlaPolicySchema minus priority (not editable after creation, see UpdateSlaPolicyRequest's javadoc on the backend), plus active. */
+export const updateSlaPolicySchema = createSlaPolicySchema.omit({ priority: true }).extend({
+  active: z.boolean(),
+});
+export type UpdateSlaPolicyFormValues = z.infer<typeof updateSlaPolicySchema>;
+
 // ---- Team / role management ----
 
 export const roleFormSchema = z.object({

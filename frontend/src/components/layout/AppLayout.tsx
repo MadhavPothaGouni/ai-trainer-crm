@@ -55,6 +55,9 @@ const ADMIN_NAV_LINKS = [
   { to: "/custom-objects", label: "Custom Objects", end: false },
   { to: "/custom-fields", label: "Custom Fields", end: false },
   { to: "/workflows", label: "Workflows", end: false },
+  // SLA_POLICY:*:ORGANIZATION only, same third-kind admin-config shape as CustomField/ApiKey/
+  // Webhook above - see backend/crm-platform/README.md's module layout for `sla`.
+  { to: "/sla-policies", label: "SLA Policies", end: false },
 ];
 
 /** Shell for every authenticated page: a slim top bar (current user + sign out), CRM nav, and the routed page content. */

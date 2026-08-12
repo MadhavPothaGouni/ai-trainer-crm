@@ -1402,3 +1402,54 @@ export interface ApprovalTaskDto {
   actionable: boolean;
   createdAt: string;
 }
+
+// ---- SLA & Escalation ----
+//
+// Per-Ticket-priority response/resolution deadlines, plus automatic escalation - see
+// backend/crm-platform/README.md's module layout for `sla`. SlaPolicyDto reuses TicketPriority
+// directly (same choice SlaPolicy makes on the backend against Ticket.Priority) rather than a
+// parallel type, since these really are the same four values, not a different set the way
+// ApprovalRelatedToType deliberately is.
+
+export interface SlaPolicyDto {
+  id: string;
+  name: string;
+  priority: TicketPriority;
+  responseTargetMinutes: number;
+  resolutionTargetMinutes: number;
+  escalateToUserId: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSlaPolicyRequest {
+  name: string;
+  priority: TicketPriority;
+  responseTargetMinutes: number;
+  resolutionTargetMinutes: number;
+  escalateToUserId?: string | null;
+}
+
+/** priority is deliberately absent here - not editable after creation, see UpdateSlaPolicyRequest's javadoc on the backend. */
+export interface UpdateSlaPolicyRequest {
+  name: string;
+  responseTargetMinutes: number;
+  resolutionTargetMinutes: number;
+  escalateToUserId?: string | null;
+  active: boolean;
+}
+
+/** The response shape of GET /ticket-sla/{ticketId} when a policy IS tracking this ticket - the endpoint returns `data: null` instead when no active policy covers the ticket's priority, so callers should treat this as `TicketSlaStatusDto | null`, not assume it's always present. */
+export interface TicketSlaStatusDto {
+  ticketId: string;
+  slaPolicyId: string;
+  responseDueAt: string;
+  resolutionDueAt: string;
+  responseBreached: boolean;
+  resolutionBreached: boolean;
+  responseBreachedAt: string | null;
+  resolutionBreachedAt: string | null;
+  escalated: boolean;
+  escalatedAt: string | null;
+}

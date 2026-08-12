@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { listAccounts } from "../../api/accounts";
 import { listContacts } from "../../api/contacts";
 import { deleteTicket, getTicket, updateTicket, updateTicketStatus } from "../../api/tickets";
+import { TicketSlaWidget } from "../../components/tickets/TicketSlaWidget";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { Select } from "../../components/ui/Select";
@@ -186,6 +187,8 @@ export default function TicketDetailPage() {
             />
           </div>
         </div>
+
+        <TicketSlaWidget ticketId={ticket.id} />
       </div>
 
       <form onSubmit={onSaveEdits} noValidate className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-5">

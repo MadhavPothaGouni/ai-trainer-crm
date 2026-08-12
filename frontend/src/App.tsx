@@ -15,6 +15,8 @@ import ApiKeysPage from "./pages/apikeys/ApiKeysPage";
 import ApprovalCreatePage from "./pages/approvals/ApprovalCreatePage";
 import ApprovalDetailPage from "./pages/approvals/ApprovalDetailPage";
 import ApprovalListPage from "./pages/approvals/ApprovalListPage";
+import SlaPolicyDetailPage from "./pages/sla/SlaPolicyDetailPage";
+import SlaPolicyListPage from "./pages/sla/SlaPolicyListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -156,6 +158,9 @@ export default function App() {
           <Route path="/approvals" element={<ApprovalListPage />} />
           <Route path="/approvals/new" element={<ApprovalCreatePage />} />
           <Route path="/approvals/:requestId" element={<ApprovalDetailPage />} />
+
+          <Route path="/sla-policies" element={<SlaPolicyListPage />} />
+          <Route path="/sla-policies/:policyId" element={<SlaPolicyDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />
