@@ -26,7 +26,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 
 /**
  * End-to-end coverage for the Attachment module - upload/list/download/update/delete/
@@ -49,7 +48,12 @@ class AttachmentIntegrationTest extends AbstractIntegrationTest {
         byte[] fileContent = "%PDF-1.4 fake contract bytes".getBytes(StandardCharsets.UTF_8);
         MockMultipartFile file = new MockMultipartFile("file", "contract.pdf", "application/pdf", fileContent);
 
-        MockMultipartHttpServletRequestBuilder uploadRequest = multipart("/api/v1/attachments")
+        // .file() returns MockMultipartHttpServletRequestBuilder, but .param() is inherited from
+        // MockHttpServletRequestBuilder and is declared there to return that parent type, not the
+        // multipart subtype - even though the object itself is still the same multipart builder at
+        // runtime, the chain's static type narrows after the first .param() call. So this is typed
+        // as the parent type throughout, same as authedMultipart's parameter/return type below.
+        MockHttpServletRequestBuilder uploadRequest = multipart("/api/v1/attachments")
                 .file(file)
                 .param("relatedToType", "ACCOUNT")
                 .param("relatedToId", accountId)
@@ -99,7 +103,7 @@ class AttachmentIntegrationTest extends AbstractIntegrationTest {
         String ownerToken = registerOwner("attach-badrelated");
         MockMultipartFile file = new MockMultipartFile("file", "note.txt", "text/plain", "hello".getBytes(StandardCharsets.UTF_8));
 
-        MockMultipartHttpServletRequestBuilder request = multipart("/api/v1/attachments")
+        MockHttpServletRequestBuilder request = multipart("/api/v1/attachments")
                 .file(file)
                 .param("relatedToType", "ACCOUNT")
                 .param("relatedToId", UUID.randomUUID().toString());
@@ -112,7 +116,7 @@ class AttachmentIntegrationTest extends AbstractIntegrationTest {
         String accountId = createAccount(ownerToken, "Empty Co");
         MockMultipartFile emptyFile = new MockMultipartFile("file", "empty.txt", "text/plain", new byte[0]);
 
-        MockMultipartHttpServletRequestBuilder request = multipart("/api/v1/attachments")
+        MockHttpServletRequestBuilder request = multipart("/api/v1/attachments")
                 .file(emptyFile)
                 .param("relatedToType", "ACCOUNT")
                 .param("relatedToId", accountId);
@@ -126,7 +130,7 @@ class AttachmentIntegrationTest extends AbstractIntegrationTest {
         String accountId = createAccount(ownerToken, "Reassign Co");
         MockMultipartFile file = new MockMultipartFile("file", "logo.png", "image/png", "fake-png-bytes".getBytes(StandardCharsets.UTF_8));
 
-        MockMultipartHttpServletRequestBuilder uploadRequest = multipart("/api/v1/attachments")
+        MockHttpServletRequestBuilder uploadRequest = multipart("/api/v1/attachments")
                 .file(file)
                 .param("relatedToType", "ACCOUNT")
                 .param("relatedToId", accountId);
@@ -167,8 +171,15 @@ class AttachmentIntegrationTest extends AbstractIntegrationTest {
         return builder.header("Authorization", "Bearer " + accessToken).contentType(MediaType.APPLICATION_JSON);
     }
 
-    /** No .contentType() call, unlike authed() - the multipart builder already sets its own multipart/form-data content type, and overriding it here would break the upload. */
-    private MockHttpServletRequestBuilder authedMultipart(MockMultipartHttpServletRequestBuilder builder, String accessToken) {
+    /**
+     * Takes MockHttpServletRequestBuilder, not MockMultipartHttpServletRequestBuilder - every
+     * caller's request chain already narrowed to the parent type after its first .param() call
+     * (see the comment on uploadListDownloadUpdateAndDelete_endToEnd's uploadRequest), so this
+     * only ever receives that type in practice. No .contentType() call, unlike authed() - the
+     * multipart builder already set its own multipart/form-data content type back when .file()
+     * was called, and overriding it here would break the upload.
+     */
+    private MockHttpServletRequestBuilder authedMultipart(MockHttpServletRequestBuilder builder, String accessToken) {
         return builder.header("Authorization", "Bearer " + accessToken);
     }
 
