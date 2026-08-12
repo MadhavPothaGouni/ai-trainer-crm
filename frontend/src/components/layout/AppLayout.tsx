@@ -58,6 +58,11 @@ const ADMIN_NAV_LINKS = [
   // SLA_POLICY:*:ORGANIZATION only, same third-kind admin-config shape as CustomField/ApiKey/
   // Webhook above - see backend/crm-platform/README.md's module layout for `sla`.
   { to: "/sla-policies", label: "SLA Policies", end: false },
+  // TERRITORY_RULE:*:ORGANIZATION only, same third-kind shape - this gate only covers defining
+  // rules, not the auto-assignment they trigger (that runs unconditionally off TerritoryRule
+  // data via an @EventListener with no @PreAuthorize of its own). See backend/crm-platform/
+  // README.md's module layout for `territory`.
+  { to: "/territory-rules", label: "Territory Rules", end: false },
 ];
 
 /** Shell for every authenticated page: a slim top bar (current user + sign out), CRM nav, and the routed page content. */

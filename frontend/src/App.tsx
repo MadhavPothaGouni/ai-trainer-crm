@@ -17,6 +17,8 @@ import ApprovalDetailPage from "./pages/approvals/ApprovalDetailPage";
 import ApprovalListPage from "./pages/approvals/ApprovalListPage";
 import SlaPolicyDetailPage from "./pages/sla/SlaPolicyDetailPage";
 import SlaPolicyListPage from "./pages/sla/SlaPolicyListPage";
+import TerritoryRuleDetailPage from "./pages/territory/TerritoryRuleDetailPage";
+import TerritoryRuleListPage from "./pages/territory/TerritoryRuleListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -161,6 +163,8 @@ export default function App() {
 
           <Route path="/sla-policies" element={<SlaPolicyListPage />} />
           <Route path="/sla-policies/:policyId" element={<SlaPolicyDetailPage />} />
+          <Route path="/territory-rules" element={<TerritoryRuleListPage />} />
+          <Route path="/territory-rules/:ruleId" element={<TerritoryRuleDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />

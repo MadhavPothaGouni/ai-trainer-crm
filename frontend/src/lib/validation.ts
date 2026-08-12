@@ -279,6 +279,32 @@ export const updateSlaPolicySchema = createSlaPolicySchema.omit({ priority: true
 });
 export type UpdateSlaPolicyFormValues = z.infer<typeof updateSlaPolicySchema>;
 
+// ---- Territory / Assignment Rules ----
+
+const requiredWholeNumberString = z
+  .string()
+  .min(1, "Required")
+  .refine((value) => Number.isInteger(Number(value)) && Number(value) >= 0, "Must be a whole number");
+
+/** assignToType/assignToId aren't real request fields - the form collects "who" as one radio choice plus one picker, then the page maps it to assignToUserId or assignToTeamId (exactly one, the same "exactly one of two" rule the backend enforces) before calling the API. */
+export const createTerritoryRuleSchema = z.object({
+  name: z.string().min(1, "Name is required").max(150),
+  targetResource: z.string().min(1, "Choose Lead or Account"),
+  matchField: z.string().min(1, "Choose a field to match on"),
+  matchOperator: z.string().min(1, "Choose an operator"),
+  matchValue: z.string().min(1, "Match value is required").max(200),
+  priority: requiredWholeNumberString,
+  assignToType: z.enum(["USER", "TEAM"]),
+  assignToId: z.string().min(1, "Choose who this rule assigns to"),
+});
+export type CreateTerritoryRuleFormValues = z.infer<typeof createTerritoryRuleSchema>;
+
+/** Same fields as createTerritoryRuleSchema minus targetResource (not editable after creation, see UpdateTerritoryRuleRequest's javadoc on the backend), plus active. */
+export const updateTerritoryRuleSchema = createTerritoryRuleSchema.omit({ targetResource: true }).extend({
+  active: z.boolean(),
+});
+export type UpdateTerritoryRuleFormValues = z.infer<typeof updateTerritoryRuleSchema>;
+
 // ---- Team / role management ----
 
 export const roleFormSchema = z.object({

@@ -1453,3 +1453,64 @@ export interface TicketSlaStatusDto {
   escalated: boolean;
   escalatedAt: string | null;
 }
+
+// ---- Territory / Assignment Rules ----
+//
+// Auto-routes a newly created Lead or Account to an owner - see backend/crm-platform/README.md's
+// module layout for `territory`. The actual matching/round-robin runs asynchronously in
+// TerritoryAssignmentListener on the backend; there is no endpoint here that triggers it, only
+// CRUD for the rules that drive it.
+
+export type TerritoryTargetResource = "LEAD" | "ACCOUNT";
+export const TERRITORY_TARGET_RESOURCES: TerritoryTargetResource[] = ["LEAD", "ACCOUNT"];
+
+export type TerritoryMatchField = "SOURCE" | "COMPANY_NAME" | "INDUSTRY" | "BILLING_COUNTRY" | "BILLING_STATE";
+
+/** Which matchField values are valid depends on targetResource - TerritoryRuleService enforces this pairing server-side; these two lists exist so the form can only ever offer a valid combination. */
+export const TERRITORY_MATCH_FIELDS_BY_RESOURCE: Record<TerritoryTargetResource, TerritoryMatchField[]> = {
+  LEAD: ["SOURCE", "COMPANY_NAME"],
+  ACCOUNT: ["INDUSTRY", "BILLING_COUNTRY", "BILLING_STATE"],
+};
+
+export type TerritoryMatchOperator = "EQUALS" | "CONTAINS";
+export const TERRITORY_MATCH_OPERATORS: TerritoryMatchOperator[] = ["EQUALS", "CONTAINS"];
+
+export interface TerritoryRuleDto {
+  id: string;
+  name: string;
+  targetResource: TerritoryTargetResource;
+  matchField: TerritoryMatchField;
+  matchOperator: TerritoryMatchOperator;
+  matchValue: string;
+  priority: number;
+  assignToUserId: string | null;
+  assignToTeamId: string | null;
+  active: boolean;
+  matchCount: number;
+  lastMatchedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTerritoryRuleRequest {
+  name: string;
+  targetResource: TerritoryTargetResource;
+  matchField: TerritoryMatchField;
+  matchOperator: TerritoryMatchOperator;
+  matchValue: string;
+  priority: number;
+  assignToUserId?: string | null;
+  assignToTeamId?: string | null;
+}
+
+/** targetResource is deliberately absent - not editable after creation, see UpdateTerritoryRuleRequest's javadoc on the backend. */
+export interface UpdateTerritoryRuleRequest {
+  name: string;
+  matchField: TerritoryMatchField;
+  matchOperator: TerritoryMatchOperator;
+  matchValue: string;
+  priority: number;
+  assignToUserId?: string | null;
+  assignToTeamId?: string | null;
+  active: boolean;
+}
