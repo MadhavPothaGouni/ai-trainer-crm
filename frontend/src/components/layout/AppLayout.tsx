@@ -10,6 +10,11 @@ const CRM_NAV_LINKS = [
   { to: "/contacts", label: "Contacts", end: false },
   { to: "/opportunities", label: "Opportunities", end: false },
   { to: "/leads", label: "Leads", end: false },
+  // No permission of its own - reuses whichever of LEAD/CONTACT/ACCOUNT's own READ/UPDATE the
+  // pair's entityType maps to, so unlike Forecast/Reports below this belongs in the main nav:
+  // a default MEMBER already holds everything this page needs. See backend/crm-platform/
+  // README.md's module layout for `dedupe`.
+  { to: "/duplicates", label: "Duplicates", end: false },
   { to: "/tickets", label: "Tickets", end: false },
   { to: "/emails", label: "Emails", end: false },
   { to: "/calendar", label: "Calendar", end: false },

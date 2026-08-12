@@ -1538,3 +1538,39 @@ export interface UpdateTerritoryRuleRequest {
   assignToTeamId?: string | null;
   active: boolean;
 }
+
+// ---- Duplicate Detection / Merge ----
+//
+// Flags likely-duplicate Lead/Contact/Account pairs on creation - see backend/crm-platform/
+// README.md's module layout for `dedupe`. No DUPLICATE_MATCH permission exists: the list/merge/
+// dismiss endpoints reuse whichever of LEAD/CONTACT/ACCOUNT's own READ/UPDATE the pair's
+// entityType maps to, checked against BOTH records - so this page lives in the main CRM nav
+// (not the admin-only group Forecast/Reports sit in), since it needs no permission a default
+// MEMBER doesn't already hold on Leads/Contacts/Accounts.
+
+export type DuplicateEntityType = "LEAD" | "CONTACT" | "ACCOUNT";
+export const DUPLICATE_ENTITY_TYPES: DuplicateEntityType[] = ["LEAD", "CONTACT", "ACCOUNT"];
+
+export type DuplicateMatchReason = "EMAIL" | "NAME";
+
+export type DuplicateMatchStatus = "PENDING" | "MERGED" | "DISMISSED";
+export const DUPLICATE_MATCH_STATUSES: DuplicateMatchStatus[] = ["PENDING", "MERGED", "DISMISSED"];
+
+export interface DuplicateMatchDto {
+  id: string;
+  entityType: DuplicateEntityType;
+  recordAId: string;
+  recordBId: string;
+  matchReason: DuplicateMatchReason;
+  status: DuplicateMatchStatus;
+  survivorId: string | null;
+  absorbedId: string | null;
+  resolvedByUserId: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+}
+
+/** survivorId must be either the match's recordAId or recordBId - the backend rejects anything else with a 400. */
+export interface MergeDuplicateRequest {
+  survivorId: string;
+}
