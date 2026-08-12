@@ -41,6 +41,10 @@ const CRM_NAV_LINKS = [
 // so it lives here too even though Accounts/Contacts/Leads themselves are in the main nav.
 const ADMIN_NAV_LINKS = [
   { to: "/reports", label: "Reports", end: false },
+  // Reuses REPORT:READ rather than a permission of its own - see backend/crm-platform/
+  // README.md's module layout for `forecast`. Placed next to Reports for the same reason: same
+  // gate, same audience, just persisted history instead of a live view.
+  { to: "/forecast", label: "Forecast", end: false },
   { to: "/dashboards", label: "Dashboards", end: false },
   { to: "/import-export", label: "Import / Export", end: false },
   { to: "/users", label: "Team", end: false },

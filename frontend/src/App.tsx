@@ -19,6 +19,7 @@ import SlaPolicyDetailPage from "./pages/sla/SlaPolicyDetailPage";
 import SlaPolicyListPage from "./pages/sla/SlaPolicyListPage";
 import TerritoryRuleDetailPage from "./pages/territory/TerritoryRuleDetailPage";
 import TerritoryRuleListPage from "./pages/territory/TerritoryRuleListPage";
+import PipelineTrendPage from "./pages/forecast/PipelineTrendPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -165,6 +166,7 @@ export default function App() {
           <Route path="/sla-policies/:policyId" element={<SlaPolicyDetailPage />} />
           <Route path="/territory-rules" element={<TerritoryRuleListPage />} />
           <Route path="/territory-rules/:ruleId" element={<TerritoryRuleDetailPage />} />
+          <Route path="/forecast" element={<PipelineTrendPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />

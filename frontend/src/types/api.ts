@@ -1115,6 +1115,30 @@ export interface RepLeaderboardEntryDto {
   lostCount: number;
 }
 
+// ---- Forecasting: pipeline snapshots ----
+//
+// Daily (org, date, owner, stage) history of the pipeline - see backend/crm-platform/README.md's
+// module layout for `forecast`. Entirely read-only from this API: there is no create/update/
+// delete request type here, only the two GET response shapes, since the only writer is a
+// @Scheduled backend job.
+
+export interface PipelineSnapshotDto {
+  id: string;
+  snapshotDate: string;
+  ownerId: string;
+  stage: OpportunityStage;
+  dealCount: number;
+  totalValue: number;
+}
+
+/** One day's totals, already folded across every visible owner/stage by the backend - dealCount/totalValue are the day's grand totals, valueByStage is the same total broken down per OpportunityStage for a stacked view. */
+export interface PipelineTrendPointDto {
+  date: string;
+  dealCount: number;
+  totalValue: number;
+  valueByStage: Partial<Record<OpportunityStage, number>>;
+}
+
 // ---- Dashboards ----
 // DASHBOARD is owner-scoped (OWN/TEAM/ORGANIZATION, no DEPARTMENT) like
 // Workflow above. A widget's `data` shape depends on its reportType - see
