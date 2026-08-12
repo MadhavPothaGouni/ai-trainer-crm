@@ -72,6 +72,11 @@ const ADMIN_NAV_LINKS = [
   // data via an @EventListener with no @PreAuthorize of its own). See backend/crm-platform/
   // README.md's module layout for `territory`.
   { to: "/territory-rules", label: "Territory Rules", end: false },
+  // LEAD_SCORING_RULE:*:ORGANIZATION only, same third-kind admin-config shape as
+  // TerritoryRule/SlaPolicy above - see backend/crm-platform/README.md's module layout for
+  // `leadscoring`. The computed score itself is visible to anyone who can see a Lead at all
+  // (LeadDto#score), only *defining the rules* is admin-gated.
+  { to: "/lead-scoring-rules", label: "Lead Scoring Rules", end: false },
 ];
 
 /** Shell for every authenticated page: a slim top bar (current user + sign out), CRM nav, and the routed page content. */

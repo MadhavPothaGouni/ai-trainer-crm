@@ -357,6 +357,8 @@ export interface LeadDto {
   convertedContactId: string | null;
   convertedOpportunityId: string | null;
   convertedAt: string | null;
+  /** Materialized by the backend's LeadScoringEngine - see the Lead Scoring section below. Never edited directly. */
+  score: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -1573,4 +1575,48 @@ export interface DuplicateMatchDto {
 /** survivorId must be either the match's recordAId or recordBId - the backend rejects anything else with a 400. */
 export interface MergeDuplicateRequest {
   survivorId: string;
+}
+
+// ---- Lead Scoring ----
+//
+// Admin-defined rules (field/operator/value/points) that sum onto Lead.score, recomputed by the
+// backend's LeadScoringEngine on every Lead create/update - see backend/crm-platform/README.md's
+// module layout for `leadscoring`. Unlike Territory Rule, every ACTIVE matching rule contributes
+// (no "first match wins"), so there's no priority field here.
+
+export type LeadScoringMatchField = "SOURCE" | "COMPANY_NAME" | "TITLE" | "EMAIL_DOMAIN";
+export const LEAD_SCORING_MATCH_FIELDS: LeadScoringMatchField[] = ["SOURCE", "COMPANY_NAME", "TITLE", "EMAIL_DOMAIN"];
+
+export type LeadScoringMatchOperator = "EQUALS" | "CONTAINS";
+export const LEAD_SCORING_MATCH_OPERATORS: LeadScoringMatchOperator[] = ["EQUALS", "CONTAINS"];
+
+export interface LeadScoringRuleDto {
+  id: string;
+  name: string;
+  matchField: LeadScoringMatchField;
+  matchOperator: LeadScoringMatchOperator;
+  matchValue: string;
+  points: number;
+  active: boolean;
+  matchCount: number;
+  lastMatchedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLeadScoringRuleRequest {
+  name: string;
+  matchField: LeadScoringMatchField;
+  matchOperator: LeadScoringMatchOperator;
+  matchValue: string;
+  points: number;
+}
+
+export interface UpdateLeadScoringRuleRequest {
+  name: string;
+  matchField: LeadScoringMatchField;
+  matchOperator: LeadScoringMatchOperator;
+  matchValue: string;
+  points: number;
+  active: boolean;
 }

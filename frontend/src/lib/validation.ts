@@ -305,6 +305,28 @@ export const updateTerritoryRuleSchema = createTerritoryRuleSchema.omit({ target
 });
 export type UpdateTerritoryRuleFormValues = z.infer<typeof updateTerritoryRuleSchema>;
 
+// ---- Lead Scoring ----
+
+/** Unlike requiredWholeNumberString (priority, >= 0), points can be negative - a rule can penalize a score just as easily as boost it. */
+const requiredSignedWholeNumberString = z
+  .string()
+  .min(1, "Required")
+  .refine((value) => Number.isInteger(Number(value)), "Must be a whole number");
+
+export const createLeadScoringRuleSchema = z.object({
+  name: z.string().min(1, "Name is required").max(150),
+  matchField: z.string().min(1, "Choose a field to match on"),
+  matchOperator: z.string().min(1, "Choose an operator"),
+  matchValue: z.string().min(1, "Match value is required").max(200),
+  points: requiredSignedWholeNumberString,
+});
+export type CreateLeadScoringRuleFormValues = z.infer<typeof createLeadScoringRuleSchema>;
+
+export const updateLeadScoringRuleSchema = createLeadScoringRuleSchema.extend({
+  active: z.boolean(),
+});
+export type UpdateLeadScoringRuleFormValues = z.infer<typeof updateLeadScoringRuleSchema>;
+
 // ---- Team / role management ----
 
 export const roleFormSchema = z.object({

@@ -122,6 +122,18 @@ export default function LeadDetailPage() {
           <div className="mt-1 flex items-center gap-3">
             <h1 className="text-2xl font-semibold text-slate-900">{lead.fullName}</h1>
             <StatusBadge status={lead.status} />
+            <span
+              title="Lead score - recomputed automatically by Lead Scoring Rules whenever this lead is created or edited"
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                lead.score > 0
+                  ? "bg-emerald-100 text-emerald-800"
+                  : lead.score < 0
+                    ? "bg-red-100 text-red-800"
+                    : "bg-slate-100 text-slate-600"
+              }`}
+            >
+              Score: {lead.score}
+            </span>
           </div>
         </div>
         <Button variant="danger" onClick={() => void handleDelete()} isLoading={isDeleting}>

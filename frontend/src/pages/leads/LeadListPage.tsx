@@ -67,19 +67,20 @@ export default function LeadListPage() {
               <th className="px-4 py-3 font-medium">Company</th>
               <th className="px-4 py-3 font-medium">Source</th>
               <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 font-medium">Score</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {isLoading && (
               <tr>
-                <td className="px-4 py-6 text-center text-slate-400" colSpan={4}>
+                <td className="px-4 py-6 text-center text-slate-400" colSpan={5}>
                   Loading...
                 </td>
               </tr>
             )}
             {!isLoading && result?.content.length === 0 && (
               <tr>
-                <td className="px-4 py-6 text-center text-slate-400" colSpan={4}>
+                <td className="px-4 py-6 text-center text-slate-400" colSpan={5}>
                   No leads yet.
                 </td>
               </tr>
@@ -95,6 +96,9 @@ export default function LeadListPage() {
                 <td className="px-4 py-3 text-slate-600">{lead.source}</td>
                 <td className="px-4 py-3">
                   <StatusBadge status={lead.status} />
+                </td>
+                <td className={`px-4 py-3 font-medium ${lead.score < 0 ? "text-red-600" : lead.score > 0 ? "text-emerald-700" : "text-slate-400"}`}>
+                  {lead.score}
                 </td>
               </tr>
             ))}

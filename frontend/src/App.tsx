@@ -21,6 +21,8 @@ import TerritoryRuleDetailPage from "./pages/territory/TerritoryRuleDetailPage";
 import TerritoryRuleListPage from "./pages/territory/TerritoryRuleListPage";
 import PipelineTrendPage from "./pages/forecast/PipelineTrendPage";
 import DuplicateMatchListPage from "./pages/dedupe/DuplicateMatchListPage";
+import LeadScoringRuleDetailPage from "./pages/leadscoring/LeadScoringRuleDetailPage";
+import LeadScoringRuleListPage from "./pages/leadscoring/LeadScoringRuleListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -169,6 +171,8 @@ export default function App() {
           <Route path="/territory-rules/:ruleId" element={<TerritoryRuleDetailPage />} />
           <Route path="/forecast" element={<PipelineTrendPage />} />
           <Route path="/duplicates" element={<DuplicateMatchListPage />} />
+          <Route path="/lead-scoring-rules" element={<LeadScoringRuleListPage />} />
+          <Route path="/lead-scoring-rules/:ruleId" element={<LeadScoringRuleDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />
