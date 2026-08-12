@@ -75,7 +75,7 @@ public class RoleService {
 
     private boolean isCoreCrmResource(Permission.Resource resource) {
         return switch (resource) {
-            case LEAD, CONTACT, ACCOUNT, OPPORTUNITY, ACTIVITY, QUOTE, TICKET, EMAIL_MESSAGE, CALENDAR_EVENT -> true;
+            case LEAD, CONTACT, ACCOUNT, OPPORTUNITY, ACTIVITY, QUOTE, TICKET, EMAIL_MESSAGE, CALENDAR_EVENT, ATTACHMENT -> true;
             default -> false;
         };
     }

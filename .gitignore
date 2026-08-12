@@ -31,3 +31,8 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+# LocalFileStorageService's default dev upload directory - see backend/crm-platform's
+# application.yml (crm.storage.upload-dir) and attachment/storage/LocalFileStorageService's
+# javadoc. Never meant to be committed; a real deployment mounts a volume here instead.
+backend/crm-platform/uploads/

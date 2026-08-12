@@ -12,6 +12,10 @@ crm:
     secret: test-secret-key-not-for-production-use-minimum-256-bits-long-ok
     access-token-expiration-minutes: 15
     refresh-token-expiration-days: 30
+  # Keeps AttachmentIntegrationTest's uploads out of the repo root and inside the build
+  # directory Maven already cleans between runs, rather than defaulting to ./uploads.
+  storage:
+    upload-dir: target/test-uploads
 
 logging:
   level:

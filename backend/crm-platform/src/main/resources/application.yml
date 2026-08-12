@@ -51,6 +51,16 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
+  # Backs attachment/'s upload endpoint. 25 MB request/25 MB file gives a little headroom
+  # over AttachmentService.MAX_FILE_SIZE_BYTES (20 MB) for the surrounding multipart form
+  # fields (relatedToType/relatedToId/description) - the parser rejecting an oversized part
+  # (see GlobalExceptionHandler#handleMaxUploadSizeExceeded) is the actual enforcement point;
+  # AttachmentService's own check is a second line of defense.
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
+
 server:
   port: ${SERVER_PORT:8080}
   error:
@@ -93,6 +103,13 @@ crm:
 
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
+
+  # Backs LocalFileStorageService - see its javadoc for why local disk is a documented
+  # limitation, not a production plan. In the Docker Compose setup this should be a mounted
+  # volume so uploads survive a container restart; a real production deployment should
+  # implement FileStorageService against S3/GCS instead.
+  storage:
+    upload-dir: ${STORAGE_UPLOAD_DIR:./uploads}
 
 logging:
   level:

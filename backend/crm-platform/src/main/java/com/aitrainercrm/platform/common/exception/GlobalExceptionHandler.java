@@ -14,6 +14,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 /**
  * Single place every exception in the application funnels through before it
@@ -85,6 +86,24 @@ public class GlobalExceptionHandler {
                 "DATA_INTEGRITY_VIOLATION", "The request conflicts with existing data", HttpStatus.CONFLICT.value(),
                 request.getRequestURI(), traceId);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    /**
+     * Spring's own multipart parser rejects an oversized upload before AttachmentService#create
+     * ever runs (spring.servlet.multipart.max-file-size in application.yml), so
+     * AttachmentService's own MAX_FILE_SIZE_BYTES check never actually fires for that case in
+     * practice - it exists as a second line of defense (and a clearer error message) for a
+     * client that sends the size in a request body field the parser itself doesn't inspect.
+     * Without this handler, MaxUploadSizeExceededException would otherwise fall through to
+     * handleUnexpected and return a misleading 500.
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(HttpServletRequest request) {
+        String traceId = UUID.randomUUID().toString();
+        ErrorResponse body = ErrorResponse.of(
+                "FILE_TOO_LARGE", "The uploaded file exceeds the maximum allowed size", HttpStatus.PAYLOAD_TOO_LARGE.value(),
+                request.getRequestURI(), traceId);
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(body);
     }
 
     @ExceptionHandler(Exception.class)

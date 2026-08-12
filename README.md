@@ -284,6 +284,23 @@ directly instead of calling `ScopeAuthorizationService`. See
 `Notification`'s own javadoc for the reasoning, including why - unlike
 every other table in this schema - it has no `deleted_at` column.
 
+Most recently, file attachments: an `attachment` module for uploading a
+file (a contract, a screenshot, an invoice PDF) against an Account/
+Contact/Opportunity/Lead/Ticket. Back to owner-scoped - the fourth access
+pattern Notification introduced doesn't apply here, an uploaded file is a
+normal team-visible CRM record the same way a Ticket or a logged Email is
+- but it's the first module where the record's actual content isn't a
+handful of text columns. The bytes live behind a new
+`attachment.storage.FileStorageService` interface (a `LocalFileStorageService`
+writes them to disk today; swapping in an S3-backed implementation later
+touches nothing else) rather than in Postgres, and `Attachment.storageKey`
+- the pointer into that storage - is never returned to a client; only
+`GET /attachments/{id}/download` can turn it back into bytes. See
+`backend/crm-platform/README.md`'s module layout for `attachment` and
+`LocalFileStorageService`'s javadoc for the honest limitation (local disk
+isn't durable across container replicas/redeploys without a mounted
+volume) that comes with today's default implementation.
+
 The RBAC model was designed up front for the platform's eventual full
 shape, and every resource seeded in `V2__seed_permission_catalog.sql` now
 has a full `entity`/`repository`/`service`/`controller`/`dto` module built
@@ -291,10 +308,11 @@ on top of it (following the same pattern as `account`/`contact`/
 `opportunity`/`lead`/`activity`/`product`/`quote`/`order`/`invoice`/
 `payment`/`campaign`/`knowledgearticle`/`customfield`/`workflow`/
 `dashboard`/`ticket`, plus a corresponding frontend page where one applies).
-`email`/`calendar` (`EMAIL_MESSAGE`/`CALENDAR_EVENT`) and `TEAM` extend the
-catalog itself rather than fill a pre-existing gap - all three were seeded
-and given a module in the same change, as the platform's shape grew over
-time, rather than the whole catalog being fixed in stone from V2 onward.
+`email`/`calendar` (`EMAIL_MESSAGE`/`CALENDAR_EVENT`), `TEAM`, and
+`attachment` (`ATTACHMENT`) extend the catalog itself rather than fill a
+pre-existing gap - each was seeded and given a module in the same change,
+as the platform's shape grew over time, rather than the whole catalog
+being fixed in stone from V2 onward.
 `report`, `apikey`, `webhook`, `customfield`, `dashboard`, and Team (in
 `organization/`) are exceptions built without a
 normal owner-scoped entity of their own (or, for `dashboard`, with one but
@@ -305,10 +323,9 @@ version of this file incorrectly claimed this was already true while
 for that correction and how the gap was found.
 
 Not yet built, roughly in the order planned:
-- A frontend for the Notification module (`NotificationController`'s list/
-  unread-count/mark-read/mark-all-read/delete/send endpoints) - the backend
-  module landed first, same order every prior module has followed in this
-  project
+- A frontend for the Attachment module (`AttachmentController`'s upload/
+  list/download/update/delete/assign-owner endpoints) - the backend module
+  landed first, same order every prior module has followed in this project
 - IMPORT/EXPORT for Opportunity, Activity, and Quote - seeded in the
   catalog like Account/Contact/Lead/Ticket's, not yet built
 - Retry-with-backoff for webhook delivery (today it's a single attempt with

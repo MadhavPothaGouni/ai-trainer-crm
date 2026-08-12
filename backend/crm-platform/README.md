@@ -203,6 +203,20 @@ src/main/java/com/aitrainercrm/platform/
                   external guest) and its own mutable response status, same
                   reasoning campaign/'s CampaignMember documents. See V15's
                   migration comment and CalendarEventService's javadoc
+  attachment/     files uploaded against an Account/Contact/Opportunity/
+                  Lead/Ticket - owner-scoped exactly like ticket/, required
+                  (not optional) related_to_type/related_to_id, unlike
+                  calendar/'s. The actual bytes never touch Postgres -
+                  attachment.storage.FileStorageService (an interface +
+                  LocalFileStorageService, the same swappable-abstraction
+                  shape notification.email.EmailService already
+                  established) is the only thing that reads/writes them;
+                  Attachment.storageKey is an opaque pointer into whatever
+                  implementation is active, never returned to a client. See
+                  V18's migration comment and LocalFileStorageService's
+                  javadoc for why local disk is a documented limitation
+                  (not durable across container replicas/redeploys) rather
+                  than a production plan
   notification/   a teammate's own in-app inbox (notification.inbox package
                   - distinct from notification.email, the existing
                   transactional-email abstraction auth/ already used for
@@ -236,17 +250,18 @@ src/main/java/com/aitrainercrm/platform/
 ```
 
 Every owner-scoped CRM module (`account`/`contact`/`opportunity`/`lead`/
-`activity`/`quote`/`ticket`/`email`/`calendar`) follows the same shape:
+`activity`/`quote`/`ticket`/`email`/`calendar`/`attachment`) follows the same shape:
 `entity` + `repository` + `service` + `controller` + `dto`, record-level
 OWN/TEAM/DEPARTMENT/ORGANIZATION authorization via
 `security.authorization.ScopeAuthorizationService`. The first seven have
 their permission catalog seeded in `V2__seed_permission_catalog.sql`;
-`email`/`calendar` (EMAIL_MESSAGE/CALENDAR_EVENT) are seeded in `V15` instead
-- new resources added alongside their module in the same migration, not a
-catalog-then-module gap like Ticket's - and skip IMPORT (bulk-CSV-importing
-a sent-email log or a calendar schedule isn't a real workflow the way
-importing a contact list is), so their action set is CREATE/READ/UPDATE/
-DELETE/EXPORT/ASSIGN, one action short of the other seven.
+`email`/`calendar` (EMAIL_MESSAGE/CALENDAR_EVENT) are seeded in `V15` instead,
+and `attachment` (ATTACHMENT) in `V18` - new resources added alongside their
+module in the same migration, not a catalog-then-module gap like Ticket's -
+and all three skip IMPORT (bulk-CSV-importing a sent-email log, a calendar
+schedule, or a set of file uploads isn't a real workflow the way importing a
+contact list is), so their action set is CREATE/READ/UPDATE/DELETE/EXPORT/
+ASSIGN, one action short of the original seven.
 `workflow` and `dashboard` follow the same owner-scoped shape too, minus
 DEPARTMENT (not seeded for WORKFLOW/DASHBOARD - see V2's own comment) -
 see their module comments above for why they, unlike this session's other
@@ -316,9 +331,10 @@ built on top of it as of this commit, and IMPORT/EXPORT specifically has a
 real implementation for four of the seven resources that got it seeded
 (`account`/`contact`/`lead`/`ticket`) - Opportunity, Activity, and Quote
 still have it modeled but unbuilt. `EMAIL_MESSAGE`/`CALENDAR_EVENT` (see
-`email`/`calendar` above) are a different case from that gap entirely -
-they were added to the permission catalog and given a module in the same
-migration (`V15`), so there was never a window where they were seeded but
+`email`/`calendar` above) and `ATTACHMENT` (see `attachment` above) are a
+different case from that gap entirely - each was added to the permission
+catalog and given a module in the same migration it was seeded in (`V15`,
+`V18`), so there was never a window where any of them were seeded but
 unimplemented the way Ticket was.
 
 See the root `README.md` for the RBAC model, multi-tenancy rules, and the
