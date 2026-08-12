@@ -327,6 +327,38 @@ export const updateLeadScoringRuleSchema = createLeadScoringRuleSchema.extend({
 });
 export type UpdateLeadScoringRuleFormValues = z.infer<typeof updateLeadScoringRuleSchema>;
 
+// ---- Sales Goals ----
+
+const requiredPositiveNumberString = z
+  .string()
+  .min(1, "Required")
+  .refine((value) => !Number.isNaN(Number(value)) && Number(value) > 0, "Must be a positive number");
+
+/** assignToType/assignToId aren't real request fields - same "one radio choice plus one picker, mapped to exactly one of two request fields" shape createTerritoryRuleSchema uses. A plain object (not `.refine`'d directly) so both create/update variants below can each add their own period-order check without fighting ZodEffects' lack of `.omit`/`.extend`. */
+const salesGoalFormShape = z.object({
+  name: z.string().min(1, "Name is required").max(150),
+  assignToType: z.enum(["USER", "TEAM"]),
+  assignToId: z.string().min(1, "Choose who this goal is for"),
+  metric: z.string().min(1, "Choose a metric"),
+  targetValue: requiredPositiveNumberString,
+  periodStart: z.string().min(1, "Start date is required"),
+  periodEnd: z.string().min(1, "End date is required"),
+});
+
+function withPeriodOrderCheck<T extends typeof salesGoalFormShape>(schema: T) {
+  return schema.refine((data) => data.periodEnd >= data.periodStart, {
+    message: "End date must be on or after the start date",
+    path: ["periodEnd"],
+  });
+}
+
+export const createSalesGoalSchema = withPeriodOrderCheck(salesGoalFormShape);
+export type CreateSalesGoalFormValues = z.infer<typeof createSalesGoalSchema>;
+
+/** Same fields as createSalesGoalSchema - unlike Territory Rule, nothing here becomes immutable after creation, and there's no separate "active" flag (deleting the goal is the retirement path). */
+export const updateSalesGoalSchema = createSalesGoalSchema;
+export type UpdateSalesGoalFormValues = CreateSalesGoalFormValues;
+
 // ---- Team / role management ----
 
 export const roleFormSchema = z.object({

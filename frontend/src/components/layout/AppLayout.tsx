@@ -15,6 +15,11 @@ const CRM_NAV_LINKS = [
   // a default MEMBER already holds everything this page needs. See backend/crm-platform/
   // README.md's module layout for `dedupe`.
   { to: "/duplicates", label: "Duplicates", end: false },
+  // GET /sales-goals/mine needs no permission at all - the same self-scoped shape the
+  // notification inbox uses - so this belongs in the main nav even though defining goals
+  // (below, "Sales Goals") is admin-gated. See backend/crm-platform/README.md's module
+  // layout for `salesgoals`.
+  { to: "/my-goals", label: "My Goals", end: false },
   { to: "/tickets", label: "Tickets", end: false },
   { to: "/emails", label: "Emails", end: false },
   { to: "/calendar", label: "Calendar", end: false },
@@ -77,6 +82,10 @@ const ADMIN_NAV_LINKS = [
   // `leadscoring`. The computed score itself is visible to anyone who can see a Lead at all
   // (LeadDto#score), only *defining the rules* is admin-gated.
   { to: "/lead-scoring-rules", label: "Lead Scoring Rules", end: false },
+  // SALES_GOAL:*:ORGANIZATION only, same third-kind admin-config shape as the three above -
+  // this gate only covers defining/editing goals. Viewing your OWN goals lives in the main
+  // nav's "My Goals" instead (GET /sales-goals/mine, no permission required).
+  { to: "/sales-goals", label: "Sales Goals", end: false },
 ];
 
 /** Shell for every authenticated page: a slim top bar (current user + sign out), CRM nav, and the routed page content. */

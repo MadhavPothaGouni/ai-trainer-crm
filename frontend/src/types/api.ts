@@ -1620,3 +1620,50 @@ export interface UpdateLeadScoringRuleRequest {
   points: number;
   active: boolean;
 }
+
+// ---- Sales Goals / Quota Tracking ----
+//
+// Admin-set revenue/deal-count quotas per period, assigned to exactly one of a user or a team -
+// see backend/crm-platform/README.md's module layout for `salesgoals`. actualValue/percentComplete
+// are computed live by the backend on every read, never stored. Two access patterns: full CRUD is
+// admin-gated (SALES_GOAL:*:ORGANIZATION), but GET /sales-goals/mine needs no permission at all -
+// the same self-scoped shape the notification inbox uses - so "My Goals" lives in the main nav
+// while defining goals lives in the admin group.
+
+export type SalesGoalMetric = "REVENUE" | "DEAL_COUNT";
+export const SALES_GOAL_METRICS: SalesGoalMetric[] = ["REVENUE", "DEAL_COUNT"];
+
+export interface SalesGoalDto {
+  id: string;
+  name: string;
+  ownerUserId: string | null;
+  teamId: string | null;
+  metric: SalesGoalMetric;
+  targetValue: number;
+  periodStart: string;
+  periodEnd: string;
+  actualValue: number;
+  percentComplete: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSalesGoalRequest {
+  name: string;
+  ownerUserId?: string | null;
+  teamId?: string | null;
+  metric: SalesGoalMetric;
+  targetValue: number;
+  periodStart: string;
+  periodEnd: string;
+}
+
+export interface UpdateSalesGoalRequest {
+  name: string;
+  ownerUserId?: string | null;
+  teamId?: string | null;
+  metric: SalesGoalMetric;
+  targetValue: number;
+  periodStart: string;
+  periodEnd: string;
+}

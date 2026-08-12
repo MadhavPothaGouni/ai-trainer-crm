@@ -21,6 +21,9 @@ import TerritoryRuleDetailPage from "./pages/territory/TerritoryRuleDetailPage";
 import TerritoryRuleListPage from "./pages/territory/TerritoryRuleListPage";
 import PipelineTrendPage from "./pages/forecast/PipelineTrendPage";
 import DuplicateMatchListPage from "./pages/dedupe/DuplicateMatchListPage";
+import MyGoalsPage from "./pages/salesgoals/MyGoalsPage";
+import SalesGoalDetailPage from "./pages/salesgoals/SalesGoalDetailPage";
+import SalesGoalListPage from "./pages/salesgoals/SalesGoalListPage";
 import LeadScoringRuleDetailPage from "./pages/leadscoring/LeadScoringRuleDetailPage";
 import LeadScoringRuleListPage from "./pages/leadscoring/LeadScoringRuleListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
@@ -173,6 +176,9 @@ export default function App() {
           <Route path="/duplicates" element={<DuplicateMatchListPage />} />
           <Route path="/lead-scoring-rules" element={<LeadScoringRuleListPage />} />
           <Route path="/lead-scoring-rules/:ruleId" element={<LeadScoringRuleDetailPage />} />
+          <Route path="/my-goals" element={<MyGoalsPage />} />
+          <Route path="/sales-goals" element={<SalesGoalListPage />} />
+          <Route path="/sales-goals/:goalId" element={<SalesGoalDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />
