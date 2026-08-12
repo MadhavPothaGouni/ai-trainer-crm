@@ -323,6 +323,25 @@ src/main/java/com/aitrainercrm/platform/
                   the absorbed record is soft-deleted, never hard-deleted.
                   See V23's migration comment and DuplicateMatchService's
                   javadoc for the full reasoning
+  leadscoring/    admin-defined LeadScoringRule rows (field/operator/value/
+                  points, the same match-criterion shape territory_rules
+                  established in V21) each contribute points to a Lead
+                  whenever their criterion matches it; LeadScoringEngine (the
+                  seventh @EventListener on the CrmAuditEvents bus) sums every
+                  ACTIVE matching rule and writes the total onto the new
+                  Lead.score column. Two deliberate differences from
+                  TerritoryRule, its closest precedent - see V24's migration
+                  comment for the full reasoning: scoring is cumulative (every
+                  matching rule contributes, so there's no "first match wins"
+                  and therefore no priority column), and LeadScoringEngine
+                  reacts to onRecordUpdated as well as onRecordCreated, since
+                  a stale score would actively mislead a prioritization
+                  feature the way TerritoryAssignmentListener's and
+                  DuplicateDetectionListener's deliberately-one-time behavior
+                  doesn't. LEAD_SCORING_RULE is admin configuration
+                  (CREATE/READ/UPDATE/DELETE at ORGANIZATION scope only,
+                  seeded fresh in V24), the same third-kind shape SLA_POLICY
+                  and TERRITORY_RULE already use
   notification/   a teammate's own in-app inbox (notification.inbox package
                   - distinct from notification.email, the existing
                   transactional-email abstraction auth/ already used for
@@ -401,19 +420,22 @@ permission to filter its aggregate queries by owner, rather than the
 record-level `assertCanAccess` pattern the CRUD modules use. `apikey`,
 `webhook`, `customfield`, `sla` (`SlaPolicyController` specifically - see
 below), `territory` (`TerritoryRuleController` specifically - see below),
-and Team (in `organization/`) are a third kind: platform
+`leadscoring` (`LeadScoringRuleController` specifically - see below), and
+Team (in `organization/`) are a third kind: platform
 administration, gated entirely by `API_KEY:*:ORGANIZATION` /
 `INTEGRATION:*:ORGANIZATION` / `CUSTOM_FIELD:*:ORGANIZATION` /
 `CUSTOM_OBJECT:*:ORGANIZATION` / `SLA_POLICY:*:ORGANIZATION` /
-`TERRITORY_RULE:*:ORGANIZATION` / `TEAM:*:ORGANIZATION` (no OWN/TEAM/
-DEPARTMENT variant exists for any of these seven resources - a bit of an
+`TERRITORY_RULE:*:ORGANIZATION` / `LEAD_SCORING_RULE:*:ORGANIZATION` /
+`TEAM:*:ORGANIZATION` (no OWN/TEAM/
+DEPARTMENT variant exists for any of these eight resources - a bit of an
 irony for `TEAM` specifically, whose entire purpose is backing other
 resources' TEAM/DEPARTMENT scope, but managing *teams themselves* is
 still an org-wide admin action, same as managing users or roles), with no
 per-record ownership concept at all - see `ApiKeyController`'s,
 `WebhookSubscriptionController`'s, `CustomFieldController`'s/
 `CustomObjectController`'s, `SlaPolicyController`'s,
-`TerritoryRuleController`'s, and `TeamController`'s
+`TerritoryRuleController`'s, `LeadScoringRuleController`'s, and
+`TeamController`'s
 javadoc. `sla`'s other controller, `TicketSlaController`, is not part of
 this third kind at all - it has no `@PreAuthorize` of its own and instead
 reuses the ticket's own `TICKET:READ` scope check inline
@@ -427,7 +449,12 @@ of its own at all (nothing about matching a newly created Lead against
 active rules and reassigning it is a request a caller makes - it's
 triggered purely by the `RecordCreated` event Lead/AccountService already
 publish), so `territory`'s permission only ever gates *defining* rules, never
-the auto-assignment those rules cause. Note `CustomFieldController#/values`
+the auto-assignment those rules cause. `leadscoring`'s CRUD service
+(`LeadScoringRuleService`) is the same pattern again, one level further:
+its actual scoring behavior lives entirely in `LeadScoringEngine`, which -
+unlike `TerritoryAssignmentListener` - reacts to both `RecordCreated` AND
+`RecordUpdated`, so `LEAD_SCORING_RULE`'s permission gates only *defining*
+rules, never the (re)scoring those rules cause on every Lead write. Note `CustomFieldController#/values`
 deliberately gates reading/writing a *value on a standard entity's record*
 (e.g. an Account) on `CUSTOM_FIELD:*:ORGANIZATION` rather than
 `ACCOUNT:UPDATE` - a documented simplification, not an oversight. By

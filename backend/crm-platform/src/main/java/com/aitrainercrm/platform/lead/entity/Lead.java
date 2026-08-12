@@ -17,6 +17,13 @@ import lombok.Setter;
  * Contact/Opportunity rows. {@link #convert} (via LeadService) is the only
  * path that creates those; a lead that hasn't converted has none of
  * convertedAccountId/convertedContactId/convertedOpportunityId set.
+ *
+ * <p>{@link #score} is a materialized total maintained by {@code
+ * LeadScoringEngine}, not computed live on read - see V24's migration
+ * comment. Nothing in this class ever writes it directly; every write goes
+ * through {@code LeadScoringEngine} reacting to a {@code RecordCreated}/
+ * {@code RecordUpdated} event, the same "event listener owns the field"
+ * shape {@code TerritoryAssignmentListener} uses for {@link #ownerId}.
  */
 @Entity
 @Table(name = "leads")
@@ -83,6 +90,10 @@ public class Lead extends BaseEntity {
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
+
+    /** Signed, no floor at 0 - see V24's migration comment for why a very negative score is a meaningful signal rather than noise to clamp away. */
+    @Column(nullable = false)
+    private int score = 0;
 
     public Lead(UUID organizationId, String firstName, String lastName, UUID ownerId) {
         this.organizationId = organizationId;

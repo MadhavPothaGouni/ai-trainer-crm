@@ -23,6 +23,7 @@ public record LeadDto(
         UUID convertedContactId,
         UUID convertedOpportunityId,
         Instant convertedAt,
+        int score,
         Instant createdAt,
         Instant updatedAt) {
 
@@ -44,6 +45,7 @@ public record LeadDto(
                 .convertedContactId(lead.getConvertedContactId())
                 .convertedOpportunityId(lead.getConvertedOpportunityId())
                 .convertedAt(lead.getConvertedAt())
+                .score(lead.getScore())
                 .createdAt(lead.getCreatedAt())
                 .updatedAt(lead.getUpdatedAt())
                 .build();
