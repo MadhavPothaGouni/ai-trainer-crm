@@ -254,6 +254,31 @@ src/main/java/com/aitrainercrm/platform/
                   rather than reassigning the ticket's owner out from under
                   whoever's working it; see V20's migration comment and
                   SlaEvaluationService's javadoc for the full design
+  territory/      auto-routes a newly created Lead or Account to an owner via
+                  TerritoryRule (a single match-field/operator/value
+                  criterion, not a boolean expression tree - a deliberate
+                  scope limit, same starting point real products like
+                  Salesforce Assignment Rules also began at). TerritoryRule
+                  itself is admin config (TERRITORY_RULE:*:ORGANIZATION only,
+                  seeded fresh in V21, same shape as sla/'s SlaPolicy), but
+                  TerritoryAssignmentListener - the @EventListener that
+                  actually does the matching and reassignment - is the one
+                  module this session where an @Async listener on the
+                  CrmAuditEvents bus deliberately writes back to another
+                  module's core ownerId column, rather than staying purely
+                  additive the way sla/ (reads Ticket fields, never writes
+                  to tickets) or workflow/ (never touches ownership at all)
+                  do. Safe here specifically because it only ever fires once,
+                  on RecordCreated, before any human has touched the record -
+                  there's no onRecordUpdated handler, unlike
+                  WorkflowEngineListener, because re-running territory
+                  matching against edits to an already-owned record is a
+                  different and much riskier feature this module doesn't
+                  attempt. A team assignment round-robins across the team's
+                  current members using TerritoryRule.lastAssignedUserId as
+                  the rotation cursor. See TerritoryRule's and
+                  TerritoryAssignmentListener's javadoc and V21's migration
+                  comment for the full reasoning
   notification/   a teammate's own in-app inbox (notification.inbox package
                   - distinct from notification.email, the existing
                   transactional-email abstraction auth/ already used for
@@ -331,24 +356,34 @@ owner-scoped record of its own, so it uses
 permission to filter its aggregate queries by owner, rather than the
 record-level `assertCanAccess` pattern the CRUD modules use. `apikey`,
 `webhook`, `customfield`, `sla` (`SlaPolicyController` specifically - see
-below), and Team (in `organization/`) are a third kind: platform
+below), `territory` (`TerritoryRuleController` specifically - see below),
+and Team (in `organization/`) are a third kind: platform
 administration, gated entirely by `API_KEY:*:ORGANIZATION` /
 `INTEGRATION:*:ORGANIZATION` / `CUSTOM_FIELD:*:ORGANIZATION` /
 `CUSTOM_OBJECT:*:ORGANIZATION` / `SLA_POLICY:*:ORGANIZATION` /
-`TEAM:*:ORGANIZATION` (no OWN/TEAM/
-DEPARTMENT variant exists for any of these six resources - a bit of an
+`TERRITORY_RULE:*:ORGANIZATION` / `TEAM:*:ORGANIZATION` (no OWN/TEAM/
+DEPARTMENT variant exists for any of these seven resources - a bit of an
 irony for `TEAM` specifically, whose entire purpose is backing other
 resources' TEAM/DEPARTMENT scope, but managing *teams themselves* is
 still an org-wide admin action, same as managing users or roles), with no
 per-record ownership concept at all - see `ApiKeyController`'s,
 `WebhookSubscriptionController`'s, `CustomFieldController`'s/
-`CustomObjectController`'s, `SlaPolicyController`'s, and `TeamController`'s
+`CustomObjectController`'s, `SlaPolicyController`'s,
+`TerritoryRuleController`'s, and `TeamController`'s
 javadoc. `sla`'s other controller, `TicketSlaController`, is not part of
 this third kind at all - it has no `@PreAuthorize` of its own and instead
 reuses the ticket's own `TICKET:READ` scope check inline
 (`SlaEvaluationService#getForTicket`), the same "lean on an existing
 permission rather than invent a redundant one" reasoning `dashboard`'s own
-read path already established below. Note `CustomFieldController#/values`
+read path already established below. `territory`'s CRUD service
+(`TerritoryRuleService`) is a clean instance of this third kind - the
+module's actual routing behavior lives entirely in
+`TerritoryAssignmentListener`, an `@EventListener` with no `@PreAuthorize`
+of its own at all (nothing about matching a newly created Lead against
+active rules and reassigning it is a request a caller makes - it's
+triggered purely by the `RecordCreated` event Lead/AccountService already
+publish), so `territory`'s permission only ever gates *defining* rules, never
+the auto-assignment those rules cause. Note `CustomFieldController#/values`
 deliberately gates reading/writing a *value on a standard entity's record*
 (e.g. an Account) on `CUSTOM_FIELD:*:ORGANIZATION` rather than
 `ACCOUNT:UPDATE` - a documented simplification, not an oversight. By
@@ -400,10 +435,11 @@ real implementation for four of the seven resources that got it seeded
 (`account`/`contact`/`lead`/`ticket`) - Opportunity, Activity, and Quote
 still have it modeled but unbuilt. `EMAIL_MESSAGE`/`CALENDAR_EVENT` (see
 `email`/`calendar` above), `ATTACHMENT` (see `attachment` above),
-`APPROVAL_REQUEST` (see `approval` above), and `SLA_POLICY` (see `sla`
-above) are a different case from that gap entirely - each was added to the
+`APPROVAL_REQUEST` (see `approval` above), `SLA_POLICY` (see `sla`
+above), and `TERRITORY_RULE` (see `territory` above) are a different case
+from that gap entirely - each was added to the
 permission catalog and given a module in the same migration it was seeded
-in (`V15`, `V18`, `V19`, `V20`), so there was never a window where any of
+in (`V15`, `V18`, `V19`, `V20`, `V21`), so there was never a window where any of
 them were seeded but unimplemented the way
 Ticket was.
 
