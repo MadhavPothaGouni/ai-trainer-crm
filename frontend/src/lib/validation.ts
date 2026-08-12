@@ -244,6 +244,24 @@ export const updateAttachmentSchema = z.object({
 });
 export type UpdateAttachmentFormValues = z.infer<typeof updateAttachmentSchema>;
 
+// ---- Approval Workflow ----
+//
+// approverUserIds isn't part of this schema - it's an ordered list built up by plain component
+// state (add/remove rows), not a react-hook-form field, the same "manual value/onChange" reasoning
+// RelatedToPicker's own javadoc gives for relatedToType/relatedToId. ApprovalCreatePage validates
+// the list itself (non-empty, no duplicates) before submitting.
+export const createApprovalRequestSchema = z.object({
+  relatedToType: z.string().min(1, "Choose a record type"),
+  relatedToId: z.string().min(1, "Choose a record"),
+  title: z.string().min(1, "Title is required").max(300),
+});
+export type CreateApprovalRequestFormValues = z.infer<typeof createApprovalRequestSchema>;
+
+export const decideApprovalStepSchema = z.object({
+  comment: z.string().max(1000).optional().or(z.literal("")),
+});
+export type DecideApprovalStepFormValues = z.infer<typeof decideApprovalStepSchema>;
+
 // ---- Team / role management ----
 
 export const roleFormSchema = z.object({

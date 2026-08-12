@@ -1334,3 +1334,71 @@ export interface UpdateAttachmentRequest {
   relatedToType: CrmRecordType;
   relatedToId: string;
 }
+
+// ---- Approval Workflow ----
+//
+// Named, ordered multi-step sign-off chains against a Quote/Order/Opportunity - see
+// backend/crm-platform/README.md's module layout for `approval` and ApprovalRequestService's
+// javadoc for the "fifth resource-access shape" (a named approver can always read/act on a
+// request they're on, regardless of scope). ApprovalRelatedToType is a separate type from
+// CrmRecordType above, not a subset reused by name - only Quote/Order/Opportunity carry an
+// approval-worthy dollar figure, unlike Account/Contact/Lead/Ticket.
+
+export type ApprovalRelatedToType = "QUOTE" | "ORDER" | "OPPORTUNITY";
+
+export const APPROVAL_RELATED_TO_TYPES: ApprovalRelatedToType[] = ["QUOTE", "ORDER", "OPPORTUNITY"];
+
+export type ApprovalRequestStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+
+export type ApprovalStepStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface ApprovalStepDto {
+  id: string;
+  stepNumber: number;
+  approverUserId: string;
+  status: ApprovalStepStatus;
+  comment: string | null;
+  decidedAt: string | null;
+  /** True only when this step is both PENDING and the chain's current step - see ApprovalStepDto's javadoc on the backend. */
+  actionable: boolean;
+}
+
+export interface ApprovalRequestDto {
+  id: string;
+  relatedToType: ApprovalRelatedToType;
+  relatedToId: string;
+  requestedByUserId: string;
+  title: string;
+  status: ApprovalRequestStatus;
+  currentStepNumber: number;
+  decidedAt: string | null;
+  createdAt: string;
+  /** Always empty on list rows (GET /approval-requests) - only GET /approval-requests/{id} populates this, same "don't eagerly load the collection on every list row" reasoning QuoteDto's lineItems doesn't apply to its own list view either. */
+  steps: ApprovalStepDto[];
+}
+
+/** approverUserIds is ordered - index 0 is step 1, and so on. See CreateApprovalRequestRequest's javadoc on the backend for why a duplicated user id is rejected. */
+export interface CreateApprovalRequestRequest {
+  relatedToType: ApprovalRelatedToType;
+  relatedToId: string;
+  title: string;
+  approverUserIds: string[];
+}
+
+/** Backs both POST .../approve and POST .../reject - comment is optional either way. */
+export interface DecideStepRequest {
+  comment?: string | null;
+}
+
+/** One row in the "my approvals" inbox (GET /approval-requests/my-approvals) - a step assigned to the caller, flattened with just enough of its parent request's context to render without a second round-trip per row. */
+export interface ApprovalTaskDto {
+  stepId: string;
+  approvalRequestId: string;
+  requestTitle: string;
+  relatedToType: ApprovalRelatedToType;
+  relatedToId: string;
+  requestedByUserId: string;
+  stepNumber: number;
+  actionable: boolean;
+  createdAt: string;
+}

@@ -12,6 +12,9 @@ import AccountCreatePage from "./pages/accounts/AccountCreatePage";
 import AccountDetailPage from "./pages/accounts/AccountDetailPage";
 import AccountListPage from "./pages/accounts/AccountListPage";
 import ApiKeysPage from "./pages/apikeys/ApiKeysPage";
+import ApprovalCreatePage from "./pages/approvals/ApprovalCreatePage";
+import ApprovalDetailPage from "./pages/approvals/ApprovalDetailPage";
+import ApprovalListPage from "./pages/approvals/ApprovalListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -149,6 +152,10 @@ export default function App() {
           <Route path="/attachments" element={<AttachmentListPage />} />
           <Route path="/attachments/new" element={<AttachmentUploadPage />} />
           <Route path="/attachments/:attachmentId" element={<AttachmentDetailPage />} />
+
+          <Route path="/approvals" element={<ApprovalListPage />} />
+          <Route path="/approvals/new" element={<ApprovalCreatePage />} />
+          <Route path="/approvals/:requestId" element={<ApprovalDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />

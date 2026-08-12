@@ -19,6 +19,7 @@ const CRM_NAV_LINKS = [
   { to: "/invoices", label: "Invoices", end: false },
   { to: "/campaigns", label: "Campaigns", end: false },
   { to: "/attachments", label: "Attachments", end: false },
+  { to: "/approvals", label: "Approvals", end: false },
   { to: "/knowledge-articles", label: "Knowledge Base", end: false },
 ];
 
