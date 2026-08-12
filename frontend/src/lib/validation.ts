@@ -226,6 +226,24 @@ export const createNotificationSchema = z.object({
 });
 export type CreateNotificationFormValues = z.infer<typeof createNotificationSchema>;
 
+// ---- Attachment ----
+
+/** Backs the upload form's relatedToType/description fields - the file itself is a native <input type="file"> value, not a zod-validated field, so it's handled separately in the component (see AttachmentsPage's onSubmit). */
+export const uploadAttachmentSchema = z.object({
+  relatedToType: z.string().min(1, "Choose a record type"),
+  relatedToId: z.string().min(1, "Choose a record"),
+  description: z.string().max(1000).optional().or(z.literal("")),
+});
+export type UploadAttachmentFormValues = z.infer<typeof uploadAttachmentSchema>;
+
+export const updateAttachmentSchema = z.object({
+  fileName: z.string().min(1, "File name is required").max(255),
+  description: z.string().max(1000).optional().or(z.literal("")),
+  relatedToType: z.string().min(1, "Related record type is required"),
+  relatedToId: z.string().min(1, "Related record is required"),
+});
+export type UpdateAttachmentFormValues = z.infer<typeof updateAttachmentSchema>;
+
 // ---- Team / role management ----
 
 export const roleFormSchema = z.object({

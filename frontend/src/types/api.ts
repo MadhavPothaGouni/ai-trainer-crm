@@ -1306,3 +1306,31 @@ export interface CreateNotificationRequest {
 export interface UnreadCountResponse {
   unreadCount: number;
 }
+
+// ---- Attachment ----
+//
+// Back to owner-scoped (see backend/crm-platform/README.md's module layout for `attachment`) -
+// unlike Notification, an uploaded file is a normal team-visible CRM record. storageKey is
+// deliberately never part of this type - the backend's AttachmentDto never serializes it either;
+// the only way back to the bytes is GET /attachments/{id}/download.
+
+export interface AttachmentDto {
+  id: string;
+  fileName: string;
+  contentType: string | null;
+  fileSizeBytes: number;
+  description: string | null;
+  relatedToType: CrmRecordType;
+  relatedToId: string;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Metadata-only - matches UpdateAttachmentRequest on the backend. There's no CreateAttachmentRequest type; upload goes through FormData directly (see api/attachments.ts's uploadAttachment), not a JSON body. */
+export interface UpdateAttachmentRequest {
+  fileName: string;
+  description?: string | null;
+  relatedToType: CrmRecordType;
+  relatedToId: string;
+}

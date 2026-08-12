@@ -12,6 +12,9 @@ import AccountCreatePage from "./pages/accounts/AccountCreatePage";
 import AccountDetailPage from "./pages/accounts/AccountDetailPage";
 import AccountListPage from "./pages/accounts/AccountListPage";
 import ApiKeysPage from "./pages/apikeys/ApiKeysPage";
+import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
+import AttachmentListPage from "./pages/attachments/AttachmentListPage";
+import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
 import CampaignCreatePage from "./pages/campaigns/CampaignCreatePage";
 import CampaignDetailPage from "./pages/campaigns/CampaignDetailPage";
 import CampaignListPage from "./pages/campaigns/CampaignListPage";
@@ -142,6 +145,10 @@ export default function App() {
           <Route path="/campaigns" element={<CampaignListPage />} />
           <Route path="/campaigns/new" element={<CampaignCreatePage />} />
           <Route path="/campaigns/:campaignId" element={<CampaignDetailPage />} />
+
+          <Route path="/attachments" element={<AttachmentListPage />} />
+          <Route path="/attachments/new" element={<AttachmentUploadPage />} />
+          <Route path="/attachments/:attachmentId" element={<AttachmentDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />
