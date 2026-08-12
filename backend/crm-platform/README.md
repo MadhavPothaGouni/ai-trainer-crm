@@ -233,6 +233,27 @@ src/main/java/com/aitrainercrm/platform/
                   and V19's migration comment for why the table has no
                   deleted_at (status reaching CANCELLED/APPROVED/REJECTED
                   already carries that meaning)
+  sla/            SLA policies (per-Ticket-priority response/resolution time
+                  targets) and automatic escalation when one is breached -
+                  SlaPolicy is admin config (SLA_POLICY:*:ORGANIZATION only,
+                  same shape as customfield/'s and apikey/'s resources, seeded
+                  fresh in V20), TicketSlaStatus is a lazily-created,
+                  per-ticket tracking row with no foreign key back to
+                  tickets. This module has never once written to the tickets
+                  table - it reads Ticket's existing priority/status/
+                  resolvedAt/createdAt directly rather than threading SLA
+                  bookkeeping through Ticket or TicketService, so "responded"
+                  is just "status left OPEN" and "resolved" is
+                  resolvedAt != null, no new timestamp invented for either.
+                  Home to the platform's first real @Scheduled job
+                  (SlaEvaluationService#sweep) - CrmPlatformApplication has
+                  carried @EnableScheduling since its very first commit with
+                  nothing using it until now. Escalation reuses
+                  NotificationService (a new createSystem method, sender-less
+                  - Notification's own javadoc had already anticipated this)
+                  rather than reassigning the ticket's owner out from under
+                  whoever's working it; see V20's migration comment and
+                  SlaEvaluationService's javadoc for the full design
   notification/   a teammate's own in-app inbox (notification.inbox package
                   - distinct from notification.email, the existing
                   transactional-email abstraction auth/ already used for
@@ -309,17 +330,25 @@ owner-scoped record of its own, so it uses
 `ScopeAuthorizationService#visibleOwnerIds` directly against the REPORT
 permission to filter its aggregate queries by owner, rather than the
 record-level `assertCanAccess` pattern the CRUD modules use. `apikey`,
-`webhook`, `customfield`, and Team (in `organization/`) are a third kind:
-platform administration, gated entirely by `API_KEY:*:ORGANIZATION` /
+`webhook`, `customfield`, `sla` (`SlaPolicyController` specifically - see
+below), and Team (in `organization/`) are a third kind: platform
+administration, gated entirely by `API_KEY:*:ORGANIZATION` /
 `INTEGRATION:*:ORGANIZATION` / `CUSTOM_FIELD:*:ORGANIZATION` /
-`CUSTOM_OBJECT:*:ORGANIZATION` / `TEAM:*:ORGANIZATION` (no OWN/TEAM/
-DEPARTMENT variant exists for any of these five resources - a bit of an
+`CUSTOM_OBJECT:*:ORGANIZATION` / `SLA_POLICY:*:ORGANIZATION` /
+`TEAM:*:ORGANIZATION` (no OWN/TEAM/
+DEPARTMENT variant exists for any of these six resources - a bit of an
 irony for `TEAM` specifically, whose entire purpose is backing other
 resources' TEAM/DEPARTMENT scope, but managing *teams themselves* is
 still an org-wide admin action, same as managing users or roles), with no
 per-record ownership concept at all - see `ApiKeyController`'s,
 `WebhookSubscriptionController`'s, `CustomFieldController`'s/
-`CustomObjectController`'s, and `TeamController`'s javadoc. Note `CustomFieldController#/values`
+`CustomObjectController`'s, `SlaPolicyController`'s, and `TeamController`'s
+javadoc. `sla`'s other controller, `TicketSlaController`, is not part of
+this third kind at all - it has no `@PreAuthorize` of its own and instead
+reuses the ticket's own `TICKET:READ` scope check inline
+(`SlaEvaluationService#getForTicket`), the same "lean on an existing
+permission rather than invent a redundant one" reasoning `dashboard`'s own
+read path already established below. Note `CustomFieldController#/values`
 deliberately gates reading/writing a *value on a standard entity's record*
 (e.g. an Account) on `CUSTOM_FIELD:*:ORGANIZATION` rather than
 `ACCOUNT:UPDATE` - a documented simplification, not an oversight. By
@@ -370,11 +399,12 @@ built on top of it as of this commit, and IMPORT/EXPORT specifically has a
 real implementation for four of the seven resources that got it seeded
 (`account`/`contact`/`lead`/`ticket`) - Opportunity, Activity, and Quote
 still have it modeled but unbuilt. `EMAIL_MESSAGE`/`CALENDAR_EVENT` (see
-`email`/`calendar` above), `ATTACHMENT` (see `attachment` above), and
-`APPROVAL_REQUEST` (see `approval` above) are a different case from that gap
-entirely - each was added to the permission catalog and given a module in
-the same migration it was seeded in (`V15`, `V18`, `V19`), so there was
-never a window where any of them were seeded but unimplemented the way
+`email`/`calendar` above), `ATTACHMENT` (see `attachment` above),
+`APPROVAL_REQUEST` (see `approval` above), and `SLA_POLICY` (see `sla`
+above) are a different case from that gap entirely - each was added to the
+permission catalog and given a module in the same migration it was seeded
+in (`V15`, `V18`, `V19`, `V20`), so there was never a window where any of
+them were seeded but unimplemented the way
 Ticket was.
 
 See the root `README.md` for the RBAC model, multi-tenancy rules, and the

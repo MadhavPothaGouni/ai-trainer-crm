@@ -75,6 +75,33 @@ public class NotificationService {
         return notification;
     }
 
+    /**
+     * The sender-less counterpart to {@link #create} - for automated notifications with no
+     * {@link UserPrincipal} to act as, like {@code SlaEvaluationService}'s escalation alerts.
+     * Skips {@code assertUserInOrganization}'s and {@code validateRelatedTo}'s checks that
+     * {@link #create} runs against the caller's own org, since the caller here is trusted
+     * platform code, not a request body a tenant admin could tamper with - the recipient and
+     * related record are whatever the caller already validated belongs together. {@link
+     * Notification#getSenderUserId()} is left null, same as {@link Notification}'s own javadoc
+     * anticipated ("a future system-generated notification ... has no human sender").
+     */
+    @Transactional
+    public Notification createSystem(
+            UUID organizationId,
+            UUID recipientUserId,
+            Notification.Type type,
+            String title,
+            String body,
+            Notification.RelatedToType relatedToType,
+            UUID relatedToId) {
+        Notification notification = new Notification(organizationId, recipientUserId, type, title);
+        notification.setBody(body);
+        notification.setRelatedToType(relatedToType);
+        notification.setRelatedToId(relatedToId);
+        notificationRepository.save(notification);
+        return notification;
+    }
+
     @Transactional
     public Notification markRead(UserPrincipal principal, UUID notificationId) {
         Notification notification = findOwnOrThrow(principal, notificationId);

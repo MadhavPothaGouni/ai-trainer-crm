@@ -41,7 +41,9 @@ import lombok.Setter;
 public class Notification extends BaseEntity {
 
     public enum Type {
-        ASSIGNMENT, MENTION, REMINDER, GENERAL
+        ASSIGNMENT, MENTION, REMINDER, GENERAL,
+        /** System-generated, never sent by a human via {@code POST /notifications} - see NotificationService#createSystem and SlaEvaluationService's javadoc. No DB check constraint on this column (see V17), so adding a value here needed no migration. */
+        ESCALATION
     }
 
     public enum RelatedToType {

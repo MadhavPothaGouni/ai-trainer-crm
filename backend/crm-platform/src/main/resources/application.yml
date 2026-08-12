@@ -111,6 +111,13 @@ crm:
   storage:
     upload-dir: ${STORAGE_UPLOAD_DIR:./uploads}
 
+  # Backs SlaEvaluationService#sweep, the platform's first real @Scheduled job. 5 minutes by
+  # default - frequent enough that an escalation notification doesn't sit unsent for long after
+  # a deadline passes, infrequent enough not to hammer the database scanning every open ticket
+  # across every organization on a tight loop.
+  sla:
+    sweep-interval-ms: ${SLA_SWEEP_INTERVAL_MS:300000}
+
 logging:
   level:
     root: INFO

@@ -27,4 +27,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
     List<Ticket> findByOrganizationIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID organizationId);
 
     List<Ticket> findByOrganizationIdAndOwnerIdInAndDeletedAtIsNullOrderByCreatedAtDesc(UUID organizationId, Set<UUID> ownerIds);
+
+    /** Added for SlaEvaluationService#sweep - the one genuinely cross-organization query in this repository (every other finder here is scoped to a single organizationId). The periodic sweep has no caller/tenant context at all, so it has to ask "every still-open ticket in the whole platform," the same way WebhookDispatchListener's event processing isn't scoped to one org either. */
+    List<Ticket> findByStatusInAndDeletedAtIsNull(List<Ticket.Status> statuses);
 }
