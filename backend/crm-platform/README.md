@@ -411,6 +411,42 @@ src/main/java/com/aitrainercrm/platform/
                   target entity's own OWN/TEAM/DEPARTMENT/ORGANIZATION
                   permission ladder - the same trust boundary REPORT:READ
                   already extends across a whole org's aggregate numbers
+  region/         a nested org-chart Region tree ("North America" contains
+                  "US-West"/"US-East") sitting ABOVE territory/'s existing
+                  TerritoryRule, not on top of it - a genuinely different
+                  concept, same "different question, not a duplicate"
+                  reasoning V21's own migration comment used to distinguish
+                  territory/ from workflow/. TerritoryRule answers "who
+                  should own this brand-new Lead/Account" (a routing
+                  decision fired once by an @EventListener); Region answers
+                  "how does our sales org roll up for reporting" (a static
+                  grouping of Teams, queried on demand, nothing ever fires
+                  it). REGION is admin config (REGION:*:ORGANIZATION only,
+                  V28, the same third-kind shape SLA_POLICY/TERRITORY_RULE/
+                  LEAD_SCORING_RULE/SALES_GOAL use). parentRegionId is a
+                  plain UUID column, not a JPA relationship or even a real
+                  self-referencing FK - RegionService#assertNoCycle already
+                  has to walk the parent chain in application code to reject
+                  cycles (something no FK can express), so there's no extra
+                  integrity a DB constraint would buy on top of that. Team
+                  gained an optional regionId (V28) - the only link between
+                  this tree and any real CRM data - and RegionService#rollup
+                  walks a region's full subtree (built from one
+                  whole-org-tree query, traversed in memory, the same
+                  "resolve fresh on every read" choice SalesGoalService
+                  makes for team membership), collects every team pointing
+                  at any node in it, then every active user on those teams,
+                  then hands that owner set to report/'s existing
+                  OpportunityAnalyticsRepository#summarizeByStage rather
+                  than adding a third near-identical aggregation repository
+                  - unlike salesgoals/'s SalesGoalProgressRepository, a
+                  rollup has no period to bound the query by, so the
+                  existing unbounded per-stage query already does everything
+                  needed. delete() deliberately never cascades: a region
+                  with child regions or any team still pointing at it must
+                  be reparented/reassigned by the caller first, the same
+                  conservative reasoning TeamService#delete documents for
+                  never touching the users on a team it deletes
   notification/   a teammate's own in-app inbox (notification.inbox package
                   - distinct from notification.email, the existing
                   transactional-email abstraction auth/ already used for

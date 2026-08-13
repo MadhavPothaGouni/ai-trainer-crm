@@ -11,5 +11,8 @@ public record CreateTeamRequest(
         @Size(max = 100) String department,
 
         /** Null is fine - a team doesn't need a lead on day one. Non-null must be a real user in the same organization. */
-        UUID leadUserId) {
+        UUID leadUserId,
+
+        /** Null is fine - a team doesn't have to participate in the region/ org chart at all. Non-null must be a real, active Region in the same organization. */
+        UUID regionId) {
 }

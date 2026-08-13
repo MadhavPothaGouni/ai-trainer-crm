@@ -5,6 +5,7 @@ import com.aitrainercrm.platform.organization.dto.CreateTeamRequest;
 import com.aitrainercrm.platform.organization.dto.UpdateTeamRequest;
 import com.aitrainercrm.platform.organization.entity.Team;
 import com.aitrainercrm.platform.organization.repository.TeamRepository;
+import com.aitrainercrm.platform.region.repository.RegionRepository;
 import com.aitrainercrm.platform.user.repository.UserRepository;
 import java.time.Instant;
 import java.util.UUID;
@@ -32,6 +33,7 @@ public class TeamService {
 
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
+    private final RegionRepository regionRepository;
 
     @Transactional(readOnly = true)
     public Page<Team> list(UUID organizationId, Pageable pageable) {
@@ -46,9 +48,11 @@ public class TeamService {
     @Transactional
     public Team create(UUID organizationId, CreateTeamRequest request) {
         assertLeadInOrganization(organizationId, request.leadUserId());
+        assertRegionInOrganization(organizationId, request.regionId());
 
         Team team = new Team(organizationId, request.name(), request.department());
         team.setLeadUserId(request.leadUserId());
+        team.setRegionId(request.regionId());
         return teamRepository.save(team);
     }
 
@@ -56,10 +60,12 @@ public class TeamService {
     public Team update(UUID organizationId, UUID teamId, UpdateTeamRequest request) {
         Team team = findOrThrow(organizationId, teamId);
         assertLeadInOrganization(organizationId, request.leadUserId());
+        assertRegionInOrganization(organizationId, request.regionId());
 
         team.setName(request.name());
         team.setDepartment(request.department());
         team.setLeadUserId(request.leadUserId());
+        team.setRegionId(request.regionId());
         return teamRepository.save(team);
     }
 
@@ -80,6 +86,13 @@ public class TeamService {
         boolean exists = userRepository.findActiveById(leadUserId).map(u -> organizationId.equals(u.getOrganizationId())).orElse(false);
         if (!exists) {
             throw new ResourceNotFoundException("User", leadUserId);
+        }
+    }
+
+    private void assertRegionInOrganization(UUID organizationId, UUID regionId) {
+        if (regionId == null) return;
+        if (regionRepository.findActiveByIdAndOrganizationId(regionId, organizationId).isEmpty()) {
+            throw new ResourceNotFoundException("Region", regionId);
         }
     }
 }

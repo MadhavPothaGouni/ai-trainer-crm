@@ -40,6 +40,12 @@ public class Team extends BaseEntity {
     @Column(name = "lead_user_id")
     private UUID leadUserId;
 
+    /** Optional link into region/'s org-chart tree (V28) - null means this team doesn't roll up
+     * anywhere yet, the same "not every record has to participate" shape a Lead with no matching
+     * TerritoryRule already has. See {@code RegionService#rollup}'s javadoc for how this is used. */
+    @Column(name = "region_id")
+    private UUID regionId;
+
     @Column(name = "deleted_at")
     private Instant deletedAt;
 

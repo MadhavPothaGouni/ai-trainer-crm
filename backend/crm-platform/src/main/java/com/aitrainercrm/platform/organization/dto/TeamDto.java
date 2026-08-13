@@ -5,7 +5,7 @@ import java.util.UUID;
 import lombok.Builder;
 
 @Builder
-public record TeamDto(UUID id, String name, String department, UUID leadUserId) {
+public record TeamDto(UUID id, String name, String department, UUID leadUserId, UUID regionId) {
 
     public static TeamDto from(Team team) {
         return TeamDto.builder()
@@ -13,6 +13,7 @@ public record TeamDto(UUID id, String name, String department, UUID leadUserId) 
                 .name(team.getName())
                 .department(team.getDepartment())
                 .leadUserId(team.getLeadUserId())
+                .regionId(team.getRegionId())
                 .build();
     }
 }
