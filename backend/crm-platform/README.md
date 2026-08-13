@@ -687,6 +687,24 @@ src/main/java/com/aitrainercrm/platform/
                   other statuses - "when was this originally signed" shouldn't change.
                   contractNumber is unique per organization (uq_contracts_org_number, V35),
                   the same per-tenant-not-global uniqueness shape booking_links.slug uses.
+  clientgoal/     client goals (a coach/trainer-defined, freeform measurable objective -
+                  weight, strength, endurance, or a custom metric - tracked against one
+                  Contact over time) - V36, the sixth module this session and the first
+                  to lean into what this platform's own name ("ai-trainer-crm") actually
+                  implies rather than staying purely generic-CRM. Distinct from everything
+                  else in the schema: course_enrollments (V31) track progress THROUGH a
+                  specific training course's content, sales_goals (V25) track an internal
+                  rep's own quota (never a customer's), contracts (V35) track legal/
+                  subscription terms. Owner-scoped CRM-resource pattern, mirrors contracts/
+                  tickets exactly (full OWN/TEAM/DEPARTMENT/ORGANIZATION ladder, in
+                  RoleService#isCoreCrmResource, the same restrained CREATE/READ/UPDATE/
+                  DELETE action set contracts/booking_links use). ownerId is the coach/
+                  trainer; contactId (a real, non-nullable FK) is the client the goal is
+                  FOR - never the authorization subject, the same "owner and target are
+                  different people" split sequence_enrollments established. Status is a
+                  free (non-linear) state machine like contracts.status; achievedAt is
+                  stamped the first time status moves to ACHIEVED and never overwritten
+                  afterward, the same snapshot rule contracts.signedAt already documents.
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security,
                   plus security.apikey - the X-Api-Key request filter
