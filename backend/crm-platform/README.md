@@ -447,6 +447,50 @@ src/main/java/com/aitrainercrm/platform/
                   be reparented/reassigned by the caller first, the same
                   conservative reasoning TeamService#delete documents for
                   never touching the users on a team it deletes
+  commission/     automatic sales commission tracking - CommissionEngine
+                  (an @EventListener alongside WebhookDispatchListener/
+                  AuditEventListener/WorkflowEngineListener/
+                  TerritoryAssignmentListener/DuplicateDetectionListener/
+                  LeadScoringEngine on the same CrmAuditEvents bus) creates
+                  exactly one CommissionRecord the moment an Opportunity's
+                  currently-persisted stage is read as CLOSED_WON.
+                  Deliberately does NOT try to detect a stage transition from
+                  the event itself - RecordUpdated carries no old/new field
+                  values (it's intentionally generic across all four CRM
+                  entity types) - so instead it reacts to every Opportunity
+                  update, reloads current state fresh, and relies on
+                  idempotency (CommissionRecordRepository#existsByOpportunityId
+                  plus a real uq_commission_records_opportunity unique
+                  constraint, V29) to make re-firing on an already-closed deal
+                  harmless. CommissionPlan is admin config (COMMISSION_PLAN:
+                  *:ORGANIZATION only, V29, the same third-kind shape SLA_
+                  POLICY/TERRITORY_RULE/LEAD_SCORING_RULE/SALES_GOAL/REGION
+                  use) with an exactly-one-of-ownerUserId/teamId CHECK
+                  constraint (chk_commission_plans_exactly_one_target),
+                  re-validated in CommissionPlanService the same defense-in-
+                  depth SalesGoalService documents for its identical
+                  constraint. Plan resolution follows TerritoryAssignment
+                  Listener's "no match, nothing happens" default: an
+                  individual plan for the Opportunity's owner wins if one
+                  exists, else the owner's current team's plan, else no
+                  commission record at all. CommissionRecord is fully
+                  materialized (dealAmount/rateType/rate/commissionAmount
+                  frozen at creation) rather than computed live off the
+                  current CommissionPlan the way SalesGoal progress is live -
+                  the third instance this session of the live-vs-materialized
+                  design fork (after forecast/'s PipelineSnapshot and
+                  salesgoals/'s live SalesGoal), for the sharpest reason yet:
+                  a commission is money owed, and a later change to a plan's
+                  rate must never retroactively change what a rep already
+                  earned on a deal they already closed. COMMISSION_RECORD
+                  (V29) only seeds READ and APPROVE - never CREATE/UPDATE/
+                  DELETE - since CommissionEngine is the only writer of a
+                  record's core fields, and the only API mutation is the
+                  one-way PENDING -> APPROVED -> PAID status walk (no
+                  skipping, no backward moves). GET /commission-records/mine
+                  needs no permission at all, the fourth-kind, notification-
+                  style self-scoped shape SalesGoalService#myGoals and
+                  SavedViewService already established
   notification/   a teammate's own in-app inbox (notification.inbox package
                   - distinct from notification.email, the existing
                   transactional-email abstraction auth/ already used for
