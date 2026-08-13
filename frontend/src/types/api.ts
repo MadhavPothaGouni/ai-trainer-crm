@@ -2178,3 +2178,65 @@ export interface UpdateMacroRequest {
 export interface ApplyMacroRequest {
   ticketId: string;
 }
+
+// ---- Contract ----
+//
+// See backend/crm-platform/README.md's module layout for `contract` (V35) - the fifth module
+// this session and the first added after the LOC checkpoint. Fills a real gap Quote/Order/
+// Invoice each fall short of: the ongoing agreement itself, tracked after a deal closes. Status
+// is a free (non-linear) transition, same shape TicketStatus already uses - reopening a
+// terminated contract is a legitimate correction, not an error.
+
+export type ContractStatus = "DRAFT" | "ACTIVE" | "EXPIRED" | "TERMINATED" | "RENEWED";
+
+export const CONTRACT_STATUSES: ContractStatus[] = ["DRAFT", "ACTIVE", "EXPIRED", "TERMINATED", "RENEWED"];
+
+export interface ContractDto {
+  id: string;
+  accountId: string;
+  opportunityId: string | null;
+  ownerId: string;
+  contractNumber: string;
+  title: string;
+  status: ContractStatus;
+  startDate: string;
+  endDate: string;
+  totalValue: number;
+  autoRenew: boolean;
+  renewalTermMonths: number | null;
+  /** Stamped the first time status moves to ACTIVE, never overwritten afterward - see Contract's javadoc on the backend. */
+  signedAt: string | null;
+  terms: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateContractRequest {
+  accountId: string;
+  opportunityId?: string | null;
+  contractNumber: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  totalValue?: number | null;
+  autoRenew: boolean;
+  renewalTermMonths?: number | null;
+  terms?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateContractRequest {
+  opportunityId?: string | null;
+  contractNumber: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  totalValue?: number | null;
+  autoRenew: boolean;
+  renewalTermMonths?: number | null;
+  terms?: string | null;
+}
+
+export interface UpdateContractStatusRequest {
+  status: ContractStatus;
+}

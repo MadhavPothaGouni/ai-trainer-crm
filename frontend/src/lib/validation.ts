@@ -880,3 +880,35 @@ export const updateMacroSchema = macroSchema.extend({
   active: z.boolean(),
 });
 export type UpdateMacroFormValues = z.infer<typeof updateMacroSchema>;
+
+// ---- Contract ----
+
+export const contractSchema = z
+  .object({
+    accountId: z.string().min(1, "Account is required"),
+    opportunityId: z.string().optional().or(z.literal("")),
+    contractNumber: z.string().min(1, "Contract number is required").max(50),
+    title: z.string().min(1, "Title is required").max(200),
+    startDate: z.string().min(1, "Start date is required"),
+    endDate: z.string().min(1, "End date is required"),
+    totalValue: optionalNumberString,
+    autoRenew: z.boolean().optional(),
+    /** Only required when autoRenew is checked - see the .refine below and Contract's javadoc on the backend. */
+    renewalTermMonths: z.string().optional(),
+    terms: z.string().max(4000).optional().or(z.literal("")),
+  })
+  .refine((data) => data.endDate >= data.startDate, {
+    message: "End date cannot be before start date",
+    path: ["endDate"],
+  })
+  .refine((data) => !data.autoRenew || !!data.renewalTermMonths, {
+    message: "A renewal term is required when auto-renew is enabled",
+    path: ["renewalTermMonths"],
+  });
+export type ContractFormValues = z.infer<typeof contractSchema>;
+
+export const createContractSchema = contractSchema;
+export type CreateContractFormValues = ContractFormValues;
+
+export const updateContractSchema = contractSchema;
+export type UpdateContractFormValues = ContractFormValues;

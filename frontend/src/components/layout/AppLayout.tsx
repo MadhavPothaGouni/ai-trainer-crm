@@ -33,6 +33,10 @@ const CRM_NAV_LINKS = [
   // layout for `booking`.
   { to: "/booking-links", label: "Booking Links", end: false },
   { to: "/quotes", label: "Quotes", end: false },
+  // Owner-scoped, full OWN/TEAM/DEPARTMENT/ORGANIZATION ladder like Tickets/Booking Links above,
+  // but with the more restrained CREATE/READ/UPDATE/DELETE action set (no EXPORT/IMPORT/ASSIGN).
+  // See backend/crm-platform/README.md's module layout for `contract`.
+  { to: "/contracts", label: "Contracts", end: false },
   { to: "/products", label: "Products", end: false },
   // No OWN scope on EMAIL_TEMPLATE, same three-scope-ladder shape as Products above (TEAM/
   // DEPARTMENT/ORGANIZATION only) - a template is shared organization content, not admin-only

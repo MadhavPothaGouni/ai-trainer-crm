@@ -50,6 +50,9 @@ import BookingLinkListPage from "./pages/bookingLinks/BookingLinkListPage";
 import MacroCreatePage from "./pages/macros/MacroCreatePage";
 import MacroDetailPage from "./pages/macros/MacroDetailPage";
 import MacroListPage from "./pages/macros/MacroListPage";
+import ContractCreatePage from "./pages/contracts/ContractCreatePage";
+import ContractDetailPage from "./pages/contracts/ContractDetailPage";
+import ContractListPage from "./pages/contracts/ContractListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -227,6 +230,9 @@ export default function App() {
           <Route path="/macros" element={<MacroListPage />} />
           <Route path="/macros/new" element={<MacroCreatePage />} />
           <Route path="/macros/:macroId" element={<MacroDetailPage />} />
+          <Route path="/contracts" element={<ContractListPage />} />
+          <Route path="/contracts/new" element={<ContractCreatePage />} />
+          <Route path="/contracts/:contractId" element={<ContractDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />
