@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -61,9 +62,14 @@ public class TerritoryAssignmentListener {
     // commits. A plain @Async @EventListener risks starting - and finding nothing, since the row
     // isn't visible yet on a separate connection - before the publisher's insert has committed.
     // fallbackExecution=true preserves the previous behavior if ever published outside a transaction.
+    // propagation=REQUIRES_NEW is required, not optional: Spring's
+    // RestrictedTransactionalEventListenerFactory rejects a plain @Transactional on an AFTER_COMMIT
+    // listener at context-startup time, since by AFTER_COMMIT the publisher's transaction has
+    // already committed and closed, so REQUIRED propagation would be implicitly opening a
+    // brand-new transaction anyway - Spring requires that intent to be explicit.
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRecordCreated(CrmAuditEvents.RecordCreated event) {
         TerritoryRule.TargetResource resource = parseResource(event.resourceType());
         if (resource == null) return;

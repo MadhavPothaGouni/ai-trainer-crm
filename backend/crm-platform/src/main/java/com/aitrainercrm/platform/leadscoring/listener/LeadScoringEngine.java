@@ -11,6 +11,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -46,10 +47,14 @@ public class LeadScoringEngine {
     // its own @Transactional create/update method, before that transaction commits. A plain
     // @Async @EventListener risks starting - and reading pre-commit, stale field values - before
     // the publisher's write has actually committed. fallbackExecution=true preserves the previous
-    // behavior if ever published outside a transaction.
+    // behavior if ever published outside a transaction. propagation=REQUIRES_NEW is required, not
+    // optional: Spring's RestrictedTransactionalEventListenerFactory rejects a plain @Transactional
+    // on an AFTER_COMMIT listener at context-startup time, since by AFTER_COMMIT the publisher's
+    // transaction has already committed and closed, so REQUIRED propagation would be implicitly
+    // opening a brand-new transaction anyway - Spring requires that intent to be explicit.
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRecordCreated(CrmAuditEvents.RecordCreated event) {
         if (!"Lead".equals(event.resourceType())) return;
         rescore(event.organizationId(), event.resourceId());
@@ -57,7 +62,7 @@ public class LeadScoringEngine {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRecordUpdated(CrmAuditEvents.RecordUpdated event) {
         if (!"Lead".equals(event.resourceType())) return;
         rescore(event.organizationId(), event.resourceId());

@@ -16,6 +16,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -66,10 +67,14 @@ public class CommissionEngine {
     // Opportunity's pre-commit, stale stage - before the publisher's own transaction has actually
     // written CLOSED_WON to the database, silently no-oping instead of crediting the commission.
     // fallbackExecution=true keeps this working the same as before for the rare/hypothetical case
-    // where the event is published with no active transaction at all.
+    // where the event is published with no active transaction at all. propagation=REQUIRES_NEW is
+    // required, not optional: Spring's RestrictedTransactionalEventListenerFactory rejects a plain
+    // @Transactional on an AFTER_COMMIT listener at context-startup time, since by AFTER_COMMIT the
+    // publisher's transaction has already committed and closed, so REQUIRED propagation would be
+    // implicitly opening a brand-new transaction anyway - Spring requires that intent to be explicit.
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRecordCreated(CrmAuditEvents.RecordCreated event) {
         if (!"Opportunity".equals(event.resourceType())) return;
         maybeCreateCommission(event.organizationId(), event.resourceId());
@@ -77,7 +82,7 @@ public class CommissionEngine {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onRecordUpdated(CrmAuditEvents.RecordUpdated event) {
         if (!"Opportunity".equals(event.resourceType())) return;
         maybeCreateCommission(event.organizationId(), event.resourceId());
