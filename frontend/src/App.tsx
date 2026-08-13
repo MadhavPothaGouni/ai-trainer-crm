@@ -28,6 +28,8 @@ import LeadScoringRuleDetailPage from "./pages/leadscoring/LeadScoringRuleDetail
 import LeadScoringRuleListPage from "./pages/leadscoring/LeadScoringRuleListPage";
 import EmailTemplateDetailPage from "./pages/emailtemplates/EmailTemplateDetailPage";
 import EmailTemplateListPage from "./pages/emailtemplates/EmailTemplateListPage";
+import RegionDetailPage from "./pages/regions/RegionDetailPage";
+import RegionListPage from "./pages/regions/RegionListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -183,6 +185,8 @@ export default function App() {
           <Route path="/sales-goals/:goalId" element={<SalesGoalDetailPage />} />
           <Route path="/email-templates" element={<EmailTemplateListPage />} />
           <Route path="/email-templates/:templateId" element={<EmailTemplateDetailPage />} />
+          <Route path="/regions" element={<RegionListPage />} />
+          <Route path="/regions/:regionId" element={<RegionDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />

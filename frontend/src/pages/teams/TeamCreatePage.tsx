@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { listRegions } from "../../api/regions";
 import { createTeam } from "../../api/teams";
 import { listUsers } from "../../api/users";
 import { Alert } from "../../components/ui/Alert";
@@ -10,16 +11,20 @@ import { Select } from "../../components/ui/Select";
 import { TextField } from "../../components/ui/TextField";
 import { applyServerErrors } from "../../lib/formErrors";
 import { blankToUndefined, createTeamSchema, type CreateTeamFormValues } from "../../lib/validation";
-import type { UserDto } from "../../types/api";
+import type { RegionDto, UserDto } from "../../types/api";
 
 export default function TeamCreatePage() {
   const navigate = useNavigate();
   const [formError, setFormError] = useState<string | null>(null);
   const [users, setUsers] = useState<UserDto[]>([]);
+  const [regions, setRegions] = useState<RegionDto[]>([]);
 
   useEffect(() => {
     listUsers({ size: 100 })
       .then((res) => setUsers(res.content))
+      .catch(() => undefined);
+    listRegions()
+      .then((res) => setRegions(res))
       .catch(() => undefined);
   }, []);
 
@@ -37,6 +42,7 @@ export default function TeamCreatePage() {
         name: values.name,
         department: blankToUndefined(values.department),
         leadUserId: blankToUndefined(values.leadUserId),
+        regionId: blankToUndefined(values.regionId),
       });
       navigate(`/teams/${team.id}`);
     } catch (error) {
@@ -62,6 +68,13 @@ export default function TeamCreatePage() {
           options={users.map((u) => ({ value: u.id, label: u.fullName }))}
           error={errors.leadUserId?.message}
           {...register("leadUserId")}
+        />
+        <Select
+          label="Region"
+          placeholder="None"
+          options={regions.map((r) => ({ value: r.id, label: r.name }))}
+          error={errors.regionId?.message}
+          {...register("regionId")}
         />
 
         <div className="flex justify-end gap-3">

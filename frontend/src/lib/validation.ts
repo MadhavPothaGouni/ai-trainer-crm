@@ -206,6 +206,7 @@ export const createTeamSchema = z.object({
   name: z.string().min(1, "Team name is required").max(150),
   department: z.string().max(100).optional().or(z.literal("")),
   leadUserId: z.string().optional().or(z.literal("")),
+  regionId: z.string().optional().or(z.literal("")),
 });
 export type CreateTeamFormValues = z.infer<typeof createTeamSchema>;
 
@@ -655,3 +656,15 @@ export const updateEmailTemplateSchema = createEmailTemplateSchema.extend({
   active: z.boolean(),
 });
 export type UpdateEmailTemplateFormValues = z.infer<typeof updateEmailTemplateSchema>;
+
+// ---- Territory Hierarchy (Regions) ----
+
+export const createRegionSchema = z.object({
+  name: z.string().min(1, "Name is required").max(150),
+  parentRegionId: z.string().optional().or(z.literal("")),
+  description: z.string().max(2000).optional().or(z.literal("")),
+});
+export type CreateRegionFormValues = z.infer<typeof createRegionSchema>;
+
+export const updateRegionSchema = createRegionSchema;
+export type UpdateRegionFormValues = z.infer<typeof updateRegionSchema>;

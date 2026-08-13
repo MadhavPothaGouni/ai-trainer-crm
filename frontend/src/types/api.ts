@@ -168,12 +168,15 @@ export interface TeamDto {
   name: string;
   department: string | null;
   leadUserId: string | null;
+  /** Optional link into region/'s org-chart tree - see backend/crm-platform/README.md's module layout for `region`. */
+  regionId: string | null;
 }
 
 export interface CreateTeamRequest {
   name: string;
   department?: string | null;
   leadUserId?: string | null;
+  regionId?: string | null;
 }
 
 export type UpdateTeamRequest = CreateTeamRequest;
@@ -1759,4 +1762,44 @@ export interface RenderedEmailDto {
   subject: string;
   body: string;
   unresolvedTokens: string[];
+}
+
+// ---- Territory Hierarchy (Regions) ----
+//
+// A nested org-chart Region tree sitting ABOVE territory/'s existing Territory Rules, not on top of
+// them - see backend/crm-platform/README.md's module layout for `region`. Region answers "how does
+// our sales org roll up for reporting" (a static grouping of Teams), a different question from
+// Territory Rules' "who should own this brand-new Lead/Account." A Team optionally points at a
+// Region (TeamDto#regionId above) - that's the only link between this tree and any real CRM data.
+
+export interface RegionDto {
+  id: string;
+  name: string;
+  parentRegionId: string | null;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRegionRequest {
+  name: string;
+  parentRegionId?: string | null;
+  description?: string | null;
+}
+
+export type UpdateRegionRequest = CreateRegionRequest;
+
+/** Computed live by RegionService#rollup, never stored - see that method's javadoc. */
+export interface RegionRollupDto {
+  regionId: string;
+  regionName: string;
+  descendantRegionCount: number;
+  teamCount: number;
+  userCount: number;
+  openOpportunityCount: number;
+  openPipelineValue: number;
+  wonOpportunityCount: number;
+  wonValue: number;
+  lostOpportunityCount: number;
+  lostValue: number;
 }

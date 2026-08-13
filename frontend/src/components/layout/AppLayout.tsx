@@ -91,6 +91,10 @@ const ADMIN_NAV_LINKS = [
   // this gate only covers defining/editing goals. Viewing your OWN goals lives in the main
   // nav's "My Goals" instead (GET /sales-goals/mine, no permission required).
   { to: "/sales-goals", label: "Sales Goals", end: false },
+  // REGION:*:ORGANIZATION only, same third-kind admin-config shape as the four above - a
+  // different concept from Territory Rules above (org-chart rollup grouping, not auto-routing
+  // new records to an owner). See backend/crm-platform/README.md's module layout for `region`.
+  { to: "/regions", label: "Territory Hierarchy", end: false },
 ];
 
 /** Shell for every authenticated page: a slim top bar (current user + sign out), CRM nav, and the routed page content. */

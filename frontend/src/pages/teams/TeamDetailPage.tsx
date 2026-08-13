@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { listRegions } from "../../api/regions";
 import { deleteTeam, getTeam, updateTeam } from "../../api/teams";
 import { listUsers } from "../../api/users";
 import { Alert } from "../../components/ui/Alert";
@@ -11,13 +12,14 @@ import { TextField } from "../../components/ui/TextField";
 import { ApiError } from "../../lib/apiClient";
 import { applyServerErrors } from "../../lib/formErrors";
 import { blankToUndefined, createTeamSchema, type CreateTeamFormValues } from "../../lib/validation";
-import type { TeamDto, UserDto } from "../../types/api";
+import type { RegionDto, TeamDto, UserDto } from "../../types/api";
 
 export default function TeamDetailPage() {
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const [team, setTeam] = useState<TeamDto | null>(null);
   const [users, setUsers] = useState<UserDto[]>([]);
+  const [regions, setRegions] = useState<RegionDto[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -37,6 +39,11 @@ export default function TeamDetailPage() {
         if (!cancelled) setUsers(res.content);
       })
       .catch(() => undefined);
+    listRegions()
+      .then((res) => {
+        if (!cancelled) setRegions(res);
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -52,7 +59,7 @@ export default function TeamDetailPage() {
 
   useEffect(() => {
     if (!team) return;
-    reset({ name: team.name, department: team.department ?? "", leadUserId: team.leadUserId ?? "" });
+    reset({ name: team.name, department: team.department ?? "", leadUserId: team.leadUserId ?? "", regionId: team.regionId ?? "" });
   }, [team, reset]);
 
   const onSaveEdits = handleSubmit(async (values) => {
@@ -63,6 +70,7 @@ export default function TeamDetailPage() {
         name: values.name,
         department: blankToUndefined(values.department),
         leadUserId: blankToUndefined(values.leadUserId),
+        regionId: blankToUndefined(values.regionId),
       });
       setTeam(updated);
     } catch (error) {
@@ -92,6 +100,7 @@ export default function TeamDetailPage() {
 
   const lead = users.find((u) => u.id === team.leadUserId);
   const members = users.filter((u) => u.teamId === team.id);
+  const region = regions.find((r) => r.id === team.regionId);
 
   return (
     <div className="flex flex-col gap-6">
@@ -123,6 +132,18 @@ export default function TeamDetailPage() {
                 {lead ? (
                   <Link to={`/users/${lead.id}`} className="hover:underline">
                     {lead.fullName}
+                  </Link>
+                ) : (
+                  "—"
+                )}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-slate-500">Region</dt>
+              <dd className="text-slate-900">
+                {region ? (
+                  <Link to={`/regions/${region.id}`} className="hover:underline">
+                    {region.name}
                   </Link>
                 ) : (
                   "—"
@@ -161,6 +182,13 @@ export default function TeamDetailPage() {
           options={users.map((u) => ({ value: u.id, label: u.fullName }))}
           error={errors.leadUserId?.message}
           {...register("leadUserId")}
+        />
+        <Select
+          label="Region"
+          placeholder="None"
+          options={regions.map((r) => ({ value: r.id, label: r.name }))}
+          error={errors.regionId?.message}
+          {...register("regionId")}
         />
 
         <div className="flex justify-end">
