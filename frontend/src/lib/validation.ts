@@ -668,3 +668,23 @@ export type CreateRegionFormValues = z.infer<typeof createRegionSchema>;
 
 export const updateRegionSchema = createRegionSchema;
 export type UpdateRegionFormValues = z.infer<typeof updateRegionSchema>;
+
+// ---- Commission Tracking ----
+
+/** assignToType/assignToId aren't real request fields - same "one radio choice plus one picker, mapped to exactly one of two request fields" shape salesGoalFormShape uses for ownerUserId/teamId. */
+export const commissionPlanSchema = z.object({
+  name: z.string().min(1, "Name is required").max(150),
+  assignToType: z.enum(["USER", "TEAM"]),
+  assignToId: z.string().min(1, "Choose who this plan is for"),
+  rateType: z.string().min(1, "Choose a rate type"),
+  rate: requiredPositiveNumberString,
+});
+export type CommissionPlanFormValues = z.infer<typeof commissionPlanSchema>;
+
+export const createCommissionPlanSchema = commissionPlanSchema;
+export type CreateCommissionPlanFormValues = CommissionPlanFormValues;
+
+export const updateCommissionPlanSchema = commissionPlanSchema.extend({
+  active: z.boolean(),
+});
+export type UpdateCommissionPlanFormValues = z.infer<typeof updateCommissionPlanSchema>;

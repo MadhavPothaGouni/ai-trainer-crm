@@ -1803,3 +1803,64 @@ export interface RegionRollupDto {
   lostOpportunityCount: number;
   lostValue: number;
 }
+
+// ---- Commission Tracking ----
+//
+// See backend/crm-platform/README.md's module layout for `commission`. CommissionPlan is admin
+// config (COMMISSION_PLAN:*:ORGANIZATION only) with exactly one of ownerUserId/teamId set.
+// CommissionRecord is never created or edited through the API - CommissionEngine is the only
+// writer of everything except status/paidAt, so the only mutation exposed here is the one-way
+// PENDING -> APPROVED -> PAID status walk (updateCommissionRecordStatus). GET .../mine needs no
+// permission at all, the same self-scoped shape My Goals already uses.
+
+export type CommissionRateType = "PERCENTAGE" | "FLAT_PER_DEAL";
+export const COMMISSION_RATE_TYPES: CommissionRateType[] = ["PERCENTAGE", "FLAT_PER_DEAL"];
+
+export type CommissionRecordStatus = "PENDING" | "APPROVED" | "PAID";
+
+export interface CommissionPlanDto {
+  id: string;
+  name: string;
+  ownerUserId: string | null;
+  teamId: string | null;
+  rateType: CommissionRateType;
+  rate: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCommissionPlanRequest {
+  name: string;
+  ownerUserId?: string | null;
+  teamId?: string | null;
+  rateType: CommissionRateType;
+  rate: number;
+}
+
+export interface UpdateCommissionPlanRequest {
+  name: string;
+  ownerUserId?: string | null;
+  teamId?: string | null;
+  rateType: CommissionRateType;
+  rate: number;
+  active: boolean;
+}
+
+export interface CommissionRecordDto {
+  id: string;
+  opportunityId: string;
+  ownerUserId: string;
+  planId: string | null;
+  dealAmount: number;
+  rateType: CommissionRateType;
+  rate: number;
+  commissionAmount: number;
+  status: CommissionRecordStatus;
+  earnedAt: string;
+  paidAt: string | null;
+}
+
+export interface UpdateCommissionRecordStatusRequest {
+  status: CommissionRecordStatus;
+}

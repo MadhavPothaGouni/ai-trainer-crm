@@ -20,6 +20,11 @@ const CRM_NAV_LINKS = [
   // (below, "Sales Goals") is admin-gated. See backend/crm-platform/README.md's module
   // layout for `salesgoals`.
   { to: "/my-goals", label: "My Goals", end: false },
+  // GET /commission-records/mine needs no permission at all - the same self-scoped shape as
+  // My Goals above - so this belongs in the main nav even though defining plans (below,
+  // "Commission Plans") and approving/paying records ("Commission Records") are admin-gated.
+  // See backend/crm-platform/README.md's module layout for `commission`.
+  { to: "/my-commissions", label: "My Commissions", end: false },
   { to: "/tickets", label: "Tickets", end: false },
   { to: "/emails", label: "Emails", end: false },
   { to: "/calendar", label: "Calendar", end: false },
@@ -95,6 +100,13 @@ const ADMIN_NAV_LINKS = [
   // different concept from Territory Rules above (org-chart rollup grouping, not auto-routing
   // new records to an owner). See backend/crm-platform/README.md's module layout for `region`.
   { to: "/regions", label: "Territory Hierarchy", end: false },
+  // COMMISSION_PLAN:*:ORGANIZATION only, same third-kind admin-config shape as the five above -
+  // this gate only covers defining plans. Viewing your OWN earned commissions lives in the main
+  // nav's "My Commissions" instead (GET /commission-records/mine, no permission required).
+  { to: "/commission-plans", label: "Commission Plans", end: false },
+  // COMMISSION_RECORD:READ:ORGANIZATION (list) / :APPROVE:ORGANIZATION (the status-walk action) -
+  // records themselves are only ever created by CommissionEngine, never through this page.
+  { to: "/commission-records", label: "Commission Records", end: false },
 ];
 
 /** Shell for every authenticated page: a slim top bar (current user + sign out), CRM nav, and the routed page content. */

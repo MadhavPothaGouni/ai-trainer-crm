@@ -30,6 +30,10 @@ import EmailTemplateDetailPage from "./pages/emailtemplates/EmailTemplateDetailP
 import EmailTemplateListPage from "./pages/emailtemplates/EmailTemplateListPage";
 import RegionDetailPage from "./pages/regions/RegionDetailPage";
 import RegionListPage from "./pages/regions/RegionListPage";
+import CommissionPlanDetailPage from "./pages/commission/CommissionPlanDetailPage";
+import CommissionPlanListPage from "./pages/commission/CommissionPlanListPage";
+import CommissionRecordListPage from "./pages/commission/CommissionRecordListPage";
+import MyCommissionsPage from "./pages/commission/MyCommissionsPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -187,6 +191,10 @@ export default function App() {
           <Route path="/email-templates/:templateId" element={<EmailTemplateDetailPage />} />
           <Route path="/regions" element={<RegionListPage />} />
           <Route path="/regions/:regionId" element={<RegionDetailPage />} />
+          <Route path="/my-commissions" element={<MyCommissionsPage />} />
+          <Route path="/commission-plans" element={<CommissionPlanListPage />} />
+          <Route path="/commission-plans/:planId" element={<CommissionPlanDetailPage />} />
+          <Route path="/commission-records" element={<CommissionRecordListPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />
