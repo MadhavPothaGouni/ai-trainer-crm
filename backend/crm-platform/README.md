@@ -649,6 +649,24 @@ src/main/java/com/aitrainercrm/platform/
                   call came from inside another service). uq_booking_links_org_slug and
                   uq_booking_slots_link_start (V33) are real DB constraints backing the
                   slug-uniqueness and no-double-booking checks, not just in-memory ones.
+  macro/          ticket macros (canned responses) - V34, the fourth module this session.
+                  Macro mirrors product/'s no-OWN catalog shape (TEAM/DEPARTMENT/ORGANIZATION
+                  only, no ScopeAuthorizationService call for the catalog's own CRUD).
+                  MacroService#apply is the interesting part, and it's a THIRD distinct
+                  cross-module-mutation pattern alongside the two that already existed in this
+                  codebase: (1) TerritoryAssignmentListener/LeadScoringEngine inject a foreign
+                  Repository directly and save() the foreign entity themselves, since they're
+                  system-triggered @TransactionalEventListeners with no user permission to
+                  check in the first place; (2) BookingLinkService#book/#cancel (V33) call a
+                  foreign module's Service method directly. #apply follows (2), not a new
+                  pattern - it calls straight through TicketService#update/#updateStatus,
+                  deliberately NOT re-implementing Ticket's own OWN/TEAM/DEPARTMENT/
+                  ORGANIZATION authorization against MACRO's permission instead, since a rep
+                  who can merely read the macro catalog must not be able to mutate a ticket
+                  they can't otherwise touch. See MacroService's javadoc for the full
+                  reasoning. An inactive macro can be read but not applied - active/inactive
+                  gating the same way Course/Sequence draw the line between "in the catalog"
+                  and "in listActive."
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security,
                   plus security.apikey - the X-Api-Key request filter
