@@ -695,3 +695,90 @@ export const dataSubjectRequestSchema = z.object({
   subjectEmail: emailSchema,
 });
 export type DataSubjectRequestFormValues = z.infer<typeof dataSubjectRequestSchema>;
+
+// ---- Course / Certification (training) ----
+
+const requiredNonNegativeIntegerString = z
+  .string()
+  .min(1, "Required")
+  .refine((value) => Number.isInteger(Number(value)) && Number(value) >= 0, "Must be a whole number of 0 or more");
+
+const requiredPercentString = z
+  .string()
+  .min(1, "Required")
+  .refine((value) => Number.isInteger(Number(value)) && Number(value) >= 0 && Number(value) <= 100, "Must be a whole number from 0 to 100");
+
+const optionalPercentString = z
+  .string()
+  .optional()
+  .refine(
+    (value) => value === undefined || value === "" || (Number.isInteger(Number(value)) && Number(value) >= 0 && Number(value) <= 100),
+    "Must be a whole number from 0 to 100",
+  );
+
+const optionalPositiveIntegerString = z
+  .string()
+  .optional()
+  .refine((value) => value === undefined || value === "" || (Number.isInteger(Number(value)) && Number(value) >= 1), "Must be a whole number of at least 1");
+
+export const courseSchema = z.object({
+  title: z.string().min(1, "Title is required").max(200),
+  description: z.string().max(2000).optional().or(z.literal("")),
+  category: z.enum(["SALES", "PRODUCT", "COMPLIANCE", "ONBOARDING", "LEADERSHIP", "TECHNICAL"]),
+  durationMinutes: requiredNonNegativeIntegerString,
+  passingScorePercent: requiredPercentString,
+});
+export type CourseFormValues = z.infer<typeof courseSchema>;
+
+export const createCourseSchema = courseSchema;
+export type CreateCourseFormValues = CourseFormValues;
+
+export const updateCourseSchema = courseSchema.extend({
+  active: z.boolean(),
+});
+export type UpdateCourseFormValues = z.infer<typeof updateCourseSchema>;
+
+/** userId blank means self-enrollment - see CourseEnrollmentService#resolveLearner's javadoc for the identical default the backend applies. */
+export const createCourseEnrollmentSchema = z.object({
+  courseId: z.string().min(1, "Choose a course"),
+  userId: z.string().optional().or(z.literal("")),
+  dueDate: z.string().optional().or(z.literal("")),
+});
+export type CreateCourseEnrollmentFormValues = z.infer<typeof createCourseEnrollmentSchema>;
+
+export const updateCourseEnrollmentProgressSchema = z.object({
+  status: z.enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "FAILED"]),
+  scorePercent: optionalPercentString,
+});
+export type UpdateCourseEnrollmentProgressFormValues = z.infer<typeof updateCourseEnrollmentProgressSchema>;
+
+export const certificationSchema = z.object({
+  name: z.string().min(1, "Name is required").max(200),
+  issuingBody: z.string().max(200).optional().or(z.literal("")),
+  description: z.string().max(2000).optional().or(z.literal("")),
+  /** Blank means the credential never expires - see Certification#validityMonths' javadoc. */
+  validityMonths: optionalPositiveIntegerString,
+});
+export type CertificationFormValues = z.infer<typeof certificationSchema>;
+
+export const createCertificationSchema = certificationSchema;
+export type CreateCertificationFormValues = CertificationFormValues;
+
+export const updateCertificationSchema = certificationSchema.extend({
+  active: z.boolean(),
+});
+export type UpdateCertificationFormValues = z.infer<typeof updateCertificationSchema>;
+
+export const awardCertificationSchema = z.object({
+  certificationId: z.string().min(1, "Choose a certification"),
+  userId: z.string().optional().or(z.literal("")),
+  earnedAt: z.string().min(1, "Earned date is required"),
+  credentialNumber: z.string().max(100).optional().or(z.literal("")),
+});
+export type AwardCertificationFormValues = z.infer<typeof awardCertificationSchema>;
+
+export const updateUserCertificationStatusSchema = z.object({
+  status: z.enum(["ACTIVE", "EXPIRED", "REVOKED"]),
+  notes: z.string().max(1000).optional().or(z.literal("")),
+});
+export type UpdateUserCertificationStatusFormValues = z.infer<typeof updateUserCertificationStatusSchema>;

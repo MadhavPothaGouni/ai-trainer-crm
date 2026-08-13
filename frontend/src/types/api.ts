@@ -1892,3 +1892,118 @@ export interface DataSubjectRequestDto {
 export interface CreateDataSubjectRequest {
   subjectEmail: string;
 }
+
+// ---- Course / Certification (training) ----
+//
+// See backend/crm-platform/README.md's module layout for `course`/`certification` (V31) - the first
+// module this session specific to "ai-trainer-crm" rather than generic CRM surface area. Course and
+// Certification are admin-maintained catalogs (no ownerId, mirrors ProductDto's shape - no OWN
+// scope). CourseEnrollment and UserCertification are owner-scoped records where userId (not
+// ownerId) is the enrolled learner / credential holder.
+
+export type CourseCategory = "SALES" | "PRODUCT" | "COMPLIANCE" | "ONBOARDING" | "LEADERSHIP" | "TECHNICAL";
+
+export interface CourseDto {
+  id: string;
+  title: string;
+  description: string | null;
+  category: CourseCategory;
+  durationMinutes: number;
+  passingScorePercent: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCourseRequest {
+  title: string;
+  description?: string | null;
+  category: CourseCategory;
+  durationMinutes: number;
+  passingScorePercent: number;
+}
+
+export interface UpdateCourseRequest extends CreateCourseRequest {
+  active: boolean;
+}
+
+export type CourseEnrollmentStatus = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
+
+export interface CourseEnrollmentDto {
+  id: string;
+  courseId: string;
+  userId: string;
+  assignedByUserId: string | null;
+  status: CourseEnrollmentStatus;
+  scorePercent: number | null;
+  dueDate: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCourseEnrollmentRequest {
+  courseId: string;
+  /** Null/omitted defaults to the caller (self-enrollment) - see CourseEnrollmentService#resolveLearner's javadoc. */
+  userId?: string | null;
+  dueDate?: string | null;
+}
+
+export interface UpdateCourseEnrollmentProgressRequest {
+  status: CourseEnrollmentStatus;
+  scorePercent?: number | null;
+}
+
+export interface CertificationDto {
+  id: string;
+  name: string;
+  issuingBody: string | null;
+  description: string | null;
+  /** Null means this credential never expires - see Certification#validityMonths' javadoc. */
+  validityMonths: number | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCertificationRequest {
+  name: string;
+  issuingBody?: string | null;
+  description?: string | null;
+  validityMonths?: number | null;
+}
+
+export interface UpdateCertificationRequest extends CreateCertificationRequest {
+  active: boolean;
+}
+
+export type UserCertificationStatus = "ACTIVE" | "EXPIRED" | "REVOKED";
+
+export interface UserCertificationDto {
+  id: string;
+  certificationId: string;
+  userId: string;
+  credentialNumber: string | null;
+  earnedAt: string;
+  expiresAt: string | null;
+  status: UserCertificationStatus;
+  /** Computed by the backend from expiresAt vs. today - see UserCertification#isExpired's javadoc. */
+  expired: boolean;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AwardCertificationRequest {
+  certificationId: string;
+  /** Null/omitted defaults to the caller - see UserCertificationService#resolveHolder's javadoc. */
+  userId?: string | null;
+  earnedAt: string;
+  credentialNumber?: string | null;
+}
+
+export interface UpdateUserCertificationStatusRequest {
+  status: UserCertificationStatus;
+  notes?: string | null;
+}

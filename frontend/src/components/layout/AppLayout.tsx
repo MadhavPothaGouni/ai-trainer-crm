@@ -41,6 +41,14 @@ const CRM_NAV_LINKS = [
   { to: "/attachments", label: "Attachments", end: false },
   { to: "/approvals", label: "Approvals", end: false },
   { to: "/knowledge-articles", label: "Knowledge Base", end: false },
+  // No OWN scope on COURSE/CERTIFICATION (TEAM/DEPARTMENT/ORGANIZATION only), same shared-org-
+  // content shape as Products/Email Templates above - see backend/crm-platform/README.md's
+  // module layout for `course`/`certification`. Enrolling/awarding (COURSE_ENROLLMENT/
+  // USER_CERTIFICATION, full OWN/TEAM/DEPARTMENT/ORGANIZATION ladder, MEMBER gets OWN+TEAM by
+  // default) happens from each course's/certification's own detail page rather than a separate
+  // top-level page.
+  { to: "/courses", label: "Training", end: false },
+  { to: "/certifications", label: "Certifications", end: false },
 ];
 
 // Team/Role management hits USER:READ:ORGANIZATION / ROLE:READ:ORGANIZATION on the

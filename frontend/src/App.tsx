@@ -35,6 +35,12 @@ import CommissionPlanListPage from "./pages/commission/CommissionPlanListPage";
 import CommissionRecordListPage from "./pages/commission/CommissionRecordListPage";
 import MyCommissionsPage from "./pages/commission/MyCommissionsPage";
 import DataSubjectRequestListPage from "./pages/gdpr/DataSubjectRequestListPage";
+import CourseCreatePage from "./pages/courses/CourseCreatePage";
+import CourseDetailPage from "./pages/courses/CourseDetailPage";
+import CourseListPage from "./pages/courses/CourseListPage";
+import CertificationCreatePage from "./pages/certifications/CertificationCreatePage";
+import CertificationDetailPage from "./pages/certifications/CertificationDetailPage";
+import CertificationListPage from "./pages/certifications/CertificationListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -197,6 +203,12 @@ export default function App() {
           <Route path="/commission-plans/:planId" element={<CommissionPlanDetailPage />} />
           <Route path="/commission-records" element={<CommissionRecordListPage />} />
           <Route path="/data-subject-requests" element={<DataSubjectRequestListPage />} />
+          <Route path="/courses" element={<CourseListPage />} />
+          <Route path="/courses/new" element={<CourseCreatePage />} />
+          <Route path="/courses/:courseId" element={<CourseDetailPage />} />
+          <Route path="/certifications" element={<CertificationListPage />} />
+          <Route path="/certifications/new" element={<CertificationCreatePage />} />
+          <Route path="/certifications/:certificationId" element={<CertificationDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />
