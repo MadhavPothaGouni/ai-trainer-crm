@@ -625,6 +625,30 @@ src/main/java/com/aitrainercrm/platform/
                   same state, so there's no separate "mark complete" call,
                   the same way CourseEnrollmentService re-derives status from
                   real state rather than trusting the request.
+  booking/        meeting scheduler ("book time with me" links) - V33, the third module
+                  this session that's real new functional surface area, and the first
+                  one that actively drives another module's service rather than just
+                  reading its data. BookingLink mirrors ticket/'s owner-scoped shape
+                  exactly (full OWN/TEAM/DEPARTMENT/ORGANIZATION ladder, in
+                  RoleService#isCoreCrmResource). BookingSlot is a real FK'd child row
+                  (on delete cascade), no permission of its own, managed through
+                  BookingLinkService's addSlot/removeSlot the same way QuoteService
+                  manages line items - except a slot also carries a real state machine
+                  (OPEN -> BOOKED -> [terminal] / OPEN -> CANCELLED). BookingSlot#endAt
+                  is computed once from the link's durationMinutes at slot-creation time
+                  and stored, never recomputed if durationMinutes later changes - the
+                  same "snapshot, don't drift" reasoning UserCertification#expiresAt and
+                  CommissionRecord's frozen columns already document. BookingLinkService#
+                  book/#cancel call straight into CalendarEventService#create/#delete to
+                  create/soft-delete a real CalendarEvent rather than duplicating any
+                  calendar logic here - see BookingLinkService's javadoc for the resulting
+                  cross-module permission interaction (a TEAM-scoped manager can book a
+                  report's link but the resulting CalendarEvent still needs its own
+                  CALENDAR_EVENT:CREATE:ORGANIZATION grant to be assigned to that report,
+                  since CalendarEventService#resolveOwner doesn't know or care that the
+                  call came from inside another service). uq_booking_links_org_slug and
+                  uq_booking_slots_link_start (V33) are real DB constraints backing the
+                  slug-uniqueness and no-double-booking checks, not just in-memory ones.
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security,
                   plus security.apikey - the X-Api-Key request filter
