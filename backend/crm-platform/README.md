@@ -560,6 +560,41 @@ src/main/java/com/aitrainercrm/platform/
                   added after the fact with no change to that design - one
                   more headers constant, one more export/import method
                   pair, one more row-builder
+  course/         training catalog (Course) + enrollment (CourseEnrollment) -
+                  V31, the first module this session that's actually specific
+                  to "ai-trainer-crm" rather than generic CRM surface area any
+                  sales platform would need. Course mirrors product/'s shape
+                  exactly: shared catalog data, no ownerId, COURSE seeded at
+                  TEAM/DEPARTMENT/ORGANIZATION only (no OWN) so CourseService
+                  does no ScopeAuthorizationService call, same reasoning
+                  ProductService's javadoc gives. CourseEnrollment mirrors
+                  ticket/'s shape instead: a normal owner-scoped record, full
+                  OWN/TEAM/DEPARTMENT/ORGANIZATION ladder, in
+                  RoleService#isCoreCrmResource so MEMBER gets OWN+TEAM by
+                  default - except the "owner" column is named userId (the
+                  enrolled learner), not ownerId, since "who is this course
+                  for" is a different question from "who's working this
+                  deal." CourseEnrollmentService#updateProgress re-derives
+                  COMPLETED vs FAILED from the submitted score against the
+                  Course's own passingScorePercent rather than trusting the
+                  caller's requested status outright - the same "verify
+                  against real state, don't just trust the event" reasoning
+                  CommissionEngine re-reads an Opportunity's actual stage for.
+                  uq_course_enrollments_course_user_active (V31) blocks a
+                  second concurrent active enrollment in the same course
+  certification/  the identical catalog/award pair one level up: Certification
+                  (admin-maintained credential catalog, same no-OWN shape as
+                  Course) and UserCertification (owner-scoped award record,
+                  same full-ladder shape as CourseEnrollment). Unlike
+                  CourseEnrollment there's no uniqueness constraint on
+                  UserCertification - recertification is normal, so each
+                  award is its own historical row rather than something
+                  overwritten in place. UserCertification#expiresAt is
+                  derived once at award time from Certification#validityMonths
+                  and stored, never recomputed live - the same "snapshot,
+                  don't let it drift if the catalog definition later changes"
+                  reasoning CommissionRecord's frozen dealAmount/rate/
+                  commissionAmount columns document
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security,
                   plus security.apikey - the X-Api-Key request filter
