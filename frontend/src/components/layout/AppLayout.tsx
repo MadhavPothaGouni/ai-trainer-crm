@@ -28,6 +28,10 @@ const CRM_NAV_LINKS = [
   { to: "/tickets", label: "Tickets", end: false },
   { to: "/emails", label: "Emails", end: false },
   { to: "/calendar", label: "Calendar", end: false },
+  // Owner-scoped, full OWN/TEAM/DEPARTMENT/ORGANIZATION ladder, same shape as Tickets/Calendar
+  // above - MEMBER gets OWN+TEAM by default. See backend/crm-platform/README.md's module
+  // layout for `booking`.
+  { to: "/booking-links", label: "Booking Links", end: false },
   { to: "/quotes", label: "Quotes", end: false },
   { to: "/products", label: "Products", end: false },
   // No OWN scope on EMAIL_TEMPLATE, same three-scope-ladder shape as Products above (TEAM/

@@ -826,3 +826,39 @@ export const updateSequenceEnrollmentStatusSchema = z.object({
   status: z.enum(["ACTIVE", "PAUSED", "CANCELLED"]),
 });
 export type UpdateSequenceEnrollmentStatusFormValues = z.infer<typeof updateSequenceEnrollmentStatusSchema>;
+
+// ---- Booking (meeting scheduler) ----
+// requiredPositiveIntegerString is already declared above (used by SlaPolicy/Product schemas).
+
+const slugSchema = z
+  .string()
+  .min(1, "Slug is required")
+  .max(80)
+  .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens only");
+
+export const bookingLinkSchema = z.object({
+  title: z.string().min(1, "Title is required").max(200),
+  description: z.string().max(2000).optional().or(z.literal("")),
+  durationMinutes: requiredPositiveIntegerString,
+  slug: slugSchema,
+});
+export type BookingLinkFormValues = z.infer<typeof bookingLinkSchema>;
+
+export const createBookingLinkSchema = bookingLinkSchema;
+export type CreateBookingLinkFormValues = BookingLinkFormValues;
+
+export const updateBookingLinkSchema = bookingLinkSchema.extend({
+  active: z.boolean(),
+});
+export type UpdateBookingLinkFormValues = z.infer<typeof updateBookingLinkSchema>;
+
+export const createBookingSlotSchema = z.object({
+  startAt: z.string().min(1, "Start time is required"),
+});
+export type CreateBookingSlotFormValues = z.infer<typeof createBookingSlotSchema>;
+
+export const bookSlotSchema = z.object({
+  targetType: z.enum(["LEAD", "CONTACT"]),
+  targetId: z.string().min(1, "Choose a lead or contact"),
+});
+export type BookSlotFormValues = z.infer<typeof bookSlotSchema>;

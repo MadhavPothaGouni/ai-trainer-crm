@@ -44,6 +44,9 @@ import CertificationListPage from "./pages/certifications/CertificationListPage"
 import SequenceCreatePage from "./pages/sequences/SequenceCreatePage";
 import SequenceDetailPage from "./pages/sequences/SequenceDetailPage";
 import SequenceListPage from "./pages/sequences/SequenceListPage";
+import BookingLinkCreatePage from "./pages/bookingLinks/BookingLinkCreatePage";
+import BookingLinkDetailPage from "./pages/bookingLinks/BookingLinkDetailPage";
+import BookingLinkListPage from "./pages/bookingLinks/BookingLinkListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -215,6 +218,9 @@ export default function App() {
           <Route path="/sequences" element={<SequenceListPage />} />
           <Route path="/sequences/new" element={<SequenceCreatePage />} />
           <Route path="/sequences/:sequenceId" element={<SequenceDetailPage />} />
+          <Route path="/booking-links" element={<BookingLinkListPage />} />
+          <Route path="/booking-links/new" element={<BookingLinkCreatePage />} />
+          <Route path="/booking-links/:bookingLinkId" element={<BookingLinkDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />

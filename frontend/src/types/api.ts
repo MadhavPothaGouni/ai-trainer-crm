@@ -2084,3 +2084,63 @@ export interface CreateSequenceEnrollmentRequest {
 export interface UpdateSequenceEnrollmentStatusRequest {
   status: SequenceEnrollmentStatus;
 }
+
+// ---- Booking (meeting scheduler) ----
+//
+// See backend/crm-platform/README.md's module layout for `booking` (V33) - the third module this
+// session, and the first one that actively drives another module's service: booking a slot creates
+// a real CalendarEvent via CalendarEventService, cancelling one soft-deletes that same event.
+
+export type BookingSlotStatus = "OPEN" | "BOOKED" | "CANCELLED";
+export type BookingTargetType = "LEAD" | "CONTACT";
+
+export interface BookingSlotDto {
+  id: string;
+  startAt: string;
+  endAt: string;
+  status: BookingSlotStatus;
+  targetType: BookingTargetType | null;
+  targetId: string | null;
+  bookedAt: string | null;
+  calendarEventId: string | null;
+}
+
+/** endAt is computed server-side from the link's current durationMinutes - see BookingSlot's javadoc. */
+export interface CreateBookingSlotRequest {
+  startAt: string;
+}
+
+export interface BookSlotRequest {
+  targetType: BookingTargetType;
+  targetId: string;
+}
+
+export interface BookingLinkDto {
+  id: string;
+  ownerId: string;
+  title: string;
+  description: string | null;
+  durationMinutes: number;
+  slug: string;
+  active: boolean;
+  slots: BookingSlotDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateBookingLinkRequest {
+  title: string;
+  description?: string | null;
+  durationMinutes: number;
+  slug: string;
+  /** Null/omitted defaults to the creator - see BookingLinkService#resolveOwner's javadoc. */
+  ownerId?: string | null;
+}
+
+export interface UpdateBookingLinkRequest {
+  title: string;
+  description?: string | null;
+  durationMinutes: number;
+  slug: string;
+  active: boolean;
+}
