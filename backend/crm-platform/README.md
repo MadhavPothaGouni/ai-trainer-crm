@@ -705,6 +705,24 @@ src/main/java/com/aitrainercrm/platform/
                   free (non-linear) state machine like contracts.status; achievedAt is
                   stamped the first time status moves to ACHIEVED and never overwritten
                   afterward, the same snapshot rule contracts.signedAt already documents.
+  trainingsession/ training sessions (the post-session record of what actually happened in a
+                  coaching session) - V37, the seventh module this session and the second
+                  (after clientgoal, V36) to lean into what this platform's own name
+                  ("ai-trainer-crm") implies. Deliberately distinct from booking/'s
+                  BookingLink/BookingSlot (the PRE-session scheduling mechanism - "book time
+                  with me") and from clientgoal's ClientGoal (the long-term target this
+                  session is one unit of work toward - no FK between the two tables, purely
+                  a reporting-time join on contactId). Owner-scoped CRM-resource pattern,
+                  mirrors clientgoal/contract exactly (full OWN/TEAM/DEPARTMENT/ORGANIZATION
+                  ladder, in RoleService#isCoreCrmResource, the same restrained CREATE/READ/
+                  UPDATE/DELETE action set). contactId is a required real FK (the client,
+                  never the authorization subject); bookingSlotId is an optional cross-
+                  reference to the BookingSlot this session originated from, if any - since
+                  BookingSlot itself carries no organizationId column (only bookingLinkId,
+                  see booking/'s own V33 shape), TrainingSessionService#assertBookingSlotInOrganization
+                  joins through BookingLinkRepository to check tenancy before accepting it.
+                  status is a free (non-linear) state machine like tickets/contracts/
+                  client_goals - a NO_SHOW logged in error can be corrected back to SCHEDULED.
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security,
                   plus security.apikey - the X-Api-Key request filter
