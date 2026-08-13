@@ -166,7 +166,11 @@ class SavedViewIntegrationTest extends AbstractIntegrationTest {
             if (node.get("isDefault").asBoolean()) defaultCount++;
         }
         org.assertj.core.api.Assertions.assertThat(defaultCount).isEqualTo(1);
-        mockMvc.perform(authed(get("/api/v1/saved-views/" + firstId), ownerToken)).andExpect(status().isNotFound());
+        // firstId's own view row was only unset as default, never deleted - fetching it directly
+        // must still succeed, just with isDefault now false.
+        mockMvc.perform(authed(get("/api/v1/saved-views/" + firstId), ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.isDefault").value(false));
     }
 
     @Test

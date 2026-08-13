@@ -2,9 +2,11 @@ package com.aitrainercrm.platform.gdpr.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.aitrainercrm.platform.audit.event.CrmAuditEvents;
 import com.aitrainercrm.platform.contact.entity.Contact;
 import com.aitrainercrm.platform.contact.repository.ContactRepository;
 import com.aitrainercrm.platform.gdpr.dto.DataSubjectExportDto;
@@ -114,7 +116,14 @@ class DataSubjectRequestServiceTest {
 
         verify(contactRepository).saveAll(List.of(contact));
         verify(leadRepository).saveAll(List.of(lead));
-        verify(events).publishEvent(any());
+        // any() with no type witness binds to the more specific ApplicationEventPublisher overload
+        // (publishEvent(ApplicationEvent)) at compile time - but CrmAuditEvents.RecordDeleted is a
+        // plain record, not an ApplicationEvent, so the service actually calls the other overload
+        // (publishEvent(Object)). A bare any() here verifies against a method that never ran, which
+        // Mockito reports as "wanted but not invoked" even though the real calls happened.
+        // any(RecordDeleted.class) resolves to the same Object overload the service uses. One event
+        // per matched record (one contact, one lead here), so exactly 2.
+        verify(events, times(2)).publishEvent(any(CrmAuditEvents.RecordDeleted.class));
     }
 
     @Test

@@ -57,18 +57,23 @@ public abstract class AbstractIntegrationTest {
 
     /**
      * Polls {@code action} (typically an HTTP GET through {@code MockMvc} plus a bit of JSON
-     * navigation) every 50ms until {@code condition} is satisfied or 3 seconds pass, then returns
-     * whatever the last poll produced. Every {@code @Async @EventListener} in this codebase
+     * navigation) every 50ms until {@code condition} is satisfied or the deadline passes, then
+     * returns whatever the last poll produced. Every {@code @Async @EventListener} in this codebase
      * (duplicate detection, territory assignment, the commission engine, ...) is fired-and-forgotten
      * from an HTTP request thread, so a test asserting on its side effect has no signal for "has it
      * run yet" other than the effect itself - a fixed {@code Thread.sleep} guesses at that, and
      * guesses wrong under CI load. Polling for the actual condition removes the guess: it returns as
-     * soon as the listener's effect is visible, and only spends the full 3 seconds when something is
+     * soon as the listener's effect is visible, and only spends the full deadline when something is
      * genuinely broken - at which point the caller's own assertion on the returned (still-not-ready)
      * value fails with a real diagnostic instead of the poll silently swallowing a bug.
+     *
+     * <p>8 seconds, not 3: an earlier 3-second ceiling was a guess that GitHub Actions' runners
+     * (real Docker-socket Testcontainers I/O, not a local daemon, plus other tests' load on the same
+     * JVM) disproved twice in one real CI run - both timeouts landed at just over 3s with zero
+     * progress, meaning the listener was still legitimately in flight, not stuck.
      */
     protected static <T> T awaitAsync(Callable<T> action, Predicate<T> condition) throws Exception {
-        long deadlineNanos = System.nanoTime() + TimeUnit.SECONDS.toNanos(3);
+        long deadlineNanos = System.nanoTime() + TimeUnit.SECONDS.toNanos(8);
         T result = action.call();
         while (!condition.test(result) && System.nanoTime() < deadlineNanos) {
             Thread.sleep(50);
