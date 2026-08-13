@@ -1,5 +1,6 @@
 package com.aitrainercrm.platform.leadscoring;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -121,12 +122,21 @@ class LeadScoringRuleIntegrationTest extends AbstractIntegrationTest {
                 .andReturn();
         String leadId = readField(leadResult, "data", "id");
 
-        // --- The engine runs @Async - wait for it rather than assuming timing (same pattern TerritoryRuleIntegrationTest uses) ---
-        Thread.sleep(300);
-
-        mockMvc.perform(authed(get("/api/v1/leads/" + leadId), ownerToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.score").value(35));
+        // The engine runs @Async - poll for its effect rather than assuming timing (see
+        // AbstractIntegrationTest#awaitAsync).
+        int score = awaitAsync(
+                () -> objectMapper
+                        .readTree(mockMvc
+                                .perform(authed(get("/api/v1/leads/" + leadId), ownerToken))
+                                .andExpect(status().isOk())
+                                .andReturn()
+                                .getResponse()
+                                .getContentAsString())
+                        .get("data")
+                        .get("score")
+                        .asInt(),
+                s -> s == 35);
+        assertThat(score).isEqualTo(35);
     }
 
     @Test
@@ -145,6 +155,10 @@ class LeadScoringRuleIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn();
         String leadId = readField(leadResult, "data", "id");
+        // Negative/baseline assertion (score should stay 0 - no rule matches a WEBSITE-source
+        // lead) - there's no positive condition to poll for here, so this waits out the risk
+        // window with a fixed sleep rather than awaitAsync, same reasoning as
+        // CommissionIntegrationTest's re-update-must-not-duplicate check.
         Thread.sleep(300);
 
         mockMvc.perform(authed(get("/api/v1/leads/" + leadId), ownerToken))
@@ -155,11 +169,20 @@ class LeadScoringRuleIntegrationTest extends AbstractIntegrationTest {
                         .content("{\"firstName\":\"Grace\",\"lastName\":\"Hopper\",\"companyName\":\"Compiler Co\","
                                 + "\"source\":\"REFERRAL\"}"))
                 .andExpect(status().isOk());
-        Thread.sleep(300);
 
-        mockMvc.perform(authed(get("/api/v1/leads/" + leadId), ownerToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.score").value(30));
+        int score = awaitAsync(
+                () -> objectMapper
+                        .readTree(mockMvc
+                                .perform(authed(get("/api/v1/leads/" + leadId), ownerToken))
+                                .andExpect(status().isOk())
+                                .andReturn()
+                                .getResponse()
+                                .getContentAsString())
+                        .get("data")
+                        .get("score")
+                        .asInt(),
+                s -> s == 30);
+        assertThat(score).isEqualTo(30);
     }
 
     private String registerOwner(String prefix) throws Exception {

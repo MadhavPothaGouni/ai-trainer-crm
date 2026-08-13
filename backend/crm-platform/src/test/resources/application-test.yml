@@ -6,6 +6,22 @@ spring:
     show-sql: true
   flyway:
     enabled: true
+  # No custom TaskExecutor bean exists anywhere in main/, so every @Async listener on
+  # CrmAuditEvents (webhook dispatch, audit log, workflow engine, territory assignment,
+  # duplicate detection, lead scoring, commission, ...) shares Spring Boot's default
+  # applicationTaskExecutor - 8 threads, unbounded queue. That's shared across the ENTIRE test
+  # JVM (SpringBootTest context caching means most integration test classes reuse the same
+  # context, hence the same executor), and one event fans out to ~8 listener tasks at once. CI
+  # logs showed a real symptom of this: an integration test's async effect polling for over 15s
+  # with zero progress while other, unrelated async-dependent tests failed on other runs - a
+  # backlog on a too-small shared pool, not any single test being slow. Widening the pool for
+  # the test profile only (production sizing is a separate, unrelated decision) removes the
+  # contention rather than continuing to raise a per-test poll ceiling against a shared bottleneck.
+  task:
+    execution:
+      pool:
+        core-size: 24
+        max-size: 48
 
 crm:
   jwt:
