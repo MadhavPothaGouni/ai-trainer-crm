@@ -595,6 +595,36 @@ src/main/java/com/aitrainercrm/platform/
                   don't let it drift if the catalog definition later changes"
                   reasoning CommissionRecord's frozen dealAmount/rate/
                   commissionAmount columns document
+  sequence/       sales engagement sequences (a.k.a. cadences) - V32, the
+                  second module this session that's real new functional
+                  surface area. Sequence + SequenceStep is the
+                  catalog/child-entity pair: Sequence mirrors product/'s
+                  no-OWN catalog shape exactly (SEQUENCE seeded at
+                  TEAM/DEPARTMENT/ORGANIZATION only), and SequenceStep
+                  mirrors QuoteLineItem - a real FK'd child row
+                  (on delete cascade), no permission of its own, fully
+                  owned by SequenceService's add/update/removeStep, with
+                  SequenceDto.from(sequence, steps) embedding the already-
+                  loaded step list the same way QuoteDto embeds line items.
+                  SequenceEnrollment is the owner-scoped work record - full
+                  OWN/TEAM/DEPARTMENT/ORGANIZATION ladder, in
+                  RoleService#isCoreCrmResource - except unlike
+                  CourseEnrollment/UserCertification it has two different
+                  people on it: ownerId (the rep working it, resolved via
+                  SequenceEnrollmentService#resolveOwner, same null-defaults-
+                  to-caller/ORGANIZATION-scope-to-assign-elsewhere rule
+                  TicketService#resolveOwner already applies) and targetId
+                  (the Lead or Contact being worked, validated against
+                  LeadRepository/ContactRepository - never the enrollment's
+                  authorization subject, since a rep working someone else's
+                  lead through a sequence doesn't imply visibility into that
+                  lead's other data). SequenceEnrollmentService#advance
+                  increments currentStepIndex and auto-transitions to
+                  COMPLETED once it walks off the end of the sequence's real
+                  step list - "one past the last step" and "done" are the
+                  same state, so there's no separate "mark complete" call,
+                  the same way CourseEnrollmentService re-derives status from
+                  real state rather than trusting the request.
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security,
                   plus security.apikey - the X-Api-Key request filter
