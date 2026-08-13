@@ -13,10 +13,11 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
  * Flags likely-duplicate Lead/Contact/Account pairs - the fifth independent {@code
@@ -52,8 +53,15 @@ public class DuplicateDetectionListener {
     private final AccountRepository accountRepository;
     private final DuplicateMatchRepository duplicateMatchRepository;
 
+    // @TransactionalEventListener(AFTER_COMMIT), not plain @EventListener: detectForLead/Contact/
+    // Account below re-read the just-created record (and run duplicate-candidate queries against
+    // the rest of the table) from the database, and the owning service publishes RecordCreated
+    // from inside its own @Transactional create method, before that transaction commits. A plain
+    // @Async @EventListener risks starting before the publisher's insert has committed, on a
+    // separate connection that can't see the still-uncommitted row yet. fallbackExecution=true
+    // preserves the previous behavior if ever published outside a transaction.
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     @Transactional
     public void onRecordCreated(CrmAuditEvents.RecordCreated event) {
         switch (event.resourceType()) {

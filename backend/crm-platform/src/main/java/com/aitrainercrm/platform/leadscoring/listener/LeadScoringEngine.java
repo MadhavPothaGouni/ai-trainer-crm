@@ -9,10 +9,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
  * Recomputes {@code Lead#score} whenever a Lead is created or updated - the seventh {@code
@@ -40,8 +41,14 @@ public class LeadScoringEngine {
     private final LeadScoringRuleRepository leadScoringRuleRepository;
     private final LeadRepository leadRepository;
 
+    // @TransactionalEventListener(AFTER_COMMIT), not plain @EventListener: rescore() below re-reads
+    // the Lead from the database, and LeadService publishes RecordCreated/RecordUpdated from inside
+    // its own @Transactional create/update method, before that transaction commits. A plain
+    // @Async @EventListener risks starting - and reading pre-commit, stale field values - before
+    // the publisher's write has actually committed. fallbackExecution=true preserves the previous
+    // behavior if ever published outside a transaction.
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     @Transactional
     public void onRecordCreated(CrmAuditEvents.RecordCreated event) {
         if (!"Lead".equals(event.resourceType())) return;
@@ -49,7 +56,7 @@ public class LeadScoringEngine {
     }
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     @Transactional
     public void onRecordUpdated(CrmAuditEvents.RecordUpdated event) {
         if (!"Lead".equals(event.resourceType())) return;

@@ -15,10 +15,11 @@ import java.util.Locale;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
  * Auto-assigns a newly created Lead or Account to an owner, per {@link TerritoryRule}. The fourth
@@ -54,8 +55,14 @@ public class TerritoryAssignmentListener {
     private final UserRepository userRepository;
     private final ApplicationEventPublisher events;
 
+    // @TransactionalEventListener(AFTER_COMMIT), not plain @EventListener: assignLead/assignAccount
+    // below re-read the Lead/Account from the database, and LeadService/AccountService publish
+    // RecordCreated from inside their own @Transactional create method, before that transaction
+    // commits. A plain @Async @EventListener risks starting - and finding nothing, since the row
+    // isn't visible yet on a separate connection - before the publisher's insert has committed.
+    // fallbackExecution=true preserves the previous behavior if ever published outside a transaction.
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     @Transactional
     public void onRecordCreated(CrmAuditEvents.RecordCreated event) {
         TerritoryRule.TargetResource resource = parseResource(event.resourceType());

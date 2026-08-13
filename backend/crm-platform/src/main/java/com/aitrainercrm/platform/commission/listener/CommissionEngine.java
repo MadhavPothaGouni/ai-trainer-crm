@@ -14,10 +14,11 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
  * Creates exactly one {@link CommissionRecord} the moment an Opportunity's currently-persisted
@@ -58,8 +59,16 @@ public class CommissionEngine {
     private final CommissionRecordRepository commissionRecordRepository;
     private final UserRepository userRepository;
 
+    // @TransactionalEventListener(AFTER_COMMIT), not plain @EventListener: this re-reads the
+    // Opportunity from the database (maybeCreateCommission's first line), and OpportunityService
+    // publishes RecordCreated/RecordUpdated from inside its own @Transactional method, before that
+    // transaction commits. A plain @Async @EventListener can start running - and read the
+    // Opportunity's pre-commit, stale stage - before the publisher's own transaction has actually
+    // written CLOSED_WON to the database, silently no-oping instead of crediting the commission.
+    // fallbackExecution=true keeps this working the same as before for the rare/hypothetical case
+    // where the event is published with no active transaction at all.
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     @Transactional
     public void onRecordCreated(CrmAuditEvents.RecordCreated event) {
         if (!"Opportunity".equals(event.resourceType())) return;
@@ -67,7 +76,7 @@ public class CommissionEngine {
     }
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     @Transactional
     public void onRecordUpdated(CrmAuditEvents.RecordUpdated event) {
         if (!"Opportunity".equals(event.resourceType())) return;
