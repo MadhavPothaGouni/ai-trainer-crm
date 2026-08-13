@@ -43,6 +43,10 @@ public interface ContactRepository extends JpaRepository<Contact, UUID> {
             @Param("organizationId") UUID organizationId, @Param("firstName") String firstName, @Param("lastName") String lastName,
             @Param("excludeId") UUID excludeId);
 
+    /** DataSubjectRequestService's lookup for GDPR export/erasure - deliberately no deletedAt filter, since an already-soft-deleted Contact still holds live PII a right-to-be-forgotten request needs to reach. See V30's migration comment. */
+    @Query("select c from Contact c where c.organizationId = :organizationId and lower(c.email) = lower(:email)")
+    List<Contact> findByOrganizationIdAndEmailIgnoreCase(@Param("organizationId") UUID organizationId, @Param("email") String email);
+
     /** Reassigns every Contact pointing at the absorbed Account over to the survivor - the ACCOUNT half of DuplicateMatchService#merge's fan-out. Bulk update rather than load-N-then-save-N, same shape NotificationRepository#markAllRead uses. */
     @Modifying
     @Query("update Contact c set c.accountId = :survivorId where c.organizationId = :organizationId and c.accountId = :absorbedId")

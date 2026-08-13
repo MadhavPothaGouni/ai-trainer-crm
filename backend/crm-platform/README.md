@@ -491,6 +491,51 @@ src/main/java/com/aitrainercrm/platform/
                   needs no permission at all, the fourth-kind, notification-
                   style self-scoped shape SalesGoalService#myGoals and
                   SavedViewService already established
+  gdpr/           GDPR/CCPA-style data-subject rights: export or erase every
+                  Contact/Lead in an organization matching one email address
+                  (V30). Subjects are identified by email, not a specific
+                  Contact/Lead id - "erase everything you have on
+                  jane@example.com" is the actual shape of a real request,
+                  not "delete Contact <uuid>". DataSubjectRequest is a run
+                  log, the same "audit row, not a soft-deletable business
+                  record" shape ImportJob already established (no
+                  deletedAt column here either) - COMPLETED means the
+                  request ran, which is true even when zero records
+                  matched, the identical "ran to completion isn't the same
+                  as every row succeeding" distinction ImportJob#status's
+                  javadoc makes. DATA_SUBJECT_REQUEST is seeded (V30) at
+                  ORGANIZATION scope only with the existing READ/EXPORT/
+                  DELETE actions reused rather than new ones added - EXPORT
+                  gathers data, DELETE erases it, READ browses history -
+                  the same platform-administration shape USER/ROLE/
+                  AUDIT_LOG already use, and (being absent from RoleService
+                  #isCoreCrmResource) automatically admin-only, MEMBER gets
+                  none of it by default. Erasure is a genuinely new pattern
+                  in this codebase: every other soft delete (Account/
+                  Contact/Lead/User/Ticket) only ever sets deletedAt and
+                  leaves the row's actual data alone, specifically so FK-
+                  referencing history (Activities, Opportunities, the audit
+                  trail) keeps resolving - see Contact.deletedAt's own
+                  javadoc. DataSubjectRequestService#redactContact/
+                  redactLead extend that same reasoning rather than
+                  abandoning it: PII columns (name/phone/title/description)
+                  are overwritten with a fixed placeholder and email is
+                  nulled (not redacted to a fabricated string, which could
+                  collide with a real address in
+                  ContactRepository#findDuplicateCandidatesByEmail and
+                  similar exact-match lookups elsewhere), deletedAt is set
+                  only if not already, and the row itself - along with
+                  every FK pointing at it - is left alone. Both lookups
+                  (ContactRepository/LeadRepository#findByOrganizationIdAndEmailIgnoreCase)
+                  deliberately skip the deletedAt filter every other query
+                  in this codebase applies, since an already-soft-deleted
+                  Contact still holds live PII a right-to-be-forgotten
+                  request needs to reach. export() returns a raw
+                  ResponseEntity<byte[]> JSON download, the same convention
+                  ImportExportController's CSV exports established, just a
+                  nested tree instead of a flat table; erase() returns a
+                  normal ApiResponse since affected-row counts are data a
+                  UI renders, not a file
   notification/   a teammate's own in-app inbox (notification.inbox package
                   - distinct from notification.email, the existing
                   transactional-email abstraction auth/ already used for

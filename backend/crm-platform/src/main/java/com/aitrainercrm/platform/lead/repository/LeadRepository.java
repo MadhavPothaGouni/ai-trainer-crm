@@ -36,6 +36,10 @@ public interface LeadRepository extends JpaRepository<Lead, UUID> {
             @Param("organizationId") UUID organizationId, @Param("email") String email, @Param("excludeId") UUID excludeId,
             @Param("excludedStatus") Lead.Status excludedStatus);
 
+    /** DataSubjectRequestService's lookup for GDPR export/erasure - deliberately no deletedAt/status filter (unlike findDuplicateCandidatesByEmail above), since an already-soft-deleted or already-CONVERTED Lead still holds live PII a right-to-be-forgotten request needs to reach. See V30's migration comment. */
+    @Query("select l from Lead l where l.organizationId = :organizationId and lower(l.email) = lower(:email)")
+    List<Lead> findByOrganizationIdAndEmailIgnoreCase(@Param("organizationId") UUID organizationId, @Param("email") String email);
+
     /** Fallback candidate search when the lead has no email - first+last+company, case-insensitive. See DuplicateDetectionListener's javadoc for why this only runs when email is blank. */
     @Query(
             "select l from Lead l where l.organizationId = :organizationId and lower(l.firstName) = lower(:firstName) "
