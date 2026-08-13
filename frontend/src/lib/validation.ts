@@ -782,3 +782,47 @@ export const updateUserCertificationStatusSchema = z.object({
   notes: z.string().max(1000).optional().or(z.literal("")),
 });
 export type UpdateUserCertificationStatusFormValues = z.infer<typeof updateUserCertificationStatusSchema>;
+
+// ---- Sequence (sales engagement cadences) ----
+
+export const sequenceSchema = z.object({
+  name: z.string().min(1, "Name is required").max(200),
+  description: z.string().max(2000).optional().or(z.literal("")),
+});
+export type SequenceFormValues = z.infer<typeof sequenceSchema>;
+
+export const createSequenceSchema = sequenceSchema;
+export type CreateSequenceFormValues = SequenceFormValues;
+
+export const updateSequenceSchema = sequenceSchema.extend({
+  active: z.boolean(),
+});
+export type UpdateSequenceFormValues = z.infer<typeof updateSequenceSchema>;
+
+const requiredNonNegativeDayOffsetString = z
+  .string()
+  .min(1, "Required")
+  .refine((value) => Number.isInteger(Number(value)) && Number(value) >= 0, "Must be a whole number of 0 or more");
+
+export const sequenceStepSchema = z.object({
+  type: z.enum(["EMAIL", "CALL", "TASK"]),
+  dayOffset: requiredNonNegativeDayOffsetString,
+  subject: z.string().max(200).optional().or(z.literal("")),
+  body: z.string().max(4000).optional().or(z.literal("")),
+});
+export type SequenceStepFormValues = z.infer<typeof sequenceStepSchema>;
+
+/** ownerId blank means self-assignment - see SequenceEnrollmentService#resolveOwner's javadoc for the identical default the backend applies. */
+export const createSequenceEnrollmentSchema = z.object({
+  sequenceId: z.string().min(1, "Choose a sequence"),
+  targetType: z.enum(["LEAD", "CONTACT"]),
+  targetId: z.string().min(1, "Choose a lead or contact"),
+  ownerId: z.string().optional().or(z.literal("")),
+});
+export type CreateSequenceEnrollmentFormValues = z.infer<typeof createSequenceEnrollmentSchema>;
+
+/** COMPLETED is deliberately not offered here - see UpdateSequenceEnrollmentStatusRequest's javadoc. */
+export const updateSequenceEnrollmentStatusSchema = z.object({
+  status: z.enum(["ACTIVE", "PAUSED", "CANCELLED"]),
+});
+export type UpdateSequenceEnrollmentStatusFormValues = z.infer<typeof updateSequenceEnrollmentStatusSchema>;

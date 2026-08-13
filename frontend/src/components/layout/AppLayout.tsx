@@ -49,6 +49,10 @@ const CRM_NAV_LINKS = [
   // top-level page.
   { to: "/courses", label: "Training", end: false },
   { to: "/certifications", label: "Certifications", end: false },
+  // Same reasoning as Course/Certification above: no OWN scope on SEQUENCE (TEAM/DEPARTMENT/
+  // ORGANIZATION only). Working a SequenceEnrollment (full OWN/TEAM/DEPARTMENT/ORGANIZATION
+  // ladder, MEMBER gets OWN+TEAM by default) happens from each sequence's own detail page.
+  { to: "/sequences", label: "Sequences", end: false },
 ];
 
 // Team/Role management hits USER:READ:ORGANIZATION / ROLE:READ:ORGANIZATION on the

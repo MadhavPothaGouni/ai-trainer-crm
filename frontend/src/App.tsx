@@ -41,6 +41,9 @@ import CourseListPage from "./pages/courses/CourseListPage";
 import CertificationCreatePage from "./pages/certifications/CertificationCreatePage";
 import CertificationDetailPage from "./pages/certifications/CertificationDetailPage";
 import CertificationListPage from "./pages/certifications/CertificationListPage";
+import SequenceCreatePage from "./pages/sequences/SequenceCreatePage";
+import SequenceDetailPage from "./pages/sequences/SequenceDetailPage";
+import SequenceListPage from "./pages/sequences/SequenceListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -209,6 +212,9 @@ export default function App() {
           <Route path="/certifications" element={<CertificationListPage />} />
           <Route path="/certifications/new" element={<CertificationCreatePage />} />
           <Route path="/certifications/:certificationId" element={<CertificationDetailPage />} />
+          <Route path="/sequences" element={<SequenceListPage />} />
+          <Route path="/sequences/new" element={<SequenceCreatePage />} />
+          <Route path="/sequences/:sequenceId" element={<SequenceDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />

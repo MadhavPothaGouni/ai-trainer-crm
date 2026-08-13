@@ -2007,3 +2007,80 @@ export interface UpdateUserCertificationStatusRequest {
   status: UserCertificationStatus;
   notes?: string | null;
 }
+
+// ---- Sequence (sales engagement cadences) ----
+//
+// See backend/crm-platform/README.md's module layout for `sequence` (V32) - the second module this
+// session that's real new functional surface area. Sequence + SequenceStep mirror the
+// Product/QuoteLineItem shape (no-OWN catalog + FK child row, steps embedded in SequenceDto).
+// SequenceEnrollment mirrors Ticket's owner-scoped shape, except ownerId (the rep) and targetId
+// (the Lead/Contact being worked) are two different people - see SequenceEnrollment's javadoc.
+
+export type SequenceStepType = "EMAIL" | "CALL" | "TASK";
+
+export interface SequenceStepDto {
+  id: string;
+  stepOrder: number;
+  type: SequenceStepType;
+  dayOffset: number;
+  subject: string | null;
+  body: string | null;
+}
+
+export interface CreateSequenceStepRequest {
+  type: SequenceStepType;
+  dayOffset: number;
+  subject?: string | null;
+  body?: string | null;
+}
+
+export interface UpdateSequenceStepRequest extends CreateSequenceStepRequest {}
+
+export interface SequenceDto {
+  id: string;
+  name: string;
+  description: string | null;
+  active: boolean;
+  steps: SequenceStepDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSequenceRequest {
+  name: string;
+  description?: string | null;
+}
+
+export interface UpdateSequenceRequest extends CreateSequenceRequest {
+  active: boolean;
+}
+
+export type SequenceEnrollmentTargetType = "LEAD" | "CONTACT";
+export type SequenceEnrollmentStatus = "ACTIVE" | "PAUSED" | "COMPLETED" | "CANCELLED";
+
+export interface SequenceEnrollmentDto {
+  id: string;
+  sequenceId: string;
+  targetType: SequenceEnrollmentTargetType;
+  targetId: string;
+  ownerId: string;
+  currentStepIndex: number;
+  status: SequenceEnrollmentStatus;
+  enrolledAt: string;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSequenceEnrollmentRequest {
+  sequenceId: string;
+  targetType: SequenceEnrollmentTargetType;
+  targetId: string;
+  /** Null/omitted defaults to the caller - see SequenceEnrollmentService#resolveOwner's javadoc. */
+  ownerId?: string | null;
+}
+
+/** COMPLETED is rejected here - it's only ever reached by the /advance endpoint walking off the end of the step list. */
+export interface UpdateSequenceEnrollmentStatusRequest {
+  status: SequenceEnrollmentStatus;
+}
