@@ -933,3 +933,28 @@ export type CreateClientGoalFormValues = ClientGoalFormValues;
 
 export const updateClientGoalSchema = clientGoalSchema.omit({ contactId: true });
 export type UpdateClientGoalFormValues = z.infer<typeof updateClientGoalSchema>;
+
+// ---- Training Session ----
+
+export const trainingSessionSchema = z.object({
+  contactId: z.string().min(1, "Client is required"),
+  startedAt: z.string().min(1, "Start time is required"),
+  durationMinutes: requiredPositiveIntegerString,
+  sessionType: z.string().min(1, "Session type is required"),
+  focusArea: z.string().max(200).optional().or(z.literal("")),
+  clientRpe: z
+    .string()
+    .optional()
+    .refine(
+      (value) => value === undefined || value === "" || (Number.isInteger(Number(value)) && Number(value) >= 1 && Number(value) <= 10),
+      "Must be a whole number from 1 to 10",
+    ),
+  coachNotes: z.string().max(2000).optional().or(z.literal("")),
+});
+export type TrainingSessionFormValues = z.infer<typeof trainingSessionSchema>;
+
+export const createTrainingSessionSchema = trainingSessionSchema;
+export type CreateTrainingSessionFormValues = TrainingSessionFormValues;
+
+export const updateTrainingSessionSchema = trainingSessionSchema.omit({ contactId: true });
+export type UpdateTrainingSessionFormValues = z.infer<typeof updateTrainingSessionSchema>;

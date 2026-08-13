@@ -2303,3 +2303,63 @@ export interface UpdateClientGoalRequest {
 export interface UpdateClientGoalStatusRequest {
   status: ClientGoalStatus;
 }
+
+// ---- Training Session ----
+//
+// See backend/crm-platform/README.md's module layout for `trainingsession` (V37) - the seventh
+// module this session. Deliberately distinct from BookingLink/BookingSlot (the PRE-session
+// scheduling mechanism) and ClientGoal (the long-term target this session is one unit of work
+// toward) - no relationship between ClientGoalDto and this, purely a reporting-time join on
+// contactId if a caller wants one.
+
+export type TrainingSessionType = "IN_PERSON" | "VIRTUAL" | "GROUP";
+
+export const TRAINING_SESSION_TYPES: TrainingSessionType[] = ["IN_PERSON", "VIRTUAL", "GROUP"];
+
+export type TrainingSessionStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
+
+export const TRAINING_SESSION_STATUSES: TrainingSessionStatus[] = ["SCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW"];
+
+export interface TrainingSessionDto {
+  id: string;
+  contactId: string;
+  ownerId: string;
+  /** Optional cross-reference to the BookingSlot this session originated from, if any. */
+  bookingSlotId: string | null;
+  startedAt: string;
+  durationMinutes: number;
+  sessionType: TrainingSessionType;
+  status: TrainingSessionStatus;
+  focusArea: string | null;
+  /** The client's own perceived-effort rating, 1-10 (Rate of Perceived Exertion). */
+  clientRpe: number | null;
+  coachNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTrainingSessionRequest {
+  contactId: string;
+  bookingSlotId?: string | null;
+  startedAt: string;
+  durationMinutes: number;
+  sessionType: TrainingSessionType;
+  focusArea?: string | null;
+  clientRpe?: number | null;
+  coachNotes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateTrainingSessionRequest {
+  bookingSlotId?: string | null;
+  startedAt: string;
+  durationMinutes: number;
+  sessionType: TrainingSessionType;
+  focusArea?: string | null;
+  clientRpe?: number | null;
+  coachNotes?: string | null;
+}
+
+export interface UpdateTrainingSessionStatusRequest {
+  status: TrainingSessionStatus;
+}

@@ -42,6 +42,11 @@ const CRM_NAV_LINKS = [
   // quota) - this tracks a client's own measurable objective. See backend/crm-platform/
   // README.md's module layout for `clientgoal`.
   { to: "/client-goals", label: "Client Goals", end: false },
+  // Owner-scoped, same restrained action set as Client Goals/Contracts above. Distinct from
+  // Booking Links (pre-session scheduling) and Client Goals (the long-term target) - this is
+  // the post-session record of what actually happened. See backend/crm-platform/README.md's
+  // module layout for `trainingsession`.
+  { to: "/training-sessions", label: "Training Sessions", end: false },
   { to: "/products", label: "Products", end: false },
   // No OWN scope on EMAIL_TEMPLATE, same three-scope-ladder shape as Products above (TEAM/
   // DEPARTMENT/ORGANIZATION only) - a template is shared organization content, not admin-only

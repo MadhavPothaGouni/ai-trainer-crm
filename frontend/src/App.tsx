@@ -56,6 +56,9 @@ import ContractListPage from "./pages/contracts/ContractListPage";
 import ClientGoalCreatePage from "./pages/clientGoals/ClientGoalCreatePage";
 import ClientGoalDetailPage from "./pages/clientGoals/ClientGoalDetailPage";
 import ClientGoalListPage from "./pages/clientGoals/ClientGoalListPage";
+import TrainingSessionCreatePage from "./pages/trainingSessions/TrainingSessionCreatePage";
+import TrainingSessionDetailPage from "./pages/trainingSessions/TrainingSessionDetailPage";
+import TrainingSessionListPage from "./pages/trainingSessions/TrainingSessionListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -239,6 +242,9 @@ export default function App() {
           <Route path="/client-goals" element={<ClientGoalListPage />} />
           <Route path="/client-goals/new" element={<ClientGoalCreatePage />} />
           <Route path="/client-goals/:clientGoalId" element={<ClientGoalDetailPage />} />
+          <Route path="/training-sessions" element={<TrainingSessionListPage />} />
+          <Route path="/training-sessions/new" element={<TrainingSessionCreatePage />} />
+          <Route path="/training-sessions/:trainingSessionId" element={<TrainingSessionDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />
