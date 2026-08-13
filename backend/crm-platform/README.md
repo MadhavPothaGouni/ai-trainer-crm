@@ -667,6 +667,26 @@ src/main/java/com/aitrainercrm/platform/
                   reasoning. An inactive macro can be read but not applied - active/inactive
                   gating the same way Course/Sequence draw the line between "in the catalog"
                   and "in listActive."
+  contract/       contracts (the ongoing legal/subscription relationship with a customer,
+                  tracked after a deal closes) - V35, the fifth module this session and the
+                  first added after the "keep going with more modules" checkpoint. Fills a
+                  real, previously-missing gap: Quote (product/) is a pre-close proposal,
+                  Order/Invoice (order/) are point-in-time transactions, neither tracks what
+                  was actually agreed to or for how long. Contract mirrors ticket/'s owner-
+                  scoped shape exactly (full OWN/TEAM/DEPARTMENT/ORGANIZATION ladder, in
+                  RoleService#isCoreCrmResource) but with the more restrained CREATE/READ/
+                  UPDATE/DELETE action set booking_links/course_enrollments/
+                  sequence_enrollments already use (no EXPORT/IMPORT/ASSIGN). accountId is
+                  required, opportunityId is nullable (a renewal contract has no opportunity
+                  behind it) - both real FKs, same nullable-optional-link shape
+                  tickets.contactId established. Status is a free (non-linear) state machine,
+                  same restraint tickets.status takes (see V14's migration comment) -
+                  reopening a terminated contract is a legitimate correction. signedAt is
+                  stamped the first time status moves to ACTIVE and never overwritten
+                  afterward, regardless of how many times the contract later moves through
+                  other statuses - "when was this originally signed" shouldn't change.
+                  contractNumber is unique per organization (uq_contracts_org_number, V35),
+                  the same per-tenant-not-global uniqueness shape booking_links.slug uses.
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security,
                   plus security.apikey - the X-Api-Key request filter
