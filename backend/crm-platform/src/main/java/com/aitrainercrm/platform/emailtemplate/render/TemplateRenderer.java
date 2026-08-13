@@ -1,9 +1,11 @@
 package com.aitrainercrm.platform.emailtemplate.render;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,7 +39,10 @@ public final class TemplateRenderer {
 
         Matcher matcher = TOKEN_PATTERN.matcher(text);
         StringBuilder rendered = new StringBuilder();
-        List<String> unresolvedTokens = new ArrayList<>();
+        // LinkedHashSet rather than a plain List: the same {{token}} can appear more than once in
+        // one template (e.g. a subject that repeats {{lead.companyname}}), and it should only be
+        // reported once, in first-seen order - not once per occurrence.
+        Set<String> unresolvedTokens = new LinkedHashSet<>();
 
         while (matcher.find()) {
             String tokenName = matcher.group(1).toLowerCase(Locale.ROOT);
@@ -51,7 +56,7 @@ public final class TemplateRenderer {
         }
         matcher.appendTail(rendered);
 
-        return new Result(rendered.toString(), unresolvedTokens);
+        return new Result(rendered.toString(), new ArrayList<>(unresolvedTokens));
     }
 
     public record Result(String text, List<String> unresolvedTokens) {

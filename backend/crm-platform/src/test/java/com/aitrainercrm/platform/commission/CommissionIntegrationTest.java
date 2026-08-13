@@ -94,13 +94,18 @@ class CommissionIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(authed(patch("/api/v1/opportunities/" + dealId + "/stage"), rep[1]).content("{\"stage\":\"CLOSED_WON\"}"))
                 .andExpect(status().isOk());
 
-        // CommissionEngine runs @Async - wait for it rather than assuming timing (same pattern
-        // TerritoryRuleIntegrationTest/WorkflowIntegrationTest use).
-        Thread.sleep(300);
-
-        MvcResult mineResult =
-                mockMvc.perform(authed(get("/api/v1/commission-records/mine"), rep[1])).andExpect(status().isOk()).andReturn();
-        JsonNode mine = objectMapper.readTree(mineResult.getResponse().getContentAsString()).get("data");
+        // CommissionEngine runs @Async - poll for its effect rather than guessing at a fixed sleep
+        // (see AbstractIntegrationTest#awaitAsync).
+        JsonNode mine = awaitAsync(
+                () -> objectMapper
+                        .readTree(mockMvc
+                                .perform(authed(get("/api/v1/commission-records/mine"), rep[1]))
+                                .andExpect(status().isOk())
+                                .andReturn()
+                                .getResponse()
+                                .getContentAsString())
+                        .get("data"),
+                data -> data.size() >= 1);
         assertThat(mine).hasSize(1);
         assertThat(mine.get(0).get("dealAmount").decimalValue()).isEqualByComparingTo("2000.00");
         assertThat(mine.get(0).get("commissionAmount").decimalValue()).isEqualByComparingTo("200.00");
@@ -111,7 +116,9 @@ class CommissionIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(authed(put("/api/v1/opportunities/" + dealId), rep[1])
                         .content("{\"accountId\":\"" + accountId + "\",\"name\":\"Acme Co Renewal\",\"amount\":2000.00}"))
                 .andExpect(status().isOk());
-        Thread.sleep(300);
+        // Negative assertion (no second record should appear) - there's no positive signal to poll
+        // for here, so this waits out the risk window with a fixed sleep rather than awaitAsync.
+        Thread.sleep(500);
 
         MvcResult mineAgain =
                 mockMvc.perform(authed(get("/api/v1/commission-records/mine"), rep[1])).andExpect(status().isOk()).andReturn();
@@ -138,11 +145,17 @@ class CommissionIntegrationTest extends AbstractIntegrationTest {
         String dealId = createOpportunity(rep[1], accountId, new BigDecimal("1000.00"));
         mockMvc.perform(authed(patch("/api/v1/opportunities/" + dealId + "/stage"), rep[1]).content("{\"stage\":\"CLOSED_WON\"}"))
                 .andExpect(status().isOk());
-        Thread.sleep(300);
 
-        MvcResult mineResult =
-                mockMvc.perform(authed(get("/api/v1/commission-records/mine"), rep[1])).andExpect(status().isOk()).andReturn();
-        JsonNode mine = objectMapper.readTree(mineResult.getResponse().getContentAsString()).get("data");
+        JsonNode mine = awaitAsync(
+                () -> objectMapper
+                        .readTree(mockMvc
+                                .perform(authed(get("/api/v1/commission-records/mine"), rep[1]))
+                                .andExpect(status().isOk())
+                                .andReturn()
+                                .getResponse()
+                                .getContentAsString())
+                        .get("data"),
+                data -> data.size() >= 1);
         assertThat(mine).hasSize(1);
         assertThat(mine.get(0).get("commissionAmount").decimalValue()).isEqualByComparingTo("300.00");
     }
@@ -157,11 +170,18 @@ class CommissionIntegrationTest extends AbstractIntegrationTest {
         String dealId = createOpportunity(rep[1], accountId, new BigDecimal("500.00"));
         mockMvc.perform(authed(patch("/api/v1/opportunities/" + dealId + "/stage"), rep[1]).content("{\"stage\":\"CLOSED_WON\"}"))
                 .andExpect(status().isOk());
-        Thread.sleep(300);
 
-        MvcResult listResult =
-                mockMvc.perform(authed(get("/api/v1/commission-records"), ownerToken)).andExpect(status().isOk()).andReturn();
-        JsonNode listContent = objectMapper.readTree(listResult.getResponse().getContentAsString()).get("data").get("content");
+        JsonNode listContent = awaitAsync(
+                () -> objectMapper
+                        .readTree(mockMvc
+                                .perform(authed(get("/api/v1/commission-records"), ownerToken))
+                                .andExpect(status().isOk())
+                                .andReturn()
+                                .getResponse()
+                                .getContentAsString())
+                        .get("data")
+                        .get("content"),
+                data -> data.size() >= 1);
         assertThat(listContent).hasSize(1);
         String recordId = listContent.get(0).get("id").asText();
         assertThat(recordId).isNotEmpty();

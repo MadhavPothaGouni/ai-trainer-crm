@@ -44,6 +44,11 @@ public class SavedViewController {
         return ApiResponse.ok(savedViewService.list(principal, entityType));
     }
 
+    @GetMapping("/{viewId}")
+    public ApiResponse<SavedViewDto> get(@PathVariable UUID viewId, @AuthenticationPrincipal UserPrincipal principal) {
+        return ApiResponse.ok(savedViewService.get(principal, viewId));
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<SavedViewDto> create(

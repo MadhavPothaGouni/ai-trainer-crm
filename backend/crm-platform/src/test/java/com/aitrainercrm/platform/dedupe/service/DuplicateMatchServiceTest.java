@@ -102,6 +102,13 @@ class DuplicateMatchServiceTest {
         when(principal.getOrganizationId()).thenReturn(organizationId);
         when(leadRepository.findActiveByIdAndOrganizationId(recordA.getId(), organizationId)).thenReturn(Optional.of(recordA));
         when(leadRepository.findActiveByIdAndOrganizationId(recordB.getId(), organizationId)).thenReturn(Optional.of(recordB));
+        // assertCanAccessBoth() calls assertCanAccess() once per record (A, then B) - under strict
+        // stubbing, ownerA's call needs its own stub even though it's expected to be a no-op,
+        // otherwise Mockito sees an unmatched invocation against a method that DOES have a stub
+        // registered (just for different args) and throws PotentialStubbingProblem.
+        org.mockito.Mockito.doNothing()
+                .when(scopeAuthorizationService)
+                .assertCanAccess(principal, Permission.Resource.LEAD, Permission.Action.UPDATE, recordA.getOwnerId());
         org.mockito.Mockito.doThrow(new ForbiddenException("nope"))
                 .when(scopeAuthorizationService)
                 .assertCanAccess(principal, Permission.Resource.LEAD, Permission.Action.UPDATE, recordB.getOwnerId());

@@ -8,6 +8,7 @@ import com.aitrainercrm.platform.lead.repository.LeadRepository;
 import com.aitrainercrm.platform.territory.entity.TerritoryRule;
 import com.aitrainercrm.platform.territory.repository.TerritoryRuleRepository;
 import com.aitrainercrm.platform.user.repository.UserRepository;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -129,7 +130,11 @@ public class TerritoryAssignmentListener {
         if (rule.getAssignToUserId() != null) {
             return rule.getAssignToUserId();
         }
-        List<UUID> members = userRepository.findIdsByOrganizationIdAndTeamId(rule.getOrganizationId(), rule.getAssignToTeamId());
+        // Defensive copy: the repository's return value isn't guaranteed mutable (a mock, or a
+        // future query implementation, could hand back an immutable List), and this method needs
+        // to sort in place.
+        List<UUID> members =
+                new ArrayList<>(userRepository.findIdsByOrganizationIdAndTeamId(rule.getOrganizationId(), rule.getAssignToTeamId()));
         if (members.isEmpty()) return null;
 
         members.sort(Comparator.naturalOrder());

@@ -1,5 +1,8 @@
 package com.aitrainercrm.platform.support;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -50,5 +53,27 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
+    }
+
+    /**
+     * Polls {@code action} (typically an HTTP GET through {@code MockMvc} plus a bit of JSON
+     * navigation) every 50ms until {@code condition} is satisfied or 3 seconds pass, then returns
+     * whatever the last poll produced. Every {@code @Async @EventListener} in this codebase
+     * (duplicate detection, territory assignment, the commission engine, ...) is fired-and-forgotten
+     * from an HTTP request thread, so a test asserting on its side effect has no signal for "has it
+     * run yet" other than the effect itself - a fixed {@code Thread.sleep} guesses at that, and
+     * guesses wrong under CI load. Polling for the actual condition removes the guess: it returns as
+     * soon as the listener's effect is visible, and only spends the full 3 seconds when something is
+     * genuinely broken - at which point the caller's own assertion on the returned (still-not-ready)
+     * value fails with a real diagnostic instead of the poll silently swallowing a bug.
+     */
+    protected static <T> T awaitAsync(Callable<T> action, Predicate<T> condition) throws Exception {
+        long deadlineNanos = System.nanoTime() + TimeUnit.SECONDS.toNanos(3);
+        T result = action.call();
+        while (!condition.test(result) && System.nanoTime() < deadlineNanos) {
+            Thread.sleep(50);
+            result = action.call();
+        }
+        return result;
     }
 }

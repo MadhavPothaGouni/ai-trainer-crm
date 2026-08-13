@@ -69,13 +69,18 @@ class DuplicateMatchIntegrationTest extends AbstractIntegrationTest {
                 .andReturn();
         UUID secondLeadId = UUID.fromString(readField(secondResult, "data", "id"));
 
-        Thread.sleep(300); // let the @Async DuplicateDetectionListener run
-
-        MvcResult matchesResult = mockMvc
-                .perform(authed(get("/api/v1/duplicates").param("entityType", "LEAD"), ownerToken))
-                .andExpect(status().isOk())
-                .andReturn();
-        JsonNode matches = objectMapper.readTree(matchesResult.getResponse().getContentAsString()).get("data");
+        // Poll for the @Async DuplicateDetectionListener's effect rather than guessing at a fixed
+        // sleep - see AbstractIntegrationTest#awaitAsync.
+        JsonNode matches = awaitAsync(
+                () -> objectMapper
+                        .readTree(mockMvc
+                                .perform(authed(get("/api/v1/duplicates").param("entityType", "LEAD"), ownerToken))
+                                .andExpect(status().isOk())
+                                .andReturn()
+                                .getResponse()
+                                .getContentAsString())
+                        .get("data"),
+                data -> data.size() >= 1);
         assertThat(matches).hasSize(1);
         JsonNode match = matches.get(0);
         assertThat(match.get("matchReason").asText()).isEqualTo("EMAIL");
@@ -127,14 +132,17 @@ class DuplicateMatchIntegrationTest extends AbstractIntegrationTest {
                                 new CreateLeadRequest("Grace", "Hopper", email, null, "Navy", null, Lead.Source.REFERRAL, null, null))))
                 .andExpect(status().isCreated());
 
-        Thread.sleep(300);
-
-        MvcResult matchesResult = mockMvc
-                .perform(authed(get("/api/v1/duplicates").param("entityType", "LEAD"), ownerToken))
-                .andExpect(status().isOk())
-                .andReturn();
-        UUID matchId = UUID.fromString(
-                objectMapper.readTree(matchesResult.getResponse().getContentAsString()).get("data").get(0).get("id").asText());
+        JsonNode dismissMatches = awaitAsync(
+                () -> objectMapper
+                        .readTree(mockMvc
+                                .perform(authed(get("/api/v1/duplicates").param("entityType", "LEAD"), ownerToken))
+                                .andExpect(status().isOk())
+                                .andReturn()
+                                .getResponse()
+                                .getContentAsString())
+                        .get("data"),
+                data -> data.size() >= 1);
+        UUID matchId = UUID.fromString(dismissMatches.get(0).get("id").asText());
 
         MvcResult dismissResult = mockMvc
                 .perform(authed(post("/api/v1/duplicates/" + matchId + "/dismiss"), ownerToken))

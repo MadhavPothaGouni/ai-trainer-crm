@@ -152,12 +152,15 @@ class TerritoryRuleIntegrationTest extends AbstractIntegrationTest {
                 .andReturn();
         String leadId = readField(leadResult, "data", "id");
 
-        // --- The listener runs @Async - wait for it rather than assuming timing (same pattern WorkflowIntegrationTest/WebhookIntegrationTest use) ---
-        Thread.sleep(300);
-
-        mockMvc.perform(authed(get("/api/v1/leads/" + leadId), ownerToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.ownerId").value(rep[0]));
+        // The listener runs @Async - poll for its effect rather than assuming timing (see
+        // AbstractIntegrationTest#awaitAsync).
+        String ownerId = awaitAsync(
+                () -> readField(
+                        mockMvc.perform(authed(get("/api/v1/leads/" + leadId), ownerToken)).andExpect(status().isOk()).andReturn(),
+                        "data",
+                        "ownerId"),
+                id -> id.equals(rep[0]));
+        assertThat(ownerId).isEqualTo(rep[0]);
     }
 
     @Test
@@ -209,7 +212,15 @@ class TerritoryRuleIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn();
         String leadOneId = readField(leadOneResult, "data", "id");
-        Thread.sleep(300);
+        // Poll for the @Async TerritoryAssignmentListener's effect on lead one before creating lead
+        // two - the round-robin cursor it advances must have already moved, or lead two could land
+        // on the same rep instead of the next one. See AbstractIntegrationTest#awaitAsync.
+        String firstOwner = awaitAsync(
+                () -> readField(
+                        mockMvc.perform(authed(get("/api/v1/leads/" + leadOneId), ownerToken)).andExpect(status().isOk()).andReturn(),
+                        "data",
+                        "ownerId"),
+                ownerId -> ownerId.equals(repOne[0]) || ownerId.equals(repTwo[0]));
 
         CreateLeadRequest leadTwo =
                 new CreateLeadRequest("Katherine", "Johnson", null, null, "NASA", null, Lead.Source.EVENT, null, null);
@@ -218,14 +229,12 @@ class TerritoryRuleIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn();
         String leadTwoId = readField(leadTwoResult, "data", "id");
-        Thread.sleep(300);
-
-        MvcResult ownerOneResult =
-                mockMvc.perform(authed(get("/api/v1/leads/" + leadOneId), ownerToken)).andExpect(status().isOk()).andReturn();
-        MvcResult ownerTwoResult =
-                mockMvc.perform(authed(get("/api/v1/leads/" + leadTwoId), ownerToken)).andExpect(status().isOk()).andReturn();
-        String firstOwner = readField(ownerOneResult, "data", "ownerId");
-        String secondOwner = readField(ownerTwoResult, "data", "ownerId");
+        String secondOwner = awaitAsync(
+                () -> readField(
+                        mockMvc.perform(authed(get("/api/v1/leads/" + leadTwoId), ownerToken)).andExpect(status().isOk()).andReturn(),
+                        "data",
+                        "ownerId"),
+                ownerId -> ownerId.equals(repOne[0]) || ownerId.equals(repTwo[0]));
 
         // Both leads landed on a real member of the team, and round-robin gave them to different people.
         assertThat(firstOwner).isIn(repOne[0], repTwo[0]);

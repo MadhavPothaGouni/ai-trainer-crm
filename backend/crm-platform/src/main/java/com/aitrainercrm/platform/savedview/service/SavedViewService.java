@@ -37,6 +37,11 @@ public class SavedViewService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public SavedViewDto get(UserPrincipal principal, UUID viewId) {
+        return SavedViewDto.from(findOwnOrThrow(principal, viewId));
+    }
+
     @Transactional
     public SavedViewDto create(UserPrincipal principal, CreateSavedViewRequest request) {
         SavedView view = new SavedView(
