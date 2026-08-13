@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { listAccounts } from "../../api/accounts";
 import { listContacts } from "../../api/contacts";
+import { listActiveMacros, applyMacro } from "../../api/macros";
 import { deleteTicket, getTicket, updateTicket, updateTicketStatus } from "../../api/tickets";
 import { TicketSlaWidget } from "../../components/tickets/TicketSlaWidget";
 import { Alert } from "../../components/ui/Alert";
@@ -14,7 +15,16 @@ import { TextField } from "../../components/ui/TextField";
 import { ApiError } from "../../lib/apiClient";
 import { applyServerErrors } from "../../lib/formErrors";
 import { blankToUndefined, createTicketSchema, type CreateTicketFormValues } from "../../lib/validation";
-import { TICKET_PRIORITIES, TICKET_STATUSES, type AccountDto, type ContactDto, type TicketDto, type TicketPriority, type TicketStatus } from "../../types/api";
+import {
+  TICKET_PRIORITIES,
+  TICKET_STATUSES,
+  type AccountDto,
+  type ContactDto,
+  type MacroDto,
+  type TicketDto,
+  type TicketPriority,
+  type TicketStatus,
+} from "../../types/api";
 import { TicketPriorityBadge, TicketStatusBadge } from "./TicketListPage";
 
 export default function TicketDetailPage() {
@@ -23,6 +33,7 @@ export default function TicketDetailPage() {
   const [ticket, setTicket] = useState<TicketDto | null>(null);
   const [accounts, setAccounts] = useState<AccountDto[]>([]);
   const [contacts, setContacts] = useState<ContactDto[]>([]);
+  const [macros, setMacros] = useState<MacroDto[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -46,6 +57,11 @@ export default function TicketDetailPage() {
     listContacts({ size: 100, sort: "createdAt,desc" })
       .then((res) => {
         if (!cancelled) setContacts(res.content);
+      })
+      .catch(() => undefined);
+    listActiveMacros()
+      .then((data) => {
+        if (!cancelled) setMacros(data);
       })
       .catch(() => undefined);
     return () => {
@@ -112,6 +128,17 @@ export default function TicketDetailPage() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not delete this ticket.");
       setIsDeleting(false);
+    }
+  }
+
+  async function handleApplyMacro(macroId: string) {
+    if (!ticketId) return;
+    setError(null);
+    try {
+      const updated = await applyMacro(macroId, { ticketId });
+      setTicket(updated);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not apply this macro.");
     }
   }
 
@@ -189,6 +216,8 @@ export default function TicketDetailPage() {
         </div>
 
         <TicketSlaWidget ticketId={ticket.id} />
+
+        <MacroPanel macros={macros} onApply={(macroId) => void handleApplyMacro(macroId)} />
       </div>
 
       <form onSubmit={onSaveEdits} noValidate className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-5">
@@ -238,6 +267,40 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
     <div className="flex justify-between gap-4">
       <dt className="text-slate-500">{label}</dt>
       <dd className="text-right text-slate-900">{value ?? "—"}</dd>
+    </div>
+  );
+}
+
+function MacroPanel({ macros, onApply }: { macros: MacroDto[]; onApply: (macroId: string) => void }) {
+  const [selected, setSelected] = useState("");
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-5">
+      <h2 className="text-sm font-medium text-slate-500">Apply macro</h2>
+      <p className="mt-1 text-xs text-slate-400">Appends a canned response and, optionally, changes the status.</p>
+      <div className="mt-3 flex items-end gap-3">
+        <div className="flex-1">
+          <Select
+            label="Macro"
+            placeholder="Choose a macro"
+            options={macros.map((macro) => ({ value: macro.id, label: macro.name }))}
+            value={selected}
+            onChange={(event) => setSelected(event.target.value)}
+          />
+        </div>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={!selected}
+          onClick={() => {
+            if (!selected) return;
+            onApply(selected);
+            setSelected("");
+          }}
+        >
+          Apply
+        </Button>
+      </div>
     </div>
   );
 }

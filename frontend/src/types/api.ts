@@ -2144,3 +2144,37 @@ export interface UpdateBookingLinkRequest {
   slug: string;
   active: boolean;
 }
+
+// ---- Macro (ticket canned responses) ----
+//
+// See backend/crm-platform/README.md's module layout for `macro` (V34) - the fourth module this
+// session. Applying a macro mutates a real Ticket through the ticket module's own endpoints
+// (TicketService#update/#updateStatus), so applyMacro below returns a TicketDto, not a MacroDto.
+
+export interface MacroDto {
+  id: string;
+  name: string;
+  body: string;
+  /** Null means applying this macro never changes the ticket's status. */
+  newStatus: TicketStatus | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMacroRequest {
+  name: string;
+  body: string;
+  newStatus?: TicketStatus | null;
+}
+
+export interface UpdateMacroRequest {
+  name: string;
+  body: string;
+  newStatus?: TicketStatus | null;
+  active: boolean;
+}
+
+export interface ApplyMacroRequest {
+  ticketId: string;
+}

@@ -57,6 +57,11 @@ const CRM_NAV_LINKS = [
   // ORGANIZATION only). Working a SequenceEnrollment (full OWN/TEAM/DEPARTMENT/ORGANIZATION
   // ladder, MEMBER gets OWN+TEAM by default) happens from each sequence's own detail page.
   { to: "/sequences", label: "Sequences", end: false },
+  // Same reasoning again: no OWN scope on MACRO (TEAM/DEPARTMENT/ORGANIZATION only) - shared
+  // org content like Products/Email Templates/Course/Sequence above. Applying a macro to a
+  // ticket happens from the ticket's own detail page, not here - see backend/crm-platform/
+  // README.md's module layout for `macro`.
+  { to: "/macros", label: "Macros", end: false },
 ];
 
 // Team/Role management hits USER:READ:ORGANIZATION / ROLE:READ:ORGANIZATION on the

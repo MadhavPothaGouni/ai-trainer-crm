@@ -862,3 +862,21 @@ export const bookSlotSchema = z.object({
   targetId: z.string().min(1, "Choose a lead or contact"),
 });
 export type BookSlotFormValues = z.infer<typeof bookSlotSchema>;
+
+// ---- Macro (ticket canned responses) ----
+
+export const macroSchema = z.object({
+  name: z.string().min(1, "Name is required").max(200),
+  body: z.string().min(1, "Body is required").max(2000),
+  /** Blank means applying this macro never changes the ticket's status - see Macro's javadoc. */
+  newStatus: z.string().optional().or(z.literal("")),
+});
+export type MacroFormValues = z.infer<typeof macroSchema>;
+
+export const createMacroSchema = macroSchema;
+export type CreateMacroFormValues = MacroFormValues;
+
+export const updateMacroSchema = macroSchema.extend({
+  active: z.boolean(),
+});
+export type UpdateMacroFormValues = z.infer<typeof updateMacroSchema>;

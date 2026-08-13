@@ -47,6 +47,9 @@ import SequenceListPage from "./pages/sequences/SequenceListPage";
 import BookingLinkCreatePage from "./pages/bookingLinks/BookingLinkCreatePage";
 import BookingLinkDetailPage from "./pages/bookingLinks/BookingLinkDetailPage";
 import BookingLinkListPage from "./pages/bookingLinks/BookingLinkListPage";
+import MacroCreatePage from "./pages/macros/MacroCreatePage";
+import MacroDetailPage from "./pages/macros/MacroDetailPage";
+import MacroListPage from "./pages/macros/MacroListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -221,6 +224,9 @@ export default function App() {
           <Route path="/booking-links" element={<BookingLinkListPage />} />
           <Route path="/booking-links/new" element={<BookingLinkCreatePage />} />
           <Route path="/booking-links/:bookingLinkId" element={<BookingLinkDetailPage />} />
+          <Route path="/macros" element={<MacroListPage />} />
+          <Route path="/macros/new" element={<MacroCreatePage />} />
+          <Route path="/macros/:macroId" element={<MacroDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />
