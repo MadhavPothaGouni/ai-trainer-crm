@@ -2240,3 +2240,66 @@ export interface UpdateContractRequest {
 export interface UpdateContractStatusRequest {
   status: ContractStatus;
 }
+
+// ---- Client Goal ----
+//
+// See backend/crm-platform/README.md's module layout for `clientgoal` (V36) - the sixth module
+// this session and the first to lean into what this platform's own name ("ai-trainer-crm")
+// actually implies rather than staying purely generic-CRM. Distinct from CourseEnrollment
+// (progress through a course's content), SalesGoal (an internal rep's own quota), and Contract
+// (legal/subscription terms) - this tracks a client's own measurable objective.
+
+export type ClientGoalType = "WEIGHT_LOSS" | "STRENGTH" | "ENDURANCE" | "CUSTOM";
+
+export const CLIENT_GOAL_TYPES: ClientGoalType[] = ["WEIGHT_LOSS", "STRENGTH", "ENDURANCE", "CUSTOM"];
+
+export type ClientGoalStatus = "ACTIVE" | "ON_HOLD" | "ACHIEVED" | "ABANDONED";
+
+export const CLIENT_GOAL_STATUSES: ClientGoalStatus[] = ["ACTIVE", "ON_HOLD", "ACHIEVED", "ABANDONED"];
+
+export interface ClientGoalDto {
+  id: string;
+  contactId: string;
+  ownerId: string;
+  title: string;
+  goalType: ClientGoalType;
+  metricUnit: string | null;
+  startValue: number | null;
+  targetValue: number | null;
+  currentValue: number | null;
+  targetDate: string | null;
+  status: ClientGoalStatus;
+  /** Stamped the first time status moves to ACHIEVED, never overwritten afterward - see ClientGoal's javadoc on the backend. */
+  achievedAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateClientGoalRequest {
+  contactId: string;
+  title: string;
+  goalType: ClientGoalType;
+  metricUnit?: string | null;
+  startValue?: number | null;
+  targetValue?: number | null;
+  currentValue?: number | null;
+  targetDate?: string | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateClientGoalRequest {
+  title: string;
+  goalType: ClientGoalType;
+  metricUnit?: string | null;
+  startValue?: number | null;
+  targetValue?: number | null;
+  currentValue?: number | null;
+  targetDate?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdateClientGoalStatusRequest {
+  status: ClientGoalStatus;
+}

@@ -37,6 +37,11 @@ const CRM_NAV_LINKS = [
   // but with the more restrained CREATE/READ/UPDATE/DELETE action set (no EXPORT/IMPORT/ASSIGN).
   // See backend/crm-platform/README.md's module layout for `contract`.
   { to: "/contracts", label: "Contracts", end: false },
+  // Owner-scoped, same restrained action set as Contracts above. Distinct from Training's
+  // CourseEnrollment (progress through a course) and My Goals' SalesGoal (an internal rep's own
+  // quota) - this tracks a client's own measurable objective. See backend/crm-platform/
+  // README.md's module layout for `clientgoal`.
+  { to: "/client-goals", label: "Client Goals", end: false },
   { to: "/products", label: "Products", end: false },
   // No OWN scope on EMAIL_TEMPLATE, same three-scope-ladder shape as Products above (TEAM/
   // DEPARTMENT/ORGANIZATION only) - a template is shared organization content, not admin-only

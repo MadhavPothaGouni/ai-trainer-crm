@@ -912,3 +912,24 @@ export type CreateContractFormValues = ContractFormValues;
 
 export const updateContractSchema = contractSchema;
 export type UpdateContractFormValues = ContractFormValues;
+
+// ---- Client Goal ----
+
+export const clientGoalSchema = z.object({
+  contactId: z.string().min(1, "Client is required"),
+  title: z.string().min(1, "Title is required").max(200),
+  goalType: z.string().min(1, "Goal type is required"),
+  metricUnit: z.string().max(30).optional().or(z.literal("")),
+  startValue: optionalNumberString,
+  targetValue: optionalNumberString,
+  currentValue: optionalNumberString,
+  targetDate: z.string().optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+});
+export type ClientGoalFormValues = z.infer<typeof clientGoalSchema>;
+
+export const createClientGoalSchema = clientGoalSchema;
+export type CreateClientGoalFormValues = ClientGoalFormValues;
+
+export const updateClientGoalSchema = clientGoalSchema.omit({ contactId: true });
+export type UpdateClientGoalFormValues = z.infer<typeof updateClientGoalSchema>;

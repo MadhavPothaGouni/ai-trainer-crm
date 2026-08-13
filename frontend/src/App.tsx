@@ -53,6 +53,9 @@ import MacroListPage from "./pages/macros/MacroListPage";
 import ContractCreatePage from "./pages/contracts/ContractCreatePage";
 import ContractDetailPage from "./pages/contracts/ContractDetailPage";
 import ContractListPage from "./pages/contracts/ContractListPage";
+import ClientGoalCreatePage from "./pages/clientGoals/ClientGoalCreatePage";
+import ClientGoalDetailPage from "./pages/clientGoals/ClientGoalDetailPage";
+import ClientGoalListPage from "./pages/clientGoals/ClientGoalListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -233,6 +236,9 @@ export default function App() {
           <Route path="/contracts" element={<ContractListPage />} />
           <Route path="/contracts/new" element={<ContractCreatePage />} />
           <Route path="/contracts/:contractId" element={<ContractDetailPage />} />
+          <Route path="/client-goals" element={<ClientGoalListPage />} />
+          <Route path="/client-goals/new" element={<ClientGoalCreatePage />} />
+          <Route path="/client-goals/:clientGoalId" element={<ClientGoalDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />
