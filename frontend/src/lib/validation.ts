@@ -688,3 +688,10 @@ export const updateCommissionPlanSchema = commissionPlanSchema.extend({
   active: z.boolean(),
 });
 export type UpdateCommissionPlanFormValues = z.infer<typeof updateCommissionPlanSchema>;
+
+// ---- Data Subject Requests (GDPR/CCPA) ----
+
+export const dataSubjectRequestSchema = z.object({
+  subjectEmail: emailSchema,
+});
+export type DataSubjectRequestFormValues = z.infer<typeof dataSubjectRequestSchema>;

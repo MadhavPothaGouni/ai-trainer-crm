@@ -34,6 +34,7 @@ import CommissionPlanDetailPage from "./pages/commission/CommissionPlanDetailPag
 import CommissionPlanListPage from "./pages/commission/CommissionPlanListPage";
 import CommissionRecordListPage from "./pages/commission/CommissionRecordListPage";
 import MyCommissionsPage from "./pages/commission/MyCommissionsPage";
+import DataSubjectRequestListPage from "./pages/gdpr/DataSubjectRequestListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -195,6 +196,7 @@ export default function App() {
           <Route path="/commission-plans" element={<CommissionPlanListPage />} />
           <Route path="/commission-plans/:planId" element={<CommissionPlanDetailPage />} />
           <Route path="/commission-records" element={<CommissionRecordListPage />} />
+          <Route path="/data-subject-requests" element={<DataSubjectRequestListPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />

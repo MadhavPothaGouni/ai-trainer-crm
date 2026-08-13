@@ -1864,3 +1864,31 @@ export interface CommissionRecordDto {
 export interface UpdateCommissionRecordStatusRequest {
   status: CommissionRecordStatus;
 }
+
+// ---- Data Subject Requests (GDPR/CCPA) ----
+//
+// See backend/crm-platform/README.md's module layout for `gdpr`. A subject is identified by email
+// address, not a specific Contact/Lead id - export/erase both reach every Contact/Lead in the org
+// matching that email. DATA_SUBJECT_REQUEST:*:ORGANIZATION only, admin-only by default (it isn't a
+// core CRM resource, so a default MEMBER holds none of it). Export triggers a raw JSON file
+// download (see api/gdpr.ts); erase returns affected-row counts through the normal envelope.
+
+export type DataSubjectRequestType = "EXPORT" | "ERASURE";
+export type DataSubjectRequestStatus = "COMPLETED" | "FAILED";
+
+export interface DataSubjectRequestDto {
+  id: string;
+  requestType: DataSubjectRequestType;
+  subjectEmail: string;
+  status: DataSubjectRequestStatus;
+  initiatedByUserId: string;
+  contactsAffected: number;
+  leadsAffected: number;
+  resultNote: string | null;
+  completedAt: string | null;
+  createdAt: string;
+}
+
+export interface CreateDataSubjectRequest {
+  subjectEmail: string;
+}

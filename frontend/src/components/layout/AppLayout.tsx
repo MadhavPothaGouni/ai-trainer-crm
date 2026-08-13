@@ -107,6 +107,10 @@ const ADMIN_NAV_LINKS = [
   // COMMISSION_RECORD:READ:ORGANIZATION (list) / :APPROVE:ORGANIZATION (the status-walk action) -
   // records themselves are only ever created by CommissionEngine, never through this page.
   { to: "/commission-records", label: "Commission Records", end: false },
+  // DATA_SUBJECT_REQUEST:*:ORGANIZATION only, same platform-administration shape as USER/ROLE/
+  // AUDIT_LOG above (not a core CRM resource, so a default MEMBER holds none of it). See
+  // backend/crm-platform/README.md's module layout for `gdpr`.
+  { to: "/data-subject-requests", label: "Data Subject Requests", end: false },
 ];
 
 /** Shell for every authenticated page: a slim top bar (current user + sign out), CRM nav, and the routed page content. */
