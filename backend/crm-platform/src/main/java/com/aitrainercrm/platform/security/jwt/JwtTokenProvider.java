@@ -1,5 +1,6 @@
 package com.aitrainercrm.platform.security.jwt;
 
+import com.aitrainercrm.platform.role.service.RolePermissionCacheService;
 import com.aitrainercrm.platform.security.userdetails.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -24,20 +25,34 @@ import org.springframework.stereotype.Component;
  * has to be revocable server-side (logout, password change, "sign out
  * everywhere") and a self-contained JWT can't be un-issued before it
  * naturally expires.
+ *
+ * <p>The token carries role ids, not the flattened permission list. Earlier this
+ * embedded every authority name directly (one role's worth of "RESOURCE:ACTION:SCOPE"
+ * strings), which was fine while the permission catalog was small - but it grows by
+ * roughly a dozen entries with every new module, and a role like OWNER holds all of
+ * them. That pushed a real access token past 20KB, which blew past Tomcat's default
+ * 8KB max-http-header-size on the very next request (a 431 on whatever endpoint the
+ * client called next, since the oversized Authorization header itself gets rejected
+ * before the request even reaches a controller). Role ids don't grow with the
+ * catalog - typically one or two per user - and the actual authority list gets
+ * resolved from a cached lookup (RolePermissionCacheService) once per role id
+ * instead of being duplicated into every token.
  */
 @Component
 public class JwtTokenProvider {
 
     private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
     private static final String CLAIM_ORG_ID = "org";
-    private static final String CLAIM_AUTHORITIES = "auth";
+    private static final String CLAIM_ROLE_IDS = "roles";
     private static final String CLAIM_EMAIL = "email";
 
     private final Key signingKey;
     private final JwtProperties properties;
+    private final RolePermissionCacheService rolePermissionCacheService;
 
-    public JwtTokenProvider(JwtProperties properties) {
+    public JwtTokenProvider(JwtProperties properties, RolePermissionCacheService rolePermissionCacheService) {
         this.properties = properties;
+        this.rolePermissionCacheService = rolePermissionCacheService;
         this.signingKey = Keys.hmacShaKeyFor(properties.secret().getBytes(StandardCharsets.UTF_8));
     }
 
@@ -45,15 +60,13 @@ public class JwtTokenProvider {
         Instant now = Instant.now();
         Instant expiry = now.plus(properties.accessTokenExpirationMinutes(), ChronoUnit.MINUTES);
 
-        List<String> authorityNames = principal.getAuthorities().stream()
-                .map(Object::toString)
-                .toList();
+        List<String> roleIds = principal.getRoleIds().stream().map(UUID::toString).toList();
 
         return Jwts.builder()
                 .subject(principal.getId().toString())
                 .claim(CLAIM_EMAIL, principal.getEmail())
                 .claim(CLAIM_ORG_ID, principal.getOrganizationId() == null ? null : principal.getOrganizationId().toString())
-                .claim(CLAIM_AUTHORITIES, authorityNames)
+                .claim(CLAIM_ROLE_IDS, roleIds)
                 .issuer(properties.issuer())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))
@@ -79,7 +92,15 @@ public class JwtTokenProvider {
             String orgIdStr = claims.get(CLAIM_ORG_ID, String.class);
             UUID orgId = orgIdStr == null ? null : UUID.fromString(orgIdStr);
             @SuppressWarnings("unchecked")
-            List<String> authorities = claims.get(CLAIM_AUTHORITIES, List.class);
+            List<String> roleIdStrings = claims.get(CLAIM_ROLE_IDS, List.class);
+
+            List<String> authorities = roleIdStrings == null
+                    ? List.of()
+                    : roleIdStrings.stream()
+                            .map(UUID::fromString)
+                            .flatMap(roleId -> rolePermissionCacheService.getAuthorityNames(roleId).stream())
+                            .distinct()
+                            .toList();
 
             return java.util.Optional.of(new UserPrincipal(userId, email, orgId, authorities));
         } catch (ExpiredJwtException ex) {

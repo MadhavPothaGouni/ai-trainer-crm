@@ -6,6 +6,13 @@ spring:
     show-sql: true
   flyway:
     enabled: true
+  # No Redis container in the test stack (see AbstractIntegrationTest - only Postgres),
+  # so RolePermissionCacheService's @Cacheable would otherwise try a real Redis
+  # connection and fail every test that authenticates. In-memory cache is fine here:
+  # each test class gets its own Spring context (mostly), and there's no multi-instance
+  # staleness concern to actually exercise in a single JVM test run.
+  cache:
+    type: simple
   # No custom TaskExecutor bean exists anywhere in main/, so every @Async listener on
   # CrmAuditEvents (webhook dispatch, audit log, workflow engine, territory assignment,
   # duplicate detection, lead scoring, commission, ...) shares Spring Boot's default

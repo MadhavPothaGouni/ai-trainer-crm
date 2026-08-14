@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -141,6 +142,8 @@ public class RoleService {
         return role;
     }
 
+    /** Evicts RolePermissionCacheService's per-role-id cache entry - the permission set below is what that cache holds. */
+    @CacheEvict(value = "rolePermissions", key = "#roleId")
     @Transactional
     public Role updateCustomRole(UUID organizationId, UUID roleId, String name, String description, Set<UUID> permissionIds) {
         Role role = getForOrganization(organizationId, roleId);
@@ -160,6 +163,8 @@ public class RoleService {
         return role;
     }
 
+    /** Evicts RolePermissionCacheService's cache entry for this role id - harmless no-op if nothing was cached. */
+    @CacheEvict(value = "rolePermissions", key = "#roleId")
     @Transactional
     public void deleteCustomRole(UUID organizationId, UUID roleId) {
         Role role = getForOrganization(organizationId, roleId);

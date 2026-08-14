@@ -28,6 +28,11 @@ public class UserPrincipal implements UserDetails {
     private final boolean enabled;
     private final boolean accountNonLocked;
     private final Collection<? extends GrantedAuthority> authorities;
+    /**
+     * Ids of every role this user holds. JwtTokenProvider puts these (not the flattened
+     * permission list) into the access token - see its class javadoc for why.
+     */
+    private final List<UUID> roleIds;
 
     public UserPrincipal(User user) {
         this.id = user.getId();
@@ -44,6 +49,7 @@ public class UserPrincipal implements UserDetails {
                 .map(SimpleGrantedAuthority::new)
                 .map(a -> (GrantedAuthority) a)
                 .toList();
+        this.roleIds = user.getRoles().stream().map(com.aitrainercrm.platform.role.entity.Role::getId).toList();
     }
 
     /** Used by JwtTokenProvider to rebuild a principal from a decoded token, without a role/permission fetch on every request. */
@@ -56,6 +62,7 @@ public class UserPrincipal implements UserDetails {
         this.enabled = true;
         this.accountNonLocked = true;
         this.authorities = authorityNames.stream().map(SimpleGrantedAuthority::new).toList();
+        this.roleIds = List.of();
     }
 
     @Override
