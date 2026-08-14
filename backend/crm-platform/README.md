@@ -723,6 +723,22 @@ src/main/java/com/aitrainercrm/platform/
                   joins through BookingLinkRepository to check tenancy before accepting it.
                   status is a free (non-linear) state machine like tickets/contracts/
                   client_goals - a NO_SHOW logged in error can be corrected back to SCHEDULED.
+  exercise/       exercise (movement) library - V38, the eighth module this session and the
+                  third (after clientgoal V36, trainingsession V37) to lean into what this
+                  platform's own name ("ai-trainer-crm") implies. Catalog-resource pattern,
+                  mirrors course/product exactly (no ownerId, EXERCISE seeded at TEAM/
+                  DEPARTMENT/ORGANIZATION only, no ScopeAuthorizationService call in
+                  ExerciseService). Distinct from course/certification (structured, enrollable
+                  curriculum content with progress/pass-fail) and trainingsession (the
+                  post-session log of what happened) - Exercise is the atomic named-move
+                  building block ("Barbell Back Squat") a coach references when planning.
+                  Deliberately does NOT get referenced by training_sessions in this pass - see
+                  V38's migration comment for why a real per-session exercise/sets/reps table
+                  is a separate, bigger feature this pass doesn't take on, and
+                  training_sessions.focus_area's free text already covers this module's
+                  actual need. name is unique per organization, case-insensitively
+                  (uq_exercises_org_name, V38) - same per-tenant uniqueness shape
+                  uq_contracts_org_number (V35) establishes.
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security,
                   plus security.apikey - the X-Api-Key request filter
