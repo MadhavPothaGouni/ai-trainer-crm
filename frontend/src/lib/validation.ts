@@ -992,3 +992,31 @@ export const trainingSessionExerciseSchema = z.object({
   notes: z.string().max(500).optional().or(z.literal("")),
 });
 export type TrainingSessionExerciseFormValues = z.infer<typeof trainingSessionExerciseSchema>;
+
+// ---- Nutrition Plan (V40) ----
+
+const nutritionPlanFields = {
+  title: z.string().min(1, "Title is required").max(200),
+  dailyCalorieTarget: optionalNumberString,
+  proteinTargetGrams: optionalNumberString,
+  carbTargetGrams: optionalNumberString,
+  fatTargetGrams: optionalNumberString,
+  startDate: z.string().optional().or(z.literal("")),
+  endDate: z.string().optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+/** Null-safe like NutritionPlanService#assertDatesValid on the backend - only checked when both dates are present, unlike Contract's always-required pair. */
+function refineNutritionPlanDates<T extends { startDate?: string; endDate?: string }>(data: T): boolean {
+  return !data.startDate || !data.endDate || data.endDate >= data.startDate;
+}
+
+export const createNutritionPlanSchema = z
+  .object({ contactId: z.string().min(1, "Client is required"), ...nutritionPlanFields })
+  .refine(refineNutritionPlanDates, { message: "End date cannot be before start date", path: ["endDate"] });
+export type CreateNutritionPlanFormValues = z.infer<typeof createNutritionPlanSchema>;
+
+export const updateNutritionPlanSchema = z
+  .object({ ...nutritionPlanFields })
+  .refine(refineNutritionPlanDates, { message: "End date cannot be before start date", path: ["endDate"] });
+export type UpdateNutritionPlanFormValues = z.infer<typeof updateNutritionPlanSchema>;

@@ -80,6 +80,10 @@ const CRM_NAV_LINKS = [
   // org content like Products/Course/Sequence/Macro above. See backend/crm-platform/README.md's
   // module layout for `exercise`.
   { to: "/exercises", label: "Exercises", end: false },
+  // Owner-scoped like Contracts/Client Goals/Training Sessions above (full OWN/TEAM/DEPARTMENT/
+  // ORGANIZATION ladder) - see backend/crm-platform/README.md's module layout for
+  // `nutritionplan` (V40).
+  { to: "/nutrition-plans", label: "Nutrition Plans", end: false },
 ];
 
 // Team/Role management hits USER:READ:ORGANIZATION / ROLE:READ:ORGANIZATION on the

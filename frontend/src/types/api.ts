@@ -2460,3 +2460,60 @@ export interface CreateExerciseRequest {
 export interface UpdateExerciseRequest extends CreateExerciseRequest {
   active: boolean;
 }
+
+// ---- Nutrition Plan (V40) ----
+//
+// See backend/crm-platform/README.md's module layout for `nutritionplan` (V40) - the tenth
+// module this session, and the fourth fitness-specific one in a row. Owner-scoped CRM-resource
+// pattern like ClientGoal/Contract - fills the dietary/macro-guidance gap ClientGoal (long-term
+// outcome), TrainingSession/TrainingSessionExercise (workout log), and Exercise (movement
+// catalog) don't cover.
+
+export type NutritionPlanStatus = "DRAFT" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
+
+export const NUTRITION_PLAN_STATUSES: NutritionPlanStatus[] = ["DRAFT", "ACTIVE", "COMPLETED", "ARCHIVED"];
+
+export interface NutritionPlanDto {
+  id: string;
+  contactId: string;
+  ownerId: string;
+  title: string;
+  dailyCalorieTarget: number | null;
+  proteinTargetGrams: number | null;
+  carbTargetGrams: number | null;
+  fatTargetGrams: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  status: NutritionPlanStatus;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateNutritionPlanRequest {
+  contactId: string;
+  title: string;
+  dailyCalorieTarget?: number | null;
+  proteinTargetGrams?: number | null;
+  carbTargetGrams?: number | null;
+  fatTargetGrams?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateNutritionPlanRequest {
+  title: string;
+  dailyCalorieTarget?: number | null;
+  proteinTargetGrams?: number | null;
+  carbTargetGrams?: number | null;
+  fatTargetGrams?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdateNutritionPlanStatusRequest {
+  status: NutritionPlanStatus;
+}
