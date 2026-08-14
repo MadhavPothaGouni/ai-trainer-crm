@@ -758,6 +758,20 @@ src/main/java/com/aitrainercrm/platform/
                   established, applied here to a child-entity field. No status column - like
                   quote_line_items/sequence_steps, this is an append-only log row, not a
                   resource that moves through states.
+
+  nutritionplan/  nutrition plans (V40, the tenth module this session) - a coach-authored
+                  dietary prescription (daily calorie target, macro targets, freeform guidance)
+                  for one Contact over a date range. Distinct from clientgoal (a long-term
+                  measurable OUTCOME), trainingsession/trainingsessionexercise (completed
+                  WORKOUTS), and exercise (the movement catalog) - nothing else covers the
+                  dietary/macro-guidance side of coaching. Owner-scoped CRM-resource pattern,
+                  mirrors clientgoal/contract exactly (full OWN/TEAM/DEPARTMENT/ORGANIZATION
+                  ladder, in RoleService#isCoreCrmResource, the same restrained CREATE/READ/
+                  UPDATE/DELETE action set). contactId is a required real FK (the client, never
+                  the authorization subject); status is a free (non-linear) state machine like
+                  contracts/client_goals/training_sessions. startDate/endDate are both nullable
+                  (an ongoing plan may carry neither) and only cross-validated when both are
+                  present, unlike Contract's always-required pair.
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security,
                   plus security.apikey - the X-Api-Key request filter
