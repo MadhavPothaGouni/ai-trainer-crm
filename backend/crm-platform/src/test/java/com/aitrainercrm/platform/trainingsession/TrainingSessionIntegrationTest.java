@@ -26,8 +26,11 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  * End-to-end coverage for the Training Session module - see V37's migration comment and
  * TrainingSession's javadoc for the gap this fills (BookingSlot is pre-session scheduling,
  * ClientGoal is the long-term target - this is the post-session record of what actually
- * happened). Covers full CRUD, the free (non-linear) status transition, and validates that a
- * bookingSlotId must belong to the caller's own organization.
+ * happened). Covers full CRUD, the free (non-linear) status transition, validates that a
+ * bookingSlotId must belong to the caller's own organization, and (V39) the per-session
+ * exercise-entry sub-resource - add/update/remove, embedded in the session's own response,
+ * and the same organization-tenancy check on an optional exerciseId that bookingSlotId already
+ * gets.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
@@ -103,6 +106,54 @@ class TrainingSessionIntegrationTest extends AbstractIntegrationTest {
                                 "sessionType":"IN_PERSON"}
                                 """
                                         .formatted(contactId, java.util.UUID.randomUUID())))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void addUpdateAndRemoveTrainingSessionExercise_endToEnd() throws Exception {
+        String ownerToken = registerOwner("session-exercises");
+        String contactId = createContact(ownerToken, "Morgan", "Client");
+        String sessionId = createSession(ownerToken, contactId);
+
+        MvcResult addResult = mockMvc
+                .perform(authed(post("/api/v1/training-sessions/" + sessionId + "/exercises"), ownerToken)
+                        .content("{\"exerciseName\":\"Barbell Back Squat\",\"setsCompleted\":3,\"repsCompleted\":\"12,10,8\",\"weightValue\":135,\"weightUnit\":\"LB\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.exerciseName").value("Barbell Back Squat"))
+                .andExpect(jsonPath("$.data.sequenceOrder").value(0))
+                .andReturn();
+        String exerciseEntryId = readField(addResult, "data", "id");
+        assertThat(exerciseEntryId).isNotBlank();
+
+        // The parent session's own response embeds the exercise list.
+        mockMvc.perform(authed(get("/api/v1/training-sessions/" + sessionId), ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.exercises.length()").value(1))
+                .andExpect(jsonPath("$.data.exercises[0].repsCompleted").value("12,10,8"));
+
+        mockMvc.perform(authed(put("/api/v1/training-sessions/" + sessionId + "/exercises/" + exerciseEntryId), ownerToken)
+                        .content("{\"exerciseName\":\"Barbell Back Squat\",\"setsCompleted\":4,\"repsCompleted\":\"12,10,8,6\",\"weightValue\":145,\"weightUnit\":\"LB\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.setsCompleted").value(4));
+
+        mockMvc.perform(authed(delete("/api/v1/training-sessions/" + sessionId + "/exercises/" + exerciseEntryId), ownerToken))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(authed(get("/api/v1/training-sessions/" + sessionId), ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.exercises.length()").value(0));
+    }
+
+    @Test
+    void addTrainingSessionExercise_withInvalidExerciseId_isRejected() throws Exception {
+        String ownerToken = registerOwner("session-exercise-badref");
+        String contactId = createContact(ownerToken, "Casey", "Client");
+        String sessionId = createSession(ownerToken, contactId);
+
+        mockMvc.perform(authed(post("/api/v1/training-sessions/" + sessionId + "/exercises"), ownerToken)
+                        .content(
+                                "{\"exerciseId\":\"%s\",\"exerciseName\":\"Push Up\",\"setsCompleted\":3,\"repsCompleted\":\"15,15,15\"}"
+                                        .formatted(java.util.UUID.randomUUID())))
                 .andExpect(status().isNotFound());
     }
 

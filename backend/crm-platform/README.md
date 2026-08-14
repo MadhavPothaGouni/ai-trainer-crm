@@ -739,6 +739,25 @@ src/main/java/com/aitrainercrm/platform/
                   actual need. name is unique per organization, case-insensitively
                   (uq_exercises_org_name, V38) - same per-tenant uniqueness shape
                   uq_contracts_org_number (V35) establishes.
+
+                  training_session_exercises (V39, the ninth module this session) is the
+                  connective tissue between trainingsession and exercise that both V37's and
+                  V38's migration comments flagged as deliberately unbuilt - which specific
+                  exercises, with which sets/reps/weight, were actually performed in a given
+                  session. Child-entity-of-parent pattern, mirrors quote's QuoteLineItem/
+                  sequence's SequenceStep exactly: a real FK to training_sessions with on
+                  delete cascade, no permission of its own - add/update/remove is gated
+                  entirely on the parent session's own TRAINING_SESSION:UPDATE permission via
+                  TrainingSessionService, embedded in TrainingSessionDto via
+                  TrainingSessionDto.from(session, exercises) the same way QuoteDto embeds
+                  line items. exerciseId is nullable and carries no cascade, mirroring
+                  quote_line_items.product_id - a coach can log a movement that isn't in the
+                  catalog yet. exerciseName is a snapshot stamped once at creation, never
+                  resynced if the catalog entry is later renamed - the same restraint
+                  booking_slots.end_at/contracts.signed_at/client_goals.achieved_at already
+                  established, applied here to a child-entity field. No status column - like
+                  quote_line_items/sequence_steps, this is an append-only log row, not a
+                  resource that moves through states.
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security,
                   plus security.apikey - the X-Api-Key request filter

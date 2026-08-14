@@ -6,15 +6,21 @@ import com.aitrainercrm.platform.booking.repository.BookingSlotRepository;
 import com.aitrainercrm.platform.common.exception.ForbiddenException;
 import com.aitrainercrm.platform.common.exception.ResourceNotFoundException;
 import com.aitrainercrm.platform.contact.repository.ContactRepository;
+import com.aitrainercrm.platform.exercise.repository.ExerciseRepository;
 import com.aitrainercrm.platform.role.entity.Permission;
 import com.aitrainercrm.platform.security.authorization.ScopeAuthorizationService;
 import com.aitrainercrm.platform.security.userdetails.UserPrincipal;
+import com.aitrainercrm.platform.trainingsession.dto.CreateTrainingSessionExerciseRequest;
 import com.aitrainercrm.platform.trainingsession.dto.CreateTrainingSessionRequest;
+import com.aitrainercrm.platform.trainingsession.dto.UpdateTrainingSessionExerciseRequest;
 import com.aitrainercrm.platform.trainingsession.dto.UpdateTrainingSessionRequest;
 import com.aitrainercrm.platform.trainingsession.entity.TrainingSession;
+import com.aitrainercrm.platform.trainingsession.entity.TrainingSessionExercise;
+import com.aitrainercrm.platform.trainingsession.repository.TrainingSessionExerciseRepository;
 import com.aitrainercrm.platform.trainingsession.repository.TrainingSessionRepository;
 import com.aitrainercrm.platform.user.repository.UserRepository;
 import java.time.Instant;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -31,7 +37,9 @@ import org.springframework.transaction.annotation.Transactional;
  * backstory. Follows the exact same shape as {@code ClientGoalService}/{@code ContractService}:
  * OWN/TEAM/DEPARTMENT/ORGANIZATION record-level authorization via
  * {@link ScopeAuthorizationService}, {@code resolveOwner} defaulting a null {@code ownerId} to
- * the caller.
+ * the caller. Per-session exercise entries (V39) are managed the same way {@code QuoteService}
+ * manages line items - add/update/remove one at a time, gated on the same UPDATE permission as
+ * the parent session, with no permission of their own.
  */
 @Service
 @RequiredArgsConstructor
@@ -40,9 +48,11 @@ public class TrainingSessionService {
     private static final Permission.Resource RESOURCE = Permission.Resource.TRAINING_SESSION;
 
     private final TrainingSessionRepository trainingSessionRepository;
+    private final TrainingSessionExerciseRepository trainingSessionExerciseRepository;
     private final ContactRepository contactRepository;
     private final BookingSlotRepository bookingSlotRepository;
     private final BookingLinkRepository bookingLinkRepository;
+    private final ExerciseRepository exerciseRepository;
     private final UserRepository userRepository;
     private final ScopeAuthorizationService scopeAuthorizationService;
     private final ApplicationEventPublisher events;
@@ -60,6 +70,12 @@ public class TrainingSessionService {
         TrainingSession session = findOrThrow(principal.getOrganizationId(), trainingSessionId);
         scopeAuthorizationService.assertCanAccess(principal, RESOURCE, Permission.Action.READ, session.getOwnerId());
         return session;
+    }
+
+    @Transactional(readOnly = true)
+    public List<TrainingSessionExercise> getExercises(UserPrincipal principal, UUID trainingSessionId) {
+        get(principal, trainingSessionId); // re-validates existence + READ access
+        return trainingSessionExerciseRepository.findByTrainingSessionIdOrderBySequenceOrderAsc(trainingSessionId);
     }
 
     @Transactional
@@ -126,6 +142,65 @@ public class TrainingSessionService {
         trainingSessionRepository.save(session);
 
         events.publishEvent(new CrmAuditEvents.RecordDeleted(principal.getId(), principal.getOrganizationId(), "TrainingSession", session.getId()));
+    }
+
+    /** New exercises are always appended at the end - sequenceOrder is the current entry count, same restraint SequenceService#addStep documents (no reordering built in this pass). */
+    @Transactional
+    public TrainingSessionExercise addExercise(UserPrincipal principal, UUID trainingSessionId, CreateTrainingSessionExerciseRequest request) {
+        TrainingSession session = findOrThrow(principal.getOrganizationId(), trainingSessionId);
+        scopeAuthorizationService.assertCanAccess(principal, RESOURCE, Permission.Action.UPDATE, session.getOwnerId());
+        if (request.exerciseId() != null) {
+            assertExerciseInOrganization(principal.getOrganizationId(), request.exerciseId());
+        }
+        int nextOrder = (int) trainingSessionExerciseRepository.countByTrainingSessionId(trainingSessionId);
+
+        TrainingSessionExercise exercise = new TrainingSessionExercise(
+                trainingSessionId, request.exerciseName(), nextOrder, request.setsCompleted(), request.repsCompleted());
+        exercise.setExerciseId(request.exerciseId());
+        exercise.setWeightValue(request.weightValue());
+        exercise.setWeightUnit(request.weightUnit());
+        exercise.setNotes(request.notes());
+        trainingSessionExerciseRepository.save(exercise);
+        return exercise;
+    }
+
+    @Transactional
+    public TrainingSessionExercise updateExercise(
+            UserPrincipal principal, UUID trainingSessionId, UUID exerciseEntryId, UpdateTrainingSessionExerciseRequest request) {
+        TrainingSession session = findOrThrow(principal.getOrganizationId(), trainingSessionId);
+        scopeAuthorizationService.assertCanAccess(principal, RESOURCE, Permission.Action.UPDATE, session.getOwnerId());
+        if (request.exerciseId() != null) {
+            assertExerciseInOrganization(principal.getOrganizationId(), request.exerciseId());
+        }
+        TrainingSessionExercise exercise = findExerciseOrThrow(trainingSessionId, exerciseEntryId);
+
+        exercise.setExerciseId(request.exerciseId());
+        exercise.setExerciseName(request.exerciseName());
+        exercise.setSetsCompleted(request.setsCompleted());
+        exercise.setRepsCompleted(request.repsCompleted());
+        exercise.setWeightValue(request.weightValue());
+        exercise.setWeightUnit(request.weightUnit());
+        exercise.setNotes(request.notes());
+        trainingSessionExerciseRepository.save(exercise);
+        return exercise;
+    }
+
+    @Transactional
+    public void removeExercise(UserPrincipal principal, UUID trainingSessionId, UUID exerciseEntryId) {
+        TrainingSession session = findOrThrow(principal.getOrganizationId(), trainingSessionId);
+        scopeAuthorizationService.assertCanAccess(principal, RESOURCE, Permission.Action.UPDATE, session.getOwnerId());
+        TrainingSessionExercise exercise = findExerciseOrThrow(trainingSessionId, exerciseEntryId);
+        trainingSessionExerciseRepository.delete(exercise);
+    }
+
+    private TrainingSessionExercise findExerciseOrThrow(UUID trainingSessionId, UUID exerciseEntryId) {
+        return trainingSessionExerciseRepository.findByIdAndTrainingSessionId(exerciseEntryId, trainingSessionId)
+                .orElseThrow(() -> new ResourceNotFoundException("TrainingSessionExercise", exerciseEntryId));
+    }
+
+    private void assertExerciseInOrganization(UUID organizationId, UUID exerciseId) {
+        exerciseRepository.findActiveByIdAndOrganizationId(exerciseId, organizationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Exercise", exerciseId));
     }
 
     private TrainingSession findOrThrow(UUID organizationId, UUID trainingSessionId) {

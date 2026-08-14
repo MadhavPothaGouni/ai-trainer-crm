@@ -14,10 +14,14 @@ import com.aitrainercrm.platform.booking.repository.BookingSlotRepository;
 import com.aitrainercrm.platform.common.exception.ForbiddenException;
 import com.aitrainercrm.platform.common.exception.ResourceNotFoundException;
 import com.aitrainercrm.platform.contact.repository.ContactRepository;
+import com.aitrainercrm.platform.exercise.repository.ExerciseRepository;
 import com.aitrainercrm.platform.security.authorization.ScopeAuthorizationService;
 import com.aitrainercrm.platform.security.userdetails.UserPrincipal;
+import com.aitrainercrm.platform.trainingsession.dto.CreateTrainingSessionExerciseRequest;
 import com.aitrainercrm.platform.trainingsession.dto.CreateTrainingSessionRequest;
 import com.aitrainercrm.platform.trainingsession.entity.TrainingSession;
+import com.aitrainercrm.platform.trainingsession.entity.TrainingSessionExercise;
+import com.aitrainercrm.platform.trainingsession.repository.TrainingSessionExerciseRepository;
 import com.aitrainercrm.platform.trainingsession.repository.TrainingSessionRepository;
 import com.aitrainercrm.platform.user.repository.UserRepository;
 import java.time.Instant;
@@ -31,14 +35,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
-/** See {@link TrainingSessionService}'s javadoc for the shape this mirrors ({@code ClientGoalService}/{@code ContractService}). */
+/** See {@link TrainingSessionService}'s javadoc for the shape this mirrors ({@code ClientGoalService}/{@code ContractService}, plus {@code QuoteService}'s line-item shape for the V39 exercise-entry methods). */
 @ExtendWith(MockitoExtension.class)
 class TrainingSessionServiceTest {
 
     @Mock private TrainingSessionRepository trainingSessionRepository;
+    @Mock private TrainingSessionExerciseRepository trainingSessionExerciseRepository;
     @Mock private ContactRepository contactRepository;
     @Mock private BookingSlotRepository bookingSlotRepository;
     @Mock private BookingLinkRepository bookingLinkRepository;
+    @Mock private ExerciseRepository exerciseRepository;
     @Mock private UserRepository userRepository;
     @Mock private ScopeAuthorizationService scopeAuthorizationService;
     @Mock private ApplicationEventPublisher events;
@@ -52,8 +58,8 @@ class TrainingSessionServiceTest {
     @BeforeEach
     void setUp() {
         service = new TrainingSessionService(
-                trainingSessionRepository, contactRepository, bookingSlotRepository, bookingLinkRepository, userRepository,
-                scopeAuthorizationService, events);
+                trainingSessionRepository, trainingSessionExerciseRepository, contactRepository, bookingSlotRepository, bookingLinkRepository,
+                exerciseRepository, userRepository, scopeAuthorizationService, events);
     }
 
     private UserPrincipal principal(UUID userId) {
@@ -131,5 +137,49 @@ class TrainingSessionServiceTest {
 
         TrainingSession corrected = service.updateStatus(principal(callerId), sessionId, TrainingSession.Status.SCHEDULED);
         assertThat(corrected.getStatus()).isEqualTo(TrainingSession.Status.SCHEDULED);
+    }
+
+    @Test
+    void addExercise_newEntry_isAppendedAtTheCurrentCount() {
+        UUID sessionId = UUID.randomUUID();
+        TrainingSession session = new TrainingSession(organizationId, contactId, callerId, Instant.now());
+        session.setId(sessionId);
+        when(trainingSessionRepository.findActiveByIdAndOrganizationId(sessionId, organizationId)).thenReturn(Optional.of(session));
+        when(trainingSessionExerciseRepository.countByTrainingSessionId(sessionId)).thenReturn(2L);
+
+        CreateTrainingSessionExerciseRequest request = new CreateTrainingSessionExerciseRequest(null, "Barbell Back Squat", 3, "12,10,8", null, null, null);
+        TrainingSessionExercise result = service.addExercise(principal(callerId), sessionId, request);
+
+        assertThat(result.getSequenceOrder()).isEqualTo(2);
+        assertThat(result.getExerciseName()).isEqualTo("Barbell Back Squat");
+        assertThat(result.getTrainingSessionId()).isEqualTo(sessionId);
+        verify(trainingSessionExerciseRepository).save(result);
+    }
+
+    @Test
+    void addExercise_exerciseIdFromAnotherOrganization_isRejected() {
+        UUID sessionId = UUID.randomUUID();
+        UUID exerciseId = UUID.randomUUID();
+        TrainingSession session = new TrainingSession(organizationId, contactId, callerId, Instant.now());
+        session.setId(sessionId);
+        when(trainingSessionRepository.findActiveByIdAndOrganizationId(sessionId, organizationId)).thenReturn(Optional.of(session));
+        when(exerciseRepository.findActiveByIdAndOrganizationId(exerciseId, organizationId)).thenReturn(Optional.empty());
+
+        CreateTrainingSessionExerciseRequest request = new CreateTrainingSessionExerciseRequest(exerciseId, "Squat", 3, "10", null, null, null);
+        assertThatThrownBy(() -> service.addExercise(principal(callerId), sessionId, request)).isInstanceOf(ResourceNotFoundException.class);
+        verify(trainingSessionExerciseRepository, never()).save(any());
+    }
+
+    @Test
+    void removeExercise_entryFromAnotherSession_isRejected() {
+        UUID sessionId = UUID.randomUUID();
+        UUID otherSessionEntryId = UUID.randomUUID();
+        TrainingSession session = new TrainingSession(organizationId, contactId, callerId, Instant.now());
+        session.setId(sessionId);
+        when(trainingSessionRepository.findActiveByIdAndOrganizationId(sessionId, organizationId)).thenReturn(Optional.of(session));
+        when(trainingSessionExerciseRepository.findByIdAndTrainingSessionId(otherSessionEntryId, sessionId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.removeExercise(principal(callerId), sessionId, otherSessionEntryId))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }
