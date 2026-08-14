@@ -2363,3 +2363,64 @@ export interface UpdateTrainingSessionRequest {
 export interface UpdateTrainingSessionStatusRequest {
   status: TrainingSessionStatus;
 }
+
+// ---- Exercise (movement library) ----
+//
+// See backend/crm-platform/README.md's module layout for `exercise` (V38) - the eighth module
+// this session. Catalog-resource pattern (no ownerId, no OWN scope), mirrors CourseDto/ProductDto's
+// shape exactly - the atomic movement-library building block a coach references when planning,
+// distinct from Course's structured curriculum content and TrainingSession's post-session log.
+// Deliberately no exerciseId on TrainingSessionDto in this pass - see V38's migration comment.
+
+export type ExerciseCategory = "STRENGTH" | "CARDIO" | "FLEXIBILITY" | "MOBILITY" | "BALANCE" | "PLYOMETRIC";
+
+export const EXERCISE_CATEGORIES: ExerciseCategory[] = ["STRENGTH", "CARDIO", "FLEXIBILITY", "MOBILITY", "BALANCE", "PLYOMETRIC"];
+
+export type ExerciseMuscleGroup = "CHEST" | "BACK" | "SHOULDERS" | "ARMS" | "LEGS" | "GLUTES" | "CORE" | "FULL_BODY";
+
+export const EXERCISE_MUSCLE_GROUPS: ExerciseMuscleGroup[] = ["CHEST", "BACK", "SHOULDERS", "ARMS", "LEGS", "GLUTES", "CORE", "FULL_BODY"];
+
+export type ExerciseEquipment = "BARBELL" | "DUMBBELL" | "KETTLEBELL" | "MACHINE" | "CABLE" | "RESISTANCE_BAND" | "BODYWEIGHT" | "NONE";
+
+export const EXERCISE_EQUIPMENT: ExerciseEquipment[] = [
+  "BARBELL",
+  "DUMBBELL",
+  "KETTLEBELL",
+  "MACHINE",
+  "CABLE",
+  "RESISTANCE_BAND",
+  "BODYWEIGHT",
+  "NONE",
+];
+
+export type ExerciseDifficultyLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+
+export const EXERCISE_DIFFICULTY_LEVELS: ExerciseDifficultyLevel[] = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
+
+export interface ExerciseDto {
+  id: string;
+  name: string;
+  description: string | null;
+  category: ExerciseCategory;
+  primaryMuscleGroup: ExerciseMuscleGroup;
+  equipment: ExerciseEquipment;
+  difficultyLevel: ExerciseDifficultyLevel;
+  videoUrl: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateExerciseRequest {
+  name: string;
+  description?: string | null;
+  category: ExerciseCategory;
+  primaryMuscleGroup: ExerciseMuscleGroup;
+  equipment: ExerciseEquipment;
+  difficultyLevel: ExerciseDifficultyLevel;
+  videoUrl?: string | null;
+}
+
+export interface UpdateExerciseRequest extends CreateExerciseRequest {
+  active: boolean;
+}

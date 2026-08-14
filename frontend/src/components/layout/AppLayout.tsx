@@ -76,6 +76,10 @@ const CRM_NAV_LINKS = [
   // ticket happens from the ticket's own detail page, not here - see backend/crm-platform/
   // README.md's module layout for `macro`.
   { to: "/macros", label: "Macros", end: false },
+  // Same reasoning again: no OWN scope on EXERCISE (TEAM/DEPARTMENT/ORGANIZATION only) - shared
+  // org content like Products/Course/Sequence/Macro above. See backend/crm-platform/README.md's
+  // module layout for `exercise`.
+  { to: "/exercises", label: "Exercises", end: false },
 ];
 
 // Team/Role management hits USER:READ:ORGANIZATION / ROLE:READ:ORGANIZATION on the

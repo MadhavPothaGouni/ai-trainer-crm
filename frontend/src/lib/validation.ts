@@ -958,3 +958,24 @@ export type CreateTrainingSessionFormValues = TrainingSessionFormValues;
 
 export const updateTrainingSessionSchema = trainingSessionSchema.omit({ contactId: true });
 export type UpdateTrainingSessionFormValues = z.infer<typeof updateTrainingSessionSchema>;
+
+// ---- Exercise (movement library) ----
+
+export const exerciseSchema = z.object({
+  name: z.string().min(1, "Name is required").max(200),
+  description: z.string().max(2000).optional().or(z.literal("")),
+  category: z.enum(["STRENGTH", "CARDIO", "FLEXIBILITY", "MOBILITY", "BALANCE", "PLYOMETRIC"]),
+  primaryMuscleGroup: z.enum(["CHEST", "BACK", "SHOULDERS", "ARMS", "LEGS", "GLUTES", "CORE", "FULL_BODY"]),
+  equipment: z.enum(["BARBELL", "DUMBBELL", "KETTLEBELL", "MACHINE", "CABLE", "RESISTANCE_BAND", "BODYWEIGHT", "NONE"]),
+  difficultyLevel: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]),
+  videoUrl: z.string().max(500).optional().or(z.literal("")),
+});
+export type ExerciseFormValues = z.infer<typeof exerciseSchema>;
+
+export const createExerciseSchema = exerciseSchema;
+export type CreateExerciseFormValues = ExerciseFormValues;
+
+export const updateExerciseSchema = exerciseSchema.extend({
+  active: z.boolean(),
+});
+export type UpdateExerciseFormValues = z.infer<typeof updateExerciseSchema>;
