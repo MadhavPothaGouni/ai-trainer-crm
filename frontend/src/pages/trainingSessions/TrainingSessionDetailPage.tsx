@@ -3,7 +3,16 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { listContacts } from "../../api/contacts";
-import { deleteTrainingSession, getTrainingSession, updateTrainingSession, updateTrainingSessionStatus } from "../../api/trainingSessions";
+import { listActiveExercises } from "../../api/exercises";
+import {
+  addTrainingSessionExercise,
+  deleteTrainingSession,
+  getTrainingSession,
+  removeTrainingSessionExercise,
+  updateTrainingSession,
+  updateTrainingSessionExercise,
+  updateTrainingSessionStatus,
+} from "../../api/trainingSessions";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { Select } from "../../components/ui/Select";
@@ -13,15 +22,20 @@ import { ApiError } from "../../lib/apiClient";
 import { applyServerErrors } from "../../lib/formErrors";
 import {
   blankToUndefined,
+  toOptionalNumber,
   toRequiredNumber,
+  trainingSessionExerciseSchema,
   updateTrainingSessionSchema,
+  type TrainingSessionExerciseFormValues,
   type UpdateTrainingSessionFormValues,
 } from "../../lib/validation";
 import {
   TRAINING_SESSION_STATUSES,
   TRAINING_SESSION_TYPES,
   type ContactDto,
+  type ExerciseDto,
   type TrainingSessionDto,
+  type TrainingSessionExerciseDto,
   type TrainingSessionStatus,
   type TrainingSessionType,
 } from "../../types/api";
@@ -39,29 +53,31 @@ export default function TrainingSessionDetailPage() {
   const navigate = useNavigate();
   const [session, setSession] = useState<TrainingSessionDto | null>(null);
   const [contacts, setContacts] = useState<ContactDto[]>([]);
+  const [exerciseCatalog, setExerciseCatalog] = useState<ExerciseDto[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null);
+  const [pendingExerciseId, setPendingExerciseId] = useState<string | null>(null);
+
+  function reloadSession() {
+    if (!trainingSessionId) return;
+    getTrainingSession(trainingSessionId)
+      .then((data) => setSession(data))
+      .catch((err: unknown) => setError(err instanceof ApiError ? err.message : "Could not load this session."));
+  }
 
   useEffect(() => {
     if (!trainingSessionId) return;
-    let cancelled = false;
-    getTrainingSession(trainingSessionId)
-      .then((data) => {
-        if (!cancelled) setSession(data);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setError(err instanceof ApiError ? err.message : "Could not load this session.");
-      });
+    reloadSession();
     listContacts({ size: 100, sort: "lastName,asc" })
-      .then((res) => {
-        if (!cancelled) setContacts(res.content);
-      })
+      .then((res) => setContacts(res.content))
       .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
+    listActiveExercises()
+      .then((res) => setExerciseCatalog(res))
+      .catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trainingSessionId]);
 
   const {
@@ -125,6 +141,19 @@ export default function TrainingSessionDetailPage() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not delete this session.");
       setIsDeleting(false);
+    }
+  }
+
+  async function handleRemoveExercise(exerciseEntryId: string) {
+    if (!trainingSessionId || !window.confirm("Remove this exercise entry?")) return;
+    setPendingExerciseId(exerciseEntryId);
+    try {
+      await removeTrainingSessionExercise(trainingSessionId, exerciseEntryId);
+      reloadSession();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not remove this exercise entry.");
+    } finally {
+      setPendingExerciseId(null);
     }
   }
 
@@ -228,6 +257,60 @@ export default function TrainingSessionDetailPage() {
           </Button>
         </div>
       </form>
+
+      <div className="rounded-lg border border-slate-200 bg-white p-5">
+        <h2 className="text-sm font-medium text-slate-500">Exercises</h2>
+        <p className="mt-1 text-xs text-slate-400">What was actually performed this session - sets, reps, and weight per movement.</p>
+
+        <div className="mt-3 flex flex-col gap-2">
+          {session.exercises.length === 0 && <p className="text-sm text-slate-400">No exercises logged yet.</p>}
+          {session.exercises.map((exerciseEntry) =>
+            editingExerciseId === exerciseEntry.id ? (
+              <ExerciseEntryForm
+                key={exerciseEntry.id}
+                trainingSessionId={session.id}
+                exerciseCatalog={exerciseCatalog}
+                exerciseEntry={exerciseEntry}
+                onDone={() => {
+                  setEditingExerciseId(null);
+                  reloadSession();
+                }}
+                onCancel={() => setEditingExerciseId(null)}
+              />
+            ) : (
+              <div
+                key={exerciseEntry.id}
+                className="flex items-center justify-between gap-4 border-t border-slate-100 pt-2 first:border-t-0 first:pt-0"
+              >
+                <div className="text-sm">
+                  <p className="font-medium text-slate-900">{exerciseEntry.exerciseName}</p>
+                  <p className="text-slate-500">
+                    {exerciseEntry.setsCompleted} sets &times; {exerciseEntry.repsCompleted} reps
+                    {exerciseEntry.weightValue != null && ` @ ${exerciseEntry.weightValue} ${exerciseEntry.weightUnit ?? ""}`}
+                  </p>
+                  {exerciseEntry.notes && <p className="text-slate-400">{exerciseEntry.notes}</p>}
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <Button variant="secondary" onClick={() => setEditingExerciseId(exerciseEntry.id)}>
+                    Edit
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => void handleRemoveExercise(exerciseEntry.id)}
+                    isLoading={pendingExerciseId === exerciseEntry.id}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            ),
+          )}
+        </div>
+
+        <div className="mt-4 border-t border-slate-100 pt-4">
+          <ExerciseEntryForm trainingSessionId={session.id} exerciseCatalog={exerciseCatalog} onDone={reloadSession} />
+        </div>
+      </div>
     </div>
   );
 }
@@ -238,5 +321,108 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
       <dt className="text-slate-500">{label}</dt>
       <dd className="text-right text-slate-900">{value ?? "—"}</dd>
     </div>
+  );
+}
+
+/** Shared form for adding a new exercise entry (no `exerciseEntry` prop) or editing an existing one - mirrors QuoteDetailPage's LineItemForm. */
+function ExerciseEntryForm({
+  trainingSessionId,
+  exerciseCatalog,
+  exerciseEntry,
+  onDone,
+  onCancel,
+}: {
+  trainingSessionId: string;
+  exerciseCatalog: ExerciseDto[];
+  exerciseEntry?: TrainingSessionExerciseDto;
+  onDone: () => void;
+  onCancel?: () => void;
+}) {
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<TrainingSessionExerciseFormValues>({
+    resolver: zodResolver(trainingSessionExerciseSchema),
+    defaultValues: exerciseEntry
+      ? {
+          exerciseId: exerciseEntry.exerciseId ?? "",
+          exerciseName: exerciseEntry.exerciseName,
+          setsCompleted: String(exerciseEntry.setsCompleted),
+          repsCompleted: exerciseEntry.repsCompleted,
+          weightValue: exerciseEntry.weightValue != null ? String(exerciseEntry.weightValue) : "",
+          weightUnit: exerciseEntry.weightUnit ?? "",
+          notes: exerciseEntry.notes ?? "",
+        }
+      : { setsCompleted: "1" },
+  });
+
+  function onExerciseChange(exerciseId: string) {
+    const exercise = exerciseCatalog.find((candidate) => candidate.id === exerciseId);
+    if (exercise) {
+      setValue("exerciseName", exercise.name);
+    }
+  }
+
+  const onSubmit = handleSubmit(async (values) => {
+    setFormError(null);
+    try {
+      const request = {
+        exerciseId: blankToUndefined(values.exerciseId),
+        exerciseName: values.exerciseName,
+        setsCompleted: toRequiredNumber(values.setsCompleted),
+        repsCompleted: values.repsCompleted,
+        weightValue: toOptionalNumber(values.weightValue),
+        weightUnit: blankToUndefined(values.weightUnit),
+        notes: blankToUndefined(values.notes),
+      };
+      if (exerciseEntry) {
+        await updateTrainingSessionExercise(trainingSessionId, exerciseEntry.id, request);
+      } else {
+        await addTrainingSessionExercise(trainingSessionId, request);
+        reset({ setsCompleted: "1", exerciseId: "", exerciseName: "", repsCompleted: "", weightValue: "", weightUnit: "", notes: "" });
+      }
+      onDone();
+    } catch (error) {
+      setFormError(applyServerErrors(error, setError));
+    }
+  });
+
+  return (
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3">
+      {formError && <Alert variant="error">{formError}</Alert>}
+      <div className="grid gap-3 sm:grid-cols-6">
+        <div className="sm:col-span-2">
+          <Select
+            label="Catalog exercise"
+            placeholder="Custom / off-catalog"
+            options={exerciseCatalog.map((exercise) => ({ value: exercise.id, label: exercise.name }))}
+            error={errors.exerciseId?.message}
+            {...register("exerciseId", { onChange: (event) => onExerciseChange(event.target.value) })}
+          />
+        </div>
+        <TextField label="Sets" type="number" min={1} step={1} error={errors.setsCompleted?.message} {...register("setsCompleted")} />
+        <TextField label="Reps" placeholder="12,10,8" error={errors.repsCompleted?.message} {...register("repsCompleted")} />
+        <TextField label="Weight" type="number" min={0} step="any" error={errors.weightValue?.message} {...register("weightValue")} />
+        <TextField label="Unit" placeholder="LB" error={errors.weightUnit?.message} {...register("weightUnit")} />
+        <div className="flex items-end gap-2">
+          <Button type="submit" isLoading={isSubmitting}>
+            {exerciseEntry ? "Save" : "Add"}
+          </Button>
+          {onCancel && (
+            <Button type="button" variant="secondary" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+        </div>
+      </div>
+      <TextField label="Exercise name" error={errors.exerciseName?.message} {...register("exerciseName")} />
+      <TextField label="Notes" error={errors.notes?.message} {...register("notes")} />
+    </form>
   );
 }

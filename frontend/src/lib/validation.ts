@@ -979,3 +979,16 @@ export const updateExerciseSchema = exerciseSchema.extend({
   active: z.boolean(),
 });
 export type UpdateExerciseFormValues = z.infer<typeof updateExerciseSchema>;
+
+// ---- Training Session Exercise (V39) ----
+
+export const trainingSessionExerciseSchema = z.object({
+  exerciseId: z.string().optional().or(z.literal("")),
+  exerciseName: z.string().min(1, "Name is required").max(200),
+  setsCompleted: requiredPositiveIntegerString,
+  repsCompleted: z.string().min(1, "Reps is required").max(50),
+  weightValue: optionalNumberString,
+  weightUnit: z.string().max(10).optional().or(z.literal("")),
+  notes: z.string().max(500).optional().or(z.literal("")),
+});
+export type TrainingSessionExerciseFormValues = z.infer<typeof trainingSessionExerciseSchema>;

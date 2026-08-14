@@ -2336,6 +2336,8 @@ export interface TrainingSessionDto {
   coachNotes: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Empty on list responses (fetching every session's exercises would be wasteful) - populated on get/create/update, the same header-only-on-list split QuoteDto.lineItems uses. */
+  exercises: TrainingSessionExerciseDto[];
 }
 
 export interface CreateTrainingSessionRequest {
@@ -2364,13 +2366,47 @@ export interface UpdateTrainingSessionStatusRequest {
   status: TrainingSessionStatus;
 }
 
+// ---- Training Session Exercise (V39) ----
+//
+// The connective tissue between TrainingSession and Exercise that both of those modules'
+// backend migration comments flagged as deliberately unbuilt - which specific exercises, with
+// which sets/reps/weight, were actually performed in a given session. Child-entity-of-parent
+// pattern like QuoteLineItem/SequenceStep - embedded in TrainingSessionDto.exercises, managed
+// through /training-sessions/{id}/exercises sub-resource endpoints, no permission of its own.
+
+export interface TrainingSessionExerciseDto {
+  id: string;
+  exerciseId: string | null;
+  /** Snapshot stamped once at creation - copied from the catalog Exercise's name if exerciseId is set, or typed freehand otherwise. Never resynced if the catalog entry is later renamed. */
+  exerciseName: string;
+  sequenceOrder: number;
+  setsCompleted: number;
+  /** Freeform per-set string like "12,10,8" - reps routinely vary set to set. */
+  repsCompleted: string;
+  weightValue: number | null;
+  weightUnit: string | null;
+  notes: string | null;
+}
+
+export interface CreateTrainingSessionExerciseRequest {
+  exerciseId?: string | null;
+  exerciseName: string;
+  setsCompleted: number;
+  repsCompleted: string;
+  weightValue?: number | null;
+  weightUnit?: string | null;
+  notes?: string | null;
+}
+
+export type UpdateTrainingSessionExerciseRequest = CreateTrainingSessionExerciseRequest;
+
 // ---- Exercise (movement library) ----
 //
 // See backend/crm-platform/README.md's module layout for `exercise` (V38) - the eighth module
 // this session. Catalog-resource pattern (no ownerId, no OWN scope), mirrors CourseDto/ProductDto's
 // shape exactly - the atomic movement-library building block a coach references when planning,
 // distinct from Course's structured curriculum content and TrainingSession's post-session log.
-// Deliberately no exerciseId on TrainingSessionDto in this pass - see V38's migration comment.
+// V39 (TrainingSessionExercise, above) is what actually connects the two, in a per-session log.
 
 export type ExerciseCategory = "STRENGTH" | "CARDIO" | "FLEXIBILITY" | "MOBILITY" | "BALANCE" | "PLYOMETRIC";
 

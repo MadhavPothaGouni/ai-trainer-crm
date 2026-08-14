@@ -1,8 +1,11 @@
 import { apiClient, unwrap } from "../lib/apiClient";
 import type {
+  CreateTrainingSessionExerciseRequest,
   CreateTrainingSessionRequest,
   PageResponse,
   TrainingSessionDto,
+  TrainingSessionExerciseDto,
+  UpdateTrainingSessionExerciseRequest,
   UpdateTrainingSessionRequest,
   UpdateTrainingSessionStatusRequest,
 } from "../types/api";
@@ -38,4 +41,23 @@ export function updateTrainingSessionStatus(
 
 export function deleteTrainingSession(trainingSessionId: string): Promise<null> {
   return unwrap(apiClient.delete(`/api/v1/training-sessions/${trainingSessionId}`));
+}
+
+export function addTrainingSessionExercise(
+  trainingSessionId: string,
+  request: CreateTrainingSessionExerciseRequest,
+): Promise<TrainingSessionExerciseDto> {
+  return unwrap(apiClient.post(`/api/v1/training-sessions/${trainingSessionId}/exercises`, request));
+}
+
+export function updateTrainingSessionExercise(
+  trainingSessionId: string,
+  exerciseEntryId: string,
+  request: UpdateTrainingSessionExerciseRequest,
+): Promise<TrainingSessionExerciseDto> {
+  return unwrap(apiClient.put(`/api/v1/training-sessions/${trainingSessionId}/exercises/${exerciseEntryId}`, request));
+}
+
+export function removeTrainingSessionExercise(trainingSessionId: string, exerciseEntryId: string): Promise<null> {
+  return unwrap(apiClient.delete(`/api/v1/training-sessions/${trainingSessionId}/exercises/${exerciseEntryId}`));
 }
