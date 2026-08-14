@@ -772,6 +772,23 @@ src/main/java/com/aitrainercrm/platform/
                   contracts/client_goals/training_sessions. startDate/endDate are both nullable
                   (an ongoing plan may carry neither) and only cross-validated when both are
                   present, unlike Contract's always-required pair.
+
+  bodymeasurement/ body measurements (V41, the eleventh module this session) - a periodic,
+                  point-in-time snapshot of a client's physical stats (weight, body fat %, chest/
+                  waist/hips circumference) recorded by a coach against one Contact. Distinct from
+                  clientgoal (a single named OBJECTIVE row with startValue/targetValue/
+                  currentValue, no history of every reading) - bodymeasurement is a real time
+                  series, many rows per contact, one per check-in, append-only. Owner-scoped
+                  CRM-resource pattern, mirrors nutritionplan/clientgoal exactly (full OWN/TEAM/
+                  DEPARTMENT/ORGANIZATION ladder, in RoleService#isCoreCrmResource, the same
+                  restrained CREATE/READ/UPDATE/DELETE action set). contactId is a required real
+                  FK (the client measured, never the authorization subject). Deliberately has NO
+                  status field, unlike every other owner-scoped module this session - a
+                  measurement check-in is a log entry, not a resource with a lifecycle to
+                  transition through. measuredAt is a separate date field from createdAt (a coach
+                  may backfill an entry). No photo/image column - attachment.related_to_type
+                  already includes CONTACT, so progress-photo check-ins ride on the existing
+                  attachment module rather than duplicating file-storage plumbing.
   audit/          domain events -> @Async listener -> audit_events table
   security/       JWT issuing/parsing, UserPrincipal, method security,
                   plus security.apikey - the X-Api-Key request filter

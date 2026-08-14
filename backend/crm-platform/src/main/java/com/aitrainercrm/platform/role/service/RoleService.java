@@ -85,7 +85,7 @@ public class RoleService {
         return switch (resource) {
             case LEAD, CONTACT, ACCOUNT, OPPORTUNITY, ACTIVITY, QUOTE, TICKET, EMAIL_MESSAGE, CALENDAR_EVENT, ATTACHMENT, APPROVAL_REQUEST,
                     COURSE_ENROLLMENT, USER_CERTIFICATION, SEQUENCE_ENROLLMENT, BOOKING_LINK, CONTRACT, CLIENT_GOAL, TRAINING_SESSION,
-                    NUTRITION_PLAN -> true;
+                    NUTRITION_PLAN, BODY_MEASUREMENT -> true;
             default -> false;
         };
     }
