@@ -105,19 +105,15 @@ for watch mode during development.
 4. `ProtectedRoute` guards the authenticated app shell; `PublicOnlyRoute` keeps a
    signed-in user from seeing the login/register forms again.
 
-## What's not here yet
+## Coverage
 
-See the root README's Roadmap for the current state of the whole project. As of
-this pass, the auth scaffold, the CRM workspace (accounts/contacts/opportunities/
-leads, including lead conversion), team/role management, profile settings, the
-Activity log (calls/emails/meetings/tasks/notes, plus a cross-record "My Tasks"
-view), sales tooling (Product catalog + Quotes, including the inline
-line-item editor and a per-opportunity Quotes list), a Reports page
-(pipeline-by-stage, lead funnel, rep leaderboard), and the platform/
-integration pages (API Keys, Webhooks) are all built. What's still missing
-on the frontend specifically: dedicated tests for the Product/Quote pages
-(they have none yet, unlike every other page built so far), broader test
-coverage generally beyond the pages/components covered so far, an avatar
-upload flow (`UserDto.avatarUrl` exists but nothing sets it), and UI for
-the backend resources that don't have a frontend yet - see the root
-README.
+See the root README's [Features](../README.md#features) section for the
+full, current list of what's built across both the backend and frontend.
+Every domain module there has a matching page here (a few compose into an
+existing page instead of getting their own - Payments live inside the
+Invoice detail page, Saved Views is a bar embedded in each list page).
+Two backend resources have no dedicated UI: the internal audit log (the
+backend exposes no read API to build one against) and organization
+settings (`GET`/`PATCH /organizations/me` exist but aren't wired to a
+settings page yet). An avatar upload flow is also still open -
+`UserDto.avatarUrl` exists on the type but nothing sets it.

@@ -1,175 +1,177 @@
+import { useMemo, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
 import { Button } from "../ui/Button";
 import { NotificationBell } from "./NotificationBell";
 
-const CRM_NAV_LINKS = [
-  { to: "/", label: "Dashboard", end: true },
-  { to: "/tasks", label: "My Tasks", end: false },
-  { to: "/accounts", label: "Accounts", end: false },
-  { to: "/contacts", label: "Contacts", end: false },
-  { to: "/opportunities", label: "Opportunities", end: false },
-  { to: "/leads", label: "Leads", end: false },
-  // No permission of its own - reuses whichever of LEAD/CONTACT/ACCOUNT's own READ/UPDATE the
-  // pair's entityType maps to, so unlike Forecast/Reports below this belongs in the main nav:
-  // a default MEMBER already holds everything this page needs. See backend/crm-platform/
-  // README.md's module layout for `dedupe`.
-  { to: "/duplicates", label: "Duplicates", end: false },
-  // GET /sales-goals/mine needs no permission at all - the same self-scoped shape the
-  // notification inbox uses - so this belongs in the main nav even though defining goals
-  // (below, "Sales Goals") is admin-gated. See backend/crm-platform/README.md's module
-  // layout for `salesgoals`.
-  { to: "/my-goals", label: "My Goals", end: false },
-  // GET /commission-records/mine needs no permission at all - the same self-scoped shape as
-  // My Goals above - so this belongs in the main nav even though defining plans (below,
-  // "Commission Plans") and approving/paying records ("Commission Records") are admin-gated.
-  // See backend/crm-platform/README.md's module layout for `commission`.
-  { to: "/my-commissions", label: "My Commissions", end: false },
-  { to: "/tickets", label: "Tickets", end: false },
-  { to: "/emails", label: "Emails", end: false },
-  { to: "/calendar", label: "Calendar", end: false },
-  // Owner-scoped, full OWN/TEAM/DEPARTMENT/ORGANIZATION ladder, same shape as Tickets/Calendar
-  // above - MEMBER gets OWN+TEAM by default. See backend/crm-platform/README.md's module
-  // layout for `booking`.
-  { to: "/booking-links", label: "Booking Links", end: false },
-  { to: "/quotes", label: "Quotes", end: false },
-  // Owner-scoped, full OWN/TEAM/DEPARTMENT/ORGANIZATION ladder like Tickets/Booking Links above,
-  // but with the more restrained CREATE/READ/UPDATE/DELETE action set (no EXPORT/IMPORT/ASSIGN).
-  // See backend/crm-platform/README.md's module layout for `contract`.
-  { to: "/contracts", label: "Contracts", end: false },
-  // Owner-scoped, same restrained action set as Contracts above. Distinct from Training's
-  // CourseEnrollment (progress through a course) and My Goals' SalesGoal (an internal rep's own
-  // quota) - this tracks a client's own measurable objective. See backend/crm-platform/
-  // README.md's module layout for `clientgoal`.
-  { to: "/client-goals", label: "Client Goals", end: false },
-  // Owner-scoped, same restrained action set as Client Goals/Contracts above. Distinct from
-  // Booking Links (pre-session scheduling) and Client Goals (the long-term target) - this is
-  // the post-session record of what actually happened. See backend/crm-platform/README.md's
-  // module layout for `trainingsession`.
-  { to: "/training-sessions", label: "Training Sessions", end: false },
-  { to: "/products", label: "Products", end: false },
-  // No OWN scope on EMAIL_TEMPLATE, same three-scope-ladder shape as Products above (TEAM/
-  // DEPARTMENT/ORGANIZATION only) - a template is shared organization content, not admin-only
-  // config, so this belongs in the main nav rather than the admin group below. See
-  // backend/crm-platform/README.md's module layout for `emailtemplate`.
-  { to: "/email-templates", label: "Email Templates", end: false },
-  { to: "/orders", label: "Orders", end: false },
-  { to: "/invoices", label: "Invoices", end: false },
-  { to: "/campaigns", label: "Campaigns", end: false },
-  { to: "/attachments", label: "Attachments", end: false },
-  { to: "/approvals", label: "Approvals", end: false },
-  { to: "/knowledge-articles", label: "Knowledge Base", end: false },
-  // No OWN scope on COURSE/CERTIFICATION (TEAM/DEPARTMENT/ORGANIZATION only), same shared-org-
-  // content shape as Products/Email Templates above - see backend/crm-platform/README.md's
-  // module layout for `course`/`certification`. Enrolling/awarding (COURSE_ENROLLMENT/
-  // USER_CERTIFICATION, full OWN/TEAM/DEPARTMENT/ORGANIZATION ladder, MEMBER gets OWN+TEAM by
-  // default) happens from each course's/certification's own detail page rather than a separate
-  // top-level page.
-  { to: "/courses", label: "Training", end: false },
-  { to: "/certifications", label: "Certifications", end: false },
-  // Same reasoning as Course/Certification above: no OWN scope on SEQUENCE (TEAM/DEPARTMENT/
-  // ORGANIZATION only). Working a SequenceEnrollment (full OWN/TEAM/DEPARTMENT/ORGANIZATION
-  // ladder, MEMBER gets OWN+TEAM by default) happens from each sequence's own detail page.
-  { to: "/sequences", label: "Sequences", end: false },
-  // Same reasoning again: no OWN scope on MACRO (TEAM/DEPARTMENT/ORGANIZATION only) - shared
-  // org content like Products/Email Templates/Course/Sequence above. Applying a macro to a
-  // ticket happens from the ticket's own detail page, not here - see backend/crm-platform/
-  // README.md's module layout for `macro`.
-  { to: "/macros", label: "Macros", end: false },
-  // Same reasoning again: no OWN scope on EXERCISE (TEAM/DEPARTMENT/ORGANIZATION only) - shared
-  // org content like Products/Course/Sequence/Macro above. See backend/crm-platform/README.md's
-  // module layout for `exercise`.
-  { to: "/exercises", label: "Exercises", end: false },
-  // Owner-scoped like Contracts/Client Goals/Training Sessions above (full OWN/TEAM/DEPARTMENT/
-  // ORGANIZATION ladder) - see backend/crm-platform/README.md's module layout for
-  // `nutritionplan` (V40).
-  { to: "/nutrition-plans", label: "Nutrition Plans", end: false },
-  // Owner-scoped like Nutrition Plans above, no status/lifecycle - see backend/crm-platform/
-  // README.md's module layout for `bodymeasurement` (V41).
-  { to: "/body-measurements", label: "Body Measurements", end: false },
+interface NavItem {
+  to: string;
+  label: string;
+  end?: boolean;
+}
+
+interface NavGroup {
+  heading: string;
+  items: NavItem[];
+}
+
+/**
+ * Every non-admin page, grouped for a sidebar instead of the single flat list this used
+ * to be. The grouping is purely presentational - it doesn't encode any permission logic
+ * of its own, that's still enforced by the backend (see each page's own data-fetch) and
+ * by ADMIN_NAV_GROUPS below being hidden entirely for non-admins. Two self-scoped,
+ * no-permission-required pages ("My Goals" hits GET /sales-goals/mine, "My Commissions"
+ * hits GET /commission-records/mine) sit in Overview even though defining goals/plans is
+ * admin-gated - see ADMIN_NAV_GROUPS' "Rules & Policies" for those.
+ */
+const CRM_NAV_GROUPS: NavGroup[] = [
+  {
+    heading: "Overview",
+    items: [
+      { to: "/", label: "Dashboard", end: true },
+      { to: "/tasks", label: "My Tasks" },
+      { to: "/my-goals", label: "My Goals" },
+      { to: "/my-commissions", label: "My Commissions" },
+    ],
+  },
+  {
+    heading: "CRM",
+    items: [
+      { to: "/accounts", label: "Accounts" },
+      { to: "/contacts", label: "Contacts" },
+      { to: "/opportunities", label: "Opportunities" },
+      { to: "/leads", label: "Leads" },
+      { to: "/duplicates", label: "Duplicates" },
+    ],
+  },
+  {
+    heading: "Engagement",
+    items: [
+      { to: "/tickets", label: "Tickets" },
+      { to: "/emails", label: "Emails" },
+      { to: "/calendar", label: "Calendar" },
+      { to: "/booking-links", label: "Booking Links" },
+      { to: "/campaigns", label: "Campaigns" },
+      { to: "/knowledge-articles", label: "Knowledge Base" },
+    ],
+  },
+  {
+    heading: "Sales",
+    items: [
+      { to: "/quotes", label: "Quotes" },
+      { to: "/orders", label: "Orders" },
+      { to: "/invoices", label: "Invoices" },
+      { to: "/contracts", label: "Contracts" },
+      { to: "/products", label: "Products" },
+      { to: "/email-templates", label: "Email Templates" },
+    ],
+  },
+  {
+    heading: "Training & Clients",
+    items: [
+      { to: "/client-goals", label: "Client Goals" },
+      { to: "/training-sessions", label: "Training Sessions" },
+      { to: "/nutrition-plans", label: "Nutrition Plans" },
+      { to: "/body-measurements", label: "Body Measurements" },
+      { to: "/courses", label: "Training" },
+      { to: "/certifications", label: "Certifications" },
+      { to: "/exercises", label: "Exercises" },
+    ],
+  },
+  {
+    heading: "Automation",
+    items: [
+      { to: "/sequences", label: "Sequences" },
+      { to: "/macros", label: "Macros" },
+      { to: "/attachments", label: "Attachments" },
+      { to: "/approvals", label: "Approvals" },
+    ],
+  },
 ];
 
-// Team/Role management hits USER:READ:ORGANIZATION / ROLE:READ:ORGANIZATION on the
-// backend, which only the built-in OWNER and ADMIN roles hold by default (see
-// RoleService#createDefaultRolesForOrganization) - a custom role *could* also grant
-// these, but there's no per-permission info on the client to check that precisely, so
-// this hides the links for the common case rather than showing a dead end. Anyone who
-// does have access via a custom role can still reach these pages directly by URL.
-// REPORT/API_KEY/INTEGRATION/CUSTOM_FIELD/CUSTOM_OBJECT/WORKFLOW/DASHBOARD aren't core CRM
-// resources either (see RoleService#isCoreCrmResource on the backend) - the default MEMBER
-// role holds none of them, only OWNER/ADMIN, so Reports, the platform/integration pages,
-// Custom Objects/Fields, Workflows, and Dashboards all live in this admin-only group too.
-// (Workflow and Dashboard ARE owner-scoped like Contact/Lead, unlike Custom Field/Object -
-// they're grouped here purely because MEMBER doesn't hold them by default, same reasoning
-// as Reports.) Import/Export rides on ACCOUNT/CONTACT/LEAD's own IMPORT/EXPORT actions,
-// which - unlike those same resources' CREATE/READ/UPDATE - also aren't in MEMBER's default
-// grant (RoleService#createDefaultRolesForOrganization only hands MEMBER CREATE/READ/UPDATE),
-// so it lives here too even though Accounts/Contacts/Leads themselves are in the main nav.
-const ADMIN_NAV_LINKS = [
-  { to: "/reports", label: "Reports", end: false },
-  // Reuses REPORT:READ rather than a permission of its own - see backend/crm-platform/
-  // README.md's module layout for `forecast`. Placed next to Reports for the same reason: same
-  // gate, same audience, just persisted history instead of a live view.
-  { to: "/forecast", label: "Forecast", end: false },
-  { to: "/dashboards", label: "Dashboards", end: false },
-  { to: "/import-export", label: "Import / Export", end: false },
-  { to: "/users", label: "Team", end: false },
-  // Deliberately not labeled "Teams" - "/users" above is already labeled "Team" (the whole
-  // teammate roster) and the two would be confusable. This is the literal Team entity
-  // (Sales/Marketing/Support/... sub-groupings) TEAM/DEPARTMENT-scoped permissions resolve
-  // against - see backend/crm-platform/README.md's module layout for `organization`.
-  { to: "/teams", label: "Team Groups", end: false },
-  { to: "/roles", label: "Roles", end: false },
-  { to: "/api-keys", label: "API Keys", end: false },
-  { to: "/webhooks", label: "Webhooks", end: false },
-  { to: "/custom-objects", label: "Custom Objects", end: false },
-  { to: "/custom-fields", label: "Custom Fields", end: false },
-  { to: "/workflows", label: "Workflows", end: false },
-  // SLA_POLICY:*:ORGANIZATION only, same third-kind admin-config shape as CustomField/ApiKey/
-  // Webhook above - see backend/crm-platform/README.md's module layout for `sla`.
-  { to: "/sla-policies", label: "SLA Policies", end: false },
-  // TERRITORY_RULE:*:ORGANIZATION only, same third-kind shape - this gate only covers defining
-  // rules, not the auto-assignment they trigger (that runs unconditionally off TerritoryRule
-  // data via an @EventListener with no @PreAuthorize of its own). See backend/crm-platform/
-  // README.md's module layout for `territory`.
-  { to: "/territory-rules", label: "Territory Rules", end: false },
-  // LEAD_SCORING_RULE:*:ORGANIZATION only, same third-kind admin-config shape as
-  // TerritoryRule/SlaPolicy above - see backend/crm-platform/README.md's module layout for
-  // `leadscoring`. The computed score itself is visible to anyone who can see a Lead at all
-  // (LeadDto#score), only *defining the rules* is admin-gated.
-  { to: "/lead-scoring-rules", label: "Lead Scoring Rules", end: false },
-  // SALES_GOAL:*:ORGANIZATION only, same third-kind admin-config shape as the three above -
-  // this gate only covers defining/editing goals. Viewing your OWN goals lives in the main
-  // nav's "My Goals" instead (GET /sales-goals/mine, no permission required).
-  { to: "/sales-goals", label: "Sales Goals", end: false },
-  // REGION:*:ORGANIZATION only, same third-kind admin-config shape as the four above - a
-  // different concept from Territory Rules above (org-chart rollup grouping, not auto-routing
-  // new records to an owner). See backend/crm-platform/README.md's module layout for `region`.
-  { to: "/regions", label: "Territory Hierarchy", end: false },
-  // COMMISSION_PLAN:*:ORGANIZATION only, same third-kind admin-config shape as the five above -
-  // this gate only covers defining plans. Viewing your OWN earned commissions lives in the main
-  // nav's "My Commissions" instead (GET /commission-records/mine, no permission required).
-  { to: "/commission-plans", label: "Commission Plans", end: false },
-  // COMMISSION_RECORD:READ:ORGANIZATION (list) / :APPROVE:ORGANIZATION (the status-walk action) -
-  // records themselves are only ever created by CommissionEngine, never through this page.
-  { to: "/commission-records", label: "Commission Records", end: false },
-  // DATA_SUBJECT_REQUEST:*:ORGANIZATION only, same platform-administration shape as USER/ROLE/
-  // AUDIT_LOG above (not a core CRM resource, so a default MEMBER holds none of it). See
-  // backend/crm-platform/README.md's module layout for `gdpr`.
-  { to: "/data-subject-requests", label: "Data Subject Requests", end: false },
+/**
+ * Only rendered for OWNER/ADMIN (see isOrgAdmin below) - every one of these resources
+ * either isn't a core CRM resource at all (RoleService#isCoreCrmResource on the backend
+ * says no) or, like Import/Export, rides on an action a default MEMBER isn't granted.
+ * Anyone with access via a custom role can still reach these pages directly by URL; this
+ * only hides the links for the common case rather than showing a dead end. See
+ * backend/crm-platform/README.md's module layout for exactly which resource backs each.
+ */
+const ADMIN_NAV_GROUPS: NavGroup[] = [
+  {
+    heading: "Analytics",
+    items: [
+      { to: "/reports", label: "Reports" },
+      { to: "/forecast", label: "Forecast" },
+      { to: "/dashboards", label: "Dashboards" },
+    ],
+  },
+  {
+    heading: "Organization",
+    items: [
+      { to: "/users", label: "Team" },
+      { to: "/teams", label: "Team Groups" },
+      { to: "/roles", label: "Roles" },
+      { to: "/api-keys", label: "API Keys" },
+      { to: "/webhooks", label: "Webhooks" },
+    ],
+  },
+  {
+    heading: "Platform",
+    items: [
+      { to: "/import-export", label: "Import / Export" },
+      { to: "/custom-objects", label: "Custom Objects" },
+      { to: "/custom-fields", label: "Custom Fields" },
+      { to: "/workflows", label: "Workflows" },
+    ],
+  },
+  {
+    heading: "Rules & Policies",
+    items: [
+      { to: "/sla-policies", label: "SLA Policies" },
+      { to: "/territory-rules", label: "Territory Rules" },
+      { to: "/lead-scoring-rules", label: "Lead Scoring Rules" },
+      { to: "/sales-goals", label: "Sales Goals" },
+      { to: "/regions", label: "Territory Hierarchy" },
+      { to: "/commission-plans", label: "Commission Plans" },
+      { to: "/commission-records", label: "Commission Records" },
+    ],
+  },
+  {
+    heading: "Compliance",
+    items: [{ to: "/data-subject-requests", label: "Data Subject Requests" }],
+  },
 ];
 
-/** Shell for every authenticated page: a slim top bar (current user + sign out), CRM nav, and the routed page content. */
+/** Shell for every authenticated page: a slim top bar, a grouped/searchable sidebar, and the routed page content. */
 export function AppLayout() {
   const { user, logout } = useAuth();
+  const [query, setQuery] = useState("");
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const isOrgAdmin = user?.roles.includes("OWNER") || user?.roles.includes("ADMIN");
-  const navLinks = isOrgAdmin ? [...CRM_NAV_LINKS, ...ADMIN_NAV_LINKS] : CRM_NAV_LINKS;
+  const groups = isOrgAdmin ? [...CRM_NAV_GROUPS, ...ADMIN_NAV_GROUPS] : CRM_NAV_GROUPS;
+
+  const visibleGroups = useMemo(() => {
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) return groups;
+    return groups
+      .map((group) => ({ ...group, items: group.items.filter((item) => item.label.toLowerCase().includes(trimmed)) }))
+      .filter((group) => group.items.length > 0);
+  }, [groups, query]);
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white">
+        <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsMobileNavOpen((prev) => !prev)}
+              className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 lg:hidden"
+              aria-label="Toggle navigation"
+            >
+              <MenuIcon />
+            </button>
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-900 text-xs font-semibold text-white">
               AT
             </div>
@@ -187,26 +189,86 @@ export function AppLayout() {
             </Button>
           </div>
         </div>
-        <nav className="mx-auto flex max-w-5xl gap-1 px-4">
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.end}
-              className={({ isActive }) =>
-                `border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-                  isActive ? "border-slate-900 text-slate-900" : "border-transparent text-slate-500 hover:text-slate-900"
-                }`
-              }
-            >
-              {link.label}
-            </NavLink>
-          ))}
-        </nav>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">
-        <Outlet />
-      </main>
+
+      <div className="flex">
+        {isMobileNavOpen && (
+          <div
+            className="fixed inset-0 z-10 bg-slate-900/30 lg:hidden"
+            onClick={() => setIsMobileNavOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
+        <aside
+          className={`fixed inset-y-0 top-14 z-10 w-64 shrink-0 -translate-x-full overflow-y-auto border-r border-slate-200 bg-white pb-8 transition-transform lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] lg:translate-x-0 ${
+            isMobileNavOpen ? "translate-x-0" : ""
+          }`}
+        >
+          <div className="sticky top-0 z-10 border-b border-slate-100 bg-white p-3">
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-slate-400">
+                <SearchIcon />
+              </span>
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Find a page..."
+                className="w-full rounded-md border border-slate-300 py-1.5 pl-8 pr-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <nav className="flex flex-col gap-4 px-3 py-3">
+            {visibleGroups.length === 0 && <p className="px-2 py-4 text-sm text-slate-400">No pages match &ldquo;{query}&rdquo;.</p>}
+            {visibleGroups.map((group) => (
+              <div key={group.heading}>
+                <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">{group.heading}</p>
+                <div className="flex flex-col gap-0.5">
+                  {group.items.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      end={item.end}
+                      onClick={() => setIsMobileNavOpen(false)}
+                      className={({ isActive }) =>
+                        `rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${
+                          isActive ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        }`
+                      }
+                    >
+                      {item.label}
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </nav>
+        </aside>
+
+        <main className="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-5xl">
+            <Outlet />
+          </div>
+        </main>
+      </div>
     </div>
+  );
+}
+
+function MenuIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="h-5 w-5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="h-4 w-4">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.2-5.2m0 0a7.2 7.2 0 1 0-10.184 0 7.2 7.2 0 0 0 10.184 0Z" />
+    </svg>
   );
 }

@@ -1,17 +1,22 @@
 # AI-Trainer CRM
 
-A CRM backend and frontend, built as a Spring Boot modular monolith with a
-separate React SPA. This repo currently covers authentication and
-organization/user/role administration (RBAC) end to end — see
-[Roadmap](#roadmap) for what's not built yet.
+A full CRM and client-management platform for independent trainers and
+coaching businesses, built as a Spring Boot modular monolith with a
+separate React SPA. It covers the standard CRM core (accounts, contacts,
+opportunities, leads), sales and support tooling, marketing, automation,
+compliance, and platform administration, alongside a training-specific
+layer (courses/certifications, client goals, training sessions, exercises,
+nutrition plans, body measurements, and booking links) — see
+[Features](#features) for the full list.
 
 ## Architecture
 
 ```
 ┌─────────────────┐        ┌──────────────────────────────────────┐
 │  React frontend  │  /api  │        crm-platform (Spring Boot)      │
-│  (nginx / Vite)  │───────▶│  auth · organization · user · role ·   │
-│                  │        │  audit · security  (one deployable)    │
+│  (nginx / Vite)  │───────▶│  50+ feature modules: CRM, sales,      │
+│                  │        │  support, training, marketing,         │
+│                  │        │  automation, admin  (one deployable)   │
 └─────────────────┘        └───────────┬──────────┬──────────┬──────┘
                                         │          │          │
                                    PostgreSQL    Redis    RabbitMQ
@@ -19,10 +24,11 @@ organization/user/role administration (RBAC) end to end — see
 
 **Backend** — Spring Boot 3.2.5 / Java 17, organized as a *modular monolith*:
 one deployable unit, one database, but code is split into feature modules
-(`auth`, `organization`, `user`, `role`, `audit`, ...) with clear boundaries,
-rather than either a tangled single package or a premature microservices
-split. Postgres is the system of record, Redis is for caching, RabbitMQ and
-Quartz are in place for async/scheduled work as the feature set grows.
+(`auth`, `organization`, `user`, `role`, `account`, `opportunity`, `ticket`,
+`workflow`, ...) with clear boundaries, rather than either a tangled single
+package or a premature microservices split. Postgres is the system of
+record, Redis backs caching (including role-permission resolution for
+auth), and RabbitMQ/Quartz handle async and scheduled work.
 
 **Frontend** — React 19 + TypeScript + Vite + Tailwind CSS v4, a pure JSON
 API client (no server-side rendering, no session cookie — JWT access token +
@@ -33,7 +39,10 @@ rotating opaque refresh token, both returned in the response body).
 - **Auth**: stateless JWT access tokens (15 min default) + opaque, rotating
   refresh tokens (30 days default) with server-side reuse detection — presenting
   an already-rotated-away refresh token revokes every session for that user,
-  not just the one request.
+  not just the one request. The access token carries only the caller's role
+  ids; the permissions each role grants are resolved from a cached
+  server-side lookup rather than embedded in the token itself, so the
+  token stays small no matter how large the permission catalog grows.
 - **RBAC**: `Permission` (`Resource` × `Action` × `Scope`, e.g.
   `USER:UPDATE:ORGANIZATION`) grouped into a `Role`, assigned to `User`s
   many-to-many. Every organization gets three system roles on creation —
@@ -152,188 +161,75 @@ docker-compose.prod.yml  Production stack: same services, but pulls published GH
 .github/workflows/       backend-ci.yml, frontend-ci.yml, docker-build.yml, release.yml
 ```
 
-## Roadmap
+## Features
 
-Built so far: backend scaffold, auth module (register/login/refresh/password
-reset/email verification), organizations/users/RBAC modules, the CRM domain
-itself (Account/Contact/Opportunity/Lead, including lead conversion and
-record-level OWN/TEAM/DEPARTMENT/ORGANIZATION scope authorization), an
-Activity module (calls/emails/meetings/tasks/notes logged against any CRM
-record), sales tooling (a Product catalog and Quotes - priced proposals with
-line items tied to an Opportunity, totals recomputed server-side), a
-Reporting & analytics module (pipeline value by stage, lead conversion
-funnel, and a per-rep leaderboard, backed by real aggregation queries over
-Opportunity/Lead), a platform/integration layer (API key management for
-programmatic auth, and webhook subscriptions - HMAC-signed HTTP callbacks
-dispatched off the same domain events the audit log already consumes),
-React auth scaffold (login/register/forgot/reset/verify-email pages +
-protected routing), a CRM workspace UI (list/create/detail pages for
-accounts, contacts, opportunities, and leads, including opportunity stage
-transitions, lead conversion, a per-opportunity Quotes list, and a
-per-record ActivityTimeline on every detail page), Products/Quotes pages
-(including an inline line-item editor with a product picker), a Reports
-page (pipeline-by-stage and lead-funnel charts plus the rep leaderboard),
-API Keys and Webhooks pages (create/list/revoke a key with its raw value
-shown exactly once; create/list/pause/delete a webhook subscription with
-its signing secret and last-delivery status), a cross-record "My Tasks"
-view, a team/role management UI (invite/list users, assign roles and
-status, create/edit custom roles against the full permission catalog), a
-"my profile" settings page (update name/phone/timezone/locale, change
-password), a frontend test suite (Vitest + React Testing Library), Docker
-Compose + CI for both halves, a production deploy pipeline (versioned
-GHCR image publishing + GitHub Releases on tag push — see
-[Deploying to production](#deploying-to-production)), and the order-to-cash
-module end to end: Orders (optionally converted from a Quote, with a DRAFT
--> CONFIRMED -> FULFILLED lifecycle and a CANCELLED escape hatch), Invoices
-(generated from an Order, DRAFT -> SENT -> PAID, PAID driven automatically
-by recorded payments rather than settable directly), and Payments (recorded
-against an Invoice, each one recomputing the invoice's amountPaid and
-flipping its status once fully covered) on the backend - see
-`backend/crm-platform/README.md`'s module layout for `order`/`invoice`/
-`payment` - plus Orders/Invoices pages (an order's detail page has both a
-"convert this quote" entry point and a "generate an invoice" card once
-confirmed; an invoice's detail page locks its header/line items once
-issued and grows a payment ledger with a record-payment form once sent),
-and marketing/support tooling: Campaigns (with Campaign Members - a Lead or
-a Contact tracked through an engagement funnel, plus a per-status stats
-rollup) and the Knowledge Base (articles with auto-generated unique slugs,
-tags, a DRAFT -> PUBLISHED -> ARCHIVED lifecycle, and a view counter) - see
-`backend/crm-platform/README.md`'s module layout for `campaign`/
-`knowledgearticle`. Campaigns and Knowledge Articles are also the first
-resources in the whole platform with a real `:EXPORT` implementation (a CSV
-download) rather than just a seeded-but-unbuilt permission. Most recently,
-platform extensibility: Custom Objects (admin-defined generic entities -
-a Name field plus whatever Custom Fields are attached) and Custom Fields
-(attachable to a Custom Object or to a fixed set of standard entities -
-Account/Contact/Lead/Opportunity/Campaign - never both, values stored as a
-classic EAV table and parsed/validated against each field's declared type -
-NUMBER/DATE/BOOLEAN/PICKLIST/TEXT/TEXT_AREA) - see
-`backend/crm-platform/README.md`'s module layout for `customfield`. Most
-recently, Workflow automation: a rule fires when a Lead/Contact/Account/
-Opportunity is created/updated/deleted (matched against the same
-`CrmAuditEvents` webhook delivery and the audit log already consume) and
-creates a follow-up Activity task, assigned to either a configured user or
-whoever owns the record that triggered it - with a full run history
-(succeeded/failed, per fire) and a manual "run now" for testing a workflow
-before switching it on. Unlike Campaign/Knowledge Article/Custom Field/
-Custom Object, Workflow is owner-scoped (OWN/TEAM/ORGANIZATION) - see
-`backend/crm-platform/README.md`'s module layout for `workflow`. Most
-recently, Dashboards: a named, owner-scoped set of widgets, each pulling
-its numbers live from the same three Reports queries above (pipeline by
-stage, lead funnel, leaderboard) rather than storing any report data of
-its own, plus a default-dashboard toggle. This was the exact feature
-`ReportController`'s own code comment had flagged as future work back
-when Reports first shipped - see `backend/crm-platform/README.md`'s
-module layout for `dashboard`. Next, bulk CSV import/export for Account,
-Contact, and Lead: every core CRM resource got `IMPORT` and `EXPORT`
-permissions seeded back in `V2__seed_permission_catalog.sql` alongside
-CREATE/READ/UPDATE/DELETE/ASSIGN, but `IMPORT` had zero implementation
-anywhere in the codebase, and `EXPORT` only existed for Campaign/Knowledge
-Article, until the new `importexport` module - a CSV upload creates rows
-one at a time and reports a per-row success/error result rather than
-failing the whole batch on one bad row, with a saved import-job history -
-see `backend/crm-platform/README.md`'s module layout for `importexport`.
-Most recently, Support Tickets: while building `importexport`, `TICKET`
-turned out to be the one resource in the whole permission catalog with a
-full permission set seeded but genuinely no module, entity, or endpoint
-anywhere. The new `ticket` module closes that gap, mirroring Account's
-owner-scoped shape with a free (non-linear) status transition rather than
-Lead/Order's one-way state machines, since reopening a resolved support
-ticket is a completely normal workflow - `importexport` was then extended
-to cover Ticket too, using the exact same engine already built for Account/
-Contact/Lead - see `backend/crm-platform/README.md`'s module layout for
-`ticket`. Most recently, email logging and calendar scheduling: an
-`email` module (`EmailMessage` - direction, subject, from/to/cc, tied to an
-Account/Contact/Opportunity/Lead/Ticket) and a `calendar` module
-(`CalendarEvent` plus a real `CalendarEventAttendee` child table, since an
-attendee - internal user or external guest - has its own mutable response
-status the way a plain email address never needs). Unlike Ticket, these
-aren't a permission-catalog gap - `EMAIL_MESSAGE`/`CALENDAR_EVENT` didn't
-exist in the catalog at all until this change added them (in `V15`)
-alongside their modules in the same migration, so there was never a window
-where they were seeded but unbuilt. Both coexist with `activity`'s existing
-EMAIL/MEETING types rather than replacing them - Activity logs "an email/
-meeting happened" against a record; these two modules capture the actual
-structured data (who it went to, which direction, start/end time, who's
-attending) that Activity was never meant to hold - see
-`backend/crm-platform/README.md`'s module layout for `email`/`calendar`.
-Most recently, Team management: `organization/`'s `Team` entity (Sales/
-Marketing/Support/... groupings with a free-text department string) and
-`users.team_id` have both existed since the very first migration purely so
-`ScopeAuthorizationService` had something to resolve TEAM/DEPARTMENT-scope
-visibility against - but there was never a management API, so in practice
-every user's team was null and those two scope levels sat unreachable
-behind unit tests. `TeamController` (CRUD) and a new `PATCH
-/api/v1/users/{id}/team` endpoint close that gap - see
-`backend/crm-platform/README.md`'s module layout for `organization`/`user`
-and `ScopeAuthorizationService`'s javadoc for the full backstory. The Team
-frontend (a Team Groups admin page, plus a Team picker added to each
-teammate's profile page) landed right behind it.
+Every module below is built end to end: backend entity/repository/service/
+controller/DTO with unit and integration tests, and a matching frontend
+page (a few compose into an existing page instead of getting their own —
+noted where that's the case). See `backend/crm-platform/README.md`'s
+module layout for design rationale on any individual module.
 
-Most recently, in-app notifications: a `notification/inbox` module (a
-teammate's own read/unread mail, optionally tied to a CRM record) that is
-deliberately *not* shaped like any prior module. Every resource from
-Ticket (V14) through Team (V16) either widens visibility with role
-(owner-scoped) or has one fixed org-wide scope everyone shares
-(shared-org-resource/platform-administration) - a notification does
-neither. It's exactly one person's mail, and no role should ever let a
-second person read it, so `NOTIFICATION` was never added to the permission
-catalog at all; `NotificationService` checks `recipientUserId == caller`
-directly instead of calling `ScopeAuthorizationService`. See
-`backend/crm-platform/README.md`'s module layout for `notification` and
-`Notification`'s own javadoc for the reasoning, including why - unlike
-every other table in this schema - it has no `deleted_at` column.
+**Core CRM** — Accounts, Contacts, Opportunities (sales pipeline), and
+Leads (with conversion into an Account/Contact/Opportunity), plus an
+Activity log (calls, emails, meetings, tasks, notes) attachable to any CRM
+record. Every list view enforces record-level OWN/TEAM/DEPARTMENT/
+ORGANIZATION scope authorization.
 
-Most recently, file attachments: an `attachment` module for uploading a
-file (a contract, a screenshot, an invoice PDF) against an Account/
-Contact/Opportunity/Lead/Ticket. Back to owner-scoped - the fourth access
-pattern Notification introduced doesn't apply here, an uploaded file is a
-normal team-visible CRM record the same way a Ticket or a logged Email is
-- but it's the first module where the record's actual content isn't a
-handful of text columns. The bytes live behind a new
-`attachment.storage.FileStorageService` interface (a `LocalFileStorageService`
-writes them to disk today; swapping in an S3-backed implementation later
-touches nothing else) rather than in Postgres, and `Attachment.storageKey`
-- the pointer into that storage - is never returned to a client; only
-`GET /attachments/{id}/download` can turn it back into bytes. See
-`backend/crm-platform/README.md`'s module layout for `attachment` and
-`LocalFileStorageService`'s javadoc for the honest limitation (local disk
-isn't durable across container replicas/redeploys without a mounted
-volume) that comes with today's default implementation.
+**Sales & commerce** — a Product catalog; Quotes (priced proposals against
+an Opportunity); Orders (converted from a Quote, DRAFT → CONFIRMED →
+FULFILLED); Invoices (generated from an Order, DRAFT → SENT → PAID, driven
+automatically by recorded Payments rather than settable directly);
+Contracts; a Commission engine that auto-calculates rep commission on
+closed-won deals; Sales Goals (rep/team quotas); and Forecasting (daily
+pipeline snapshots for trend reporting).
 
-The RBAC model was designed up front for the platform's eventual full
-shape, and every resource seeded in `V2__seed_permission_catalog.sql` now
-has a full `entity`/`repository`/`service`/`controller`/`dto` module built
-on top of it (following the same pattern as `account`/`contact`/
-`opportunity`/`lead`/`activity`/`product`/`quote`/`order`/`invoice`/
-`payment`/`campaign`/`knowledgearticle`/`customfield`/`workflow`/
-`dashboard`/`ticket`, plus a corresponding frontend page where one applies).
-`email`/`calendar` (`EMAIL_MESSAGE`/`CALENDAR_EVENT`), `TEAM`, and
-`attachment` (`ATTACHMENT`) extend the catalog itself rather than fill a
-pre-existing gap - each was seeded and given a module in the same change,
-as the platform's shape grew over time, rather than the whole catalog
-being fixed in stone from V2 onward.
-`report`, `apikey`, `webhook`, `customfield`, `dashboard`, and Team (in
-`organization/`) are exceptions built without a
-normal owner-scoped entity of their own (or, for `dashboard`, with one but
-no owned *report data* - it composes `report`'s) - see
-`backend/crm-platform/README.md`'s module layout for why. An earlier
-version of this file incorrectly claimed this was already true while
-`TICKET` still had no module at all; see `backend/crm-platform/README.md`
-for that correction and how the gap was found.
+**Support & service** — Support Tickets (free, non-linear status
+transitions, since reopening a resolved ticket is normal); SLA policies
+with automatic escalation; canned-response Macros; and a Knowledge Base of
+help-center articles (slugged, tagged, DRAFT → PUBLISHED → ARCHIVED, with
+view counts).
 
-Not yet built, roughly in the order planned:
-- A frontend for the Attachment module (`AttachmentController`'s upload/
-  list/download/update/delete/assign-owner endpoints) - the backend module
-  landed first, same order every prior module has followed in this project
-- IMPORT/EXPORT for Opportunity, Activity, and Quote - seeded in the
-  catalog like Account/Contact/Lead/Ticket's, not yet built
-- Retry-with-backoff for webhook delivery (today it's a single attempt with
-  a short timeout - see `WebhookDispatchListener`'s javadoc for the
-  reasoning) and scoped/delegated API keys (today a key inherits its
-  creator's full permission set rather than a chosen subset - see
-  `ApiKeyService`'s javadoc)
-- Broader frontend test coverage beyond the pages/components covered so far
-  (the Product/Quote pages in particular have no dedicated tests yet), and
-  the usual production-hardening items (rate limiting, observability/
-  metrics, avatar upload) that weren't part of the original scope
+**Training & fitness coaching** — Course/Certification management with
+enrollment and credential awarding; Client Goals (coach-defined measurable
+objectives); Training Sessions with per-session exercises logged; an
+Exercise library; Nutrition Plans; Body Measurement check-ins; and Booking
+Links for client self-scheduling.
+
+**Marketing & content** — Campaigns with member tracking (Leads/Contacts
+through an engagement funnel) and per-status stats; Email Templates;
+Sales Sequences (multi-step engagement cadences); logged Emails; and a
+Calendar with per-attendee response tracking.
+
+**Automation & rules** — Workflow automation (trigger-based follow-up
+tasks on record create/update/delete, with run history and a manual "run
+now"); Territory assignment rules (auto-routes new records to an owner);
+Lead Scoring; Duplicate detection and merge; and a Territory Hierarchy
+(Region) rollup for reporting.
+
+**Analytics & personalization** — Reports (pipeline by stage, lead
+conversion funnel, rep leaderboard, backed by real aggregation queries);
+Dashboards (saved widget layouts pulling live from the same Reports
+queries); and Saved Views (per-user filter/sort presets, embedded as a bar
+on each list page rather than a standalone page).
+
+**Compliance** — GDPR data-subject export/erase requests, and multi-step
+Approval Workflows for Quotes/Orders/Opportunities.
+
+**Platform & admin** — Organizations, Teams, and Users; full RBAC
+(permission catalog × roles); Authentication (register/login/refresh/
+password reset/email verification); API Keys for programmatic access;
+outbound Webhooks (HMAC-signed HTTP callbacks); an in-app Notification
+inbox; file Attachments (pluggable storage behind a `FileStorageService`
+interface); bulk CSV Import/Export; and Custom Objects/Fields for
+platform extensibility (EAV-backed, validated against each field's
+declared type).
+
+Cross-cutting: a full frontend test suite (Vitest + React Testing
+Library), Docker Compose + CI for both halves, and a production deploy
+pipeline (versioned GHCR image publishing + GitHub Releases on tag push —
+see [Deploying to production](#deploying-to-production)).
+
+## Author
+
+**Potha Gouni Madhav**
+Email: pothagounimadhav@gmail.com
