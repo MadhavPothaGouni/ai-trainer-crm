@@ -99,7 +99,8 @@ public class SequenceService {
         SequenceStep step = new SequenceStep(sequence.getId(), nextOrder, request.type(), request.dayOffset());
         step.setSubject(request.subject());
         step.setBody(request.body());
-        return sequenceStepRepository.save(step);
+        sequenceStepRepository.save(step);
+        return step;
     }
 
     @Transactional
@@ -111,7 +112,8 @@ public class SequenceService {
         step.setDayOffset(request.dayOffset());
         step.setSubject(request.subject());
         step.setBody(request.body());
-        return sequenceStepRepository.save(step);
+        sequenceStepRepository.save(step);
+        return step;
     }
 
     @Transactional

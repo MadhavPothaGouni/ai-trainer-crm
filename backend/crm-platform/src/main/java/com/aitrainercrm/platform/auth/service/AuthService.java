@@ -286,7 +286,8 @@ public class AuthService {
         Instant expiresAt = Instant.now().plus(30, ChronoUnit.DAYS);
         RefreshToken token = new RefreshToken(user.getId(), secureTokenService.hash(rawToken), expiresAt, deviceInfo, ipAddress);
         token.setRawTokenForResponseOnly(rawToken);
-        return refreshTokenRepository.save(token);
+        refreshTokenRepository.save(token);
+        return token;
     }
 
     private String normalizeEmail(String email) {

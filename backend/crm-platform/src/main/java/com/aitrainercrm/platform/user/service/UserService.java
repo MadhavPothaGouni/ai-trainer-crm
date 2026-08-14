@@ -107,7 +107,8 @@ public class UserService {
         if (request.locale() != null) {
             user.setLocale(request.locale());
         }
-        return userRepository.save(user);
+        userRepository.save(user);
+        return user;
     }
 
     @Transactional

@@ -46,7 +46,8 @@ public class OrganizationService {
         organization.setDefaultCurrency(request.defaultCurrency());
         organization.setTimezone(request.timezone());
         organization.setFiscalYearStartMonth(request.fiscalYearStartMonth());
-        return organizationRepository.save(organization);
+        organizationRepository.save(organization);
+        return organization;
     }
 
     private String generateUniqueSlug(String name) {

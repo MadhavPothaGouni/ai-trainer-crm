@@ -198,7 +198,8 @@ public class CalendarEventService {
         }
 
         CalendarEventAttendee attendee = new CalendarEventAttendee(eventId, request.userId(), hasUser ? null : request.externalEmail());
-        return attendeeRepository.save(attendee);
+        attendeeRepository.save(attendee);
+        return attendee;
     }
 
     @Transactional
@@ -210,7 +211,8 @@ public class CalendarEventService {
                 .orElseThrow(() -> new ResourceNotFoundException("CalendarEventAttendee", attendeeId));
 
         attendee.setResponseStatus(responseStatus);
-        return attendeeRepository.save(attendee);
+        attendeeRepository.save(attendee);
+        return attendee;
     }
 
     @Transactional

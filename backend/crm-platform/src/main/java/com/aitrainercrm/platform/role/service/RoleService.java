@@ -137,7 +137,8 @@ public class RoleService {
 
         Role role = new Role(name, description, organizationId, false);
         resolvePermissions(permissionIds).forEach(role::addPermission);
-        return roleRepository.save(role);
+        roleRepository.save(role);
+        return role;
     }
 
     @Transactional
@@ -155,7 +156,8 @@ public class RoleService {
         role.setDescription(description);
         role.getPermissions().clear();
         resolvePermissions(permissionIds).forEach(role::addPermission);
-        return roleRepository.save(role);
+        roleRepository.save(role);
+        return role;
     }
 
     @Transactional

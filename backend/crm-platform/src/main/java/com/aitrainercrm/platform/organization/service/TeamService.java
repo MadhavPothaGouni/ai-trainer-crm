@@ -53,7 +53,8 @@ public class TeamService {
         Team team = new Team(organizationId, request.name(), request.department());
         team.setLeadUserId(request.leadUserId());
         team.setRegionId(request.regionId());
-        return teamRepository.save(team);
+        teamRepository.save(team);
+        return team;
     }
 
     @Transactional
@@ -66,7 +67,8 @@ public class TeamService {
         team.setDepartment(request.department());
         team.setLeadUserId(request.leadUserId());
         team.setRegionId(request.regionId());
-        return teamRepository.save(team);
+        teamRepository.save(team);
+        return team;
     }
 
     @Transactional

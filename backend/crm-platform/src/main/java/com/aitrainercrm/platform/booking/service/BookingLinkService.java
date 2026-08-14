@@ -149,7 +149,8 @@ public class BookingLinkService {
 
         Instant endAt = request.startAt().plus(Duration.ofMinutes(link.getDurationMinutes()));
         BookingSlot slot = new BookingSlot(bookingLinkId, request.startAt(), endAt);
-        return bookingSlotRepository.save(slot);
+        bookingSlotRepository.save(slot);
+        return slot;
     }
 
     /** Only an OPEN slot can be removed directly - a booked slot has to be cancelled first, so the CalendarEvent it created gets cleaned up rather than left orphaned. */
