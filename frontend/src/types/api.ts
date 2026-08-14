@@ -2517,3 +2517,51 @@ export interface UpdateNutritionPlanRequest {
 export interface UpdateNutritionPlanStatusRequest {
   status: NutritionPlanStatus;
 }
+
+// ---- Body Measurement (V41) ----
+//
+// See backend/crm-platform/README.md's module layout for `bodymeasurement` (V41) - the eleventh
+// module this session. A periodic, point-in-time snapshot of a client's physical stats, distinct
+// from ClientGoal (a single named objective row, not a time series - no history of every
+// reading). Deliberately no status field - a check-in is an append-only log entry, not a
+// resource with a lifecycle.
+
+export interface BodyMeasurementDto {
+  id: string;
+  contactId: string;
+  ownerId: string;
+  measuredAt: string;
+  weightValue: number | null;
+  weightUnit: string | null;
+  bodyFatPercent: number | null;
+  chestCm: number | null;
+  waistCm: number | null;
+  hipsCm: number | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateBodyMeasurementRequest {
+  contactId: string;
+  measuredAt: string;
+  weightValue?: number | null;
+  weightUnit?: string | null;
+  bodyFatPercent?: number | null;
+  chestCm?: number | null;
+  waistCm?: number | null;
+  hipsCm?: number | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateBodyMeasurementRequest {
+  measuredAt: string;
+  weightValue?: number | null;
+  weightUnit?: string | null;
+  bodyFatPercent?: number | null;
+  chestCm?: number | null;
+  waistCm?: number | null;
+  hipsCm?: number | null;
+  notes?: string | null;
+}

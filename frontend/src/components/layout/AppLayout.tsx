@@ -84,6 +84,9 @@ const CRM_NAV_LINKS = [
   // ORGANIZATION ladder) - see backend/crm-platform/README.md's module layout for
   // `nutritionplan` (V40).
   { to: "/nutrition-plans", label: "Nutrition Plans", end: false },
+  // Owner-scoped like Nutrition Plans above, no status/lifecycle - see backend/crm-platform/
+  // README.md's module layout for `bodymeasurement` (V41).
+  { to: "/body-measurements", label: "Body Measurements", end: false },
 ];
 
 // Team/Role management hits USER:READ:ORGANIZATION / ROLE:READ:ORGANIZATION on the

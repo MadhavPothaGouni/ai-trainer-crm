@@ -65,6 +65,9 @@ import ExerciseListPage from "./pages/exercises/ExerciseListPage";
 import NutritionPlanCreatePage from "./pages/nutritionPlans/NutritionPlanCreatePage";
 import NutritionPlanDetailPage from "./pages/nutritionPlans/NutritionPlanDetailPage";
 import NutritionPlanListPage from "./pages/nutritionPlans/NutritionPlanListPage";
+import BodyMeasurementCreatePage from "./pages/bodyMeasurements/BodyMeasurementCreatePage";
+import BodyMeasurementDetailPage from "./pages/bodyMeasurements/BodyMeasurementDetailPage";
+import BodyMeasurementListPage from "./pages/bodyMeasurements/BodyMeasurementListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -257,6 +260,9 @@ export default function App() {
           <Route path="/nutrition-plans" element={<NutritionPlanListPage />} />
           <Route path="/nutrition-plans/new" element={<NutritionPlanCreatePage />} />
           <Route path="/nutrition-plans/:nutritionPlanId" element={<NutritionPlanDetailPage />} />
+          <Route path="/body-measurements" element={<BodyMeasurementListPage />} />
+          <Route path="/body-measurements/new" element={<BodyMeasurementCreatePage />} />
+          <Route path="/body-measurements/:bodyMeasurementId" element={<BodyMeasurementDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />

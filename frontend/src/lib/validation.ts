@@ -1020,3 +1020,22 @@ export const updateNutritionPlanSchema = z
   .object({ ...nutritionPlanFields })
   .refine(refineNutritionPlanDates, { message: "End date cannot be before start date", path: ["endDate"] });
 export type UpdateNutritionPlanFormValues = z.infer<typeof updateNutritionPlanSchema>;
+
+// ---- Body Measurement (V41) ----
+
+const bodyMeasurementFields = {
+  measuredAt: z.string().min(1, "Date is required"),
+  weightValue: optionalNumberString,
+  weightUnit: z.string().max(10).optional().or(z.literal("")),
+  bodyFatPercent: optionalNumberString,
+  chestCm: optionalNumberString,
+  waistCm: optionalNumberString,
+  hipsCm: optionalNumberString,
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createBodyMeasurementSchema = z.object({ contactId: z.string().min(1, "Client is required"), ...bodyMeasurementFields });
+export type CreateBodyMeasurementFormValues = z.infer<typeof createBodyMeasurementSchema>;
+
+export const updateBodyMeasurementSchema = z.object({ ...bodyMeasurementFields });
+export type UpdateBodyMeasurementFormValues = z.infer<typeof updateBodyMeasurementSchema>;
