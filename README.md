@@ -14,7 +14,7 @@ nutrition plans, body measurements, and booking links) — see
 ```
 ┌─────────────────┐        ┌──────────────────────────────────────┐
 │  React frontend  │  /api  │        crm-platform (Spring Boot)      │
-│  (nginx / Vite)  │───────▶│  50+ feature modules: CRM, sales,      │
+│  (nginx / Vite)  │───────▶│  70+ feature modules: CRM, sales,      │
 │                  │        │  support, training, marketing,         │
 │                  │        │  automation, admin  (one deployable)   │
 └─────────────────┘        └───────────┬──────────┬──────────┬──────┘
@@ -281,6 +281,14 @@ Cross-cutting: a full frontend test suite (Vitest + React Testing
 Library), Docker Compose + CI for both halves, and a production deploy
 pipeline (versioned GHCR image publishing + GitHub Releases on tag push —
 see [Deploying to production](#deploying-to-production)).
+
+## Project stats
+
+Built out to ~101,700 lines of code across ~72 backend feature modules: 38k
+lines of backend application code, 17k lines of backend tests (unit +
+Testcontainers-backed integration tests, 485 passing), 4.1k lines of Flyway
+migrations, and 42k lines of frontend TypeScript/React. `mvn verify` and
+`npm run build` both pass clean as of the last commit.
 
 ## Author
 
