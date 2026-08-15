@@ -98,7 +98,8 @@ public class PaymentService {
         invoiceService.applyAmountPaid(organizationId, invoiceId, amountPaid);
     }
 
-    private Payment findOrThrow(UUID organizationId, UUID paymentId) {
+    /** Package-private (not private) so {@code RefundRecordService} can reuse it when validating a refund's parent payment - same precedent {@code RoomService#findOrThrow} established for {@code RoomBookingService}. */
+    Payment findOrThrow(UUID organizationId, UUID paymentId) {
         return paymentRepository.findActiveByIdAndOrganizationId(paymentId, organizationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment", paymentId));
     }

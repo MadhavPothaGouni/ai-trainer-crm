@@ -138,7 +138,8 @@ public class MembershipService {
         events.publishEvent(new CrmAuditEvents.RecordDeleted(principal.getId(), principal.getOrganizationId(), "Membership", membershipId));
     }
 
-    private Membership findOrThrow(UUID organizationId, UUID membershipId) {
+    /** Package-private (not private) so {@code MembershipFreezeService} can reuse it when validating a freeze's parent membership - same precedent {@code RoomService#findOrThrow} established for {@code RoomBookingService}. */
+    Membership findOrThrow(UUID organizationId, UUID membershipId) {
         return membershipRepository.findActiveByIdAndOrganizationId(membershipId, organizationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Membership", membershipId));
     }

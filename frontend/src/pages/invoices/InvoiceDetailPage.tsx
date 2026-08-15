@@ -320,9 +320,14 @@ export default function InvoiceDetailPage() {
                   {payment.reference ? ` · ${payment.reference}` : ""}
                 </p>
               </div>
-              <Button variant="danger" onClick={() => void handleRemovePayment(payment.id)} isLoading={pendingPaymentId === payment.id}>
-                Remove
-              </Button>
+              <div className="flex items-center gap-2">
+                <Link to={`/refund-records/new?paymentId=${payment.id}`} className="text-sm text-slate-500 hover:text-slate-900 hover:underline">
+                  Refund
+                </Link>
+                <Button variant="danger" onClick={() => void handleRemovePayment(payment.id)} isLoading={pendingPaymentId === payment.id}>
+                  Remove
+                </Button>
+              </div>
             </div>
           ))}
         </div>

@@ -227,8 +227,23 @@ CONFIRMED bookings for the same room are rejected); Equipment Reservations
 (informal equipment booking, no overlap check by design); Progress Photos
 (a point-in-time client photo log); No-Show Records (missed bookings with
 an optional fee, waived via a dedicated action that rejects a missing or
-already-waived fee); and an Intake Form catalog with Submissions (client
-questionnaire responses stored as an opaque free-text/JSON blob).
+already-waived fee); an Intake Form catalog with Submissions (client
+questionnaire responses stored as an opaque free-text/JSON blob); Class
+Waitlists (auto-incrementing position per session, a notified-at timestamp
+stamped once on the first move into NOTIFIED); Membership Freezes (a
+date-range hold on a Membership with an overlap check adapted from Room
+Booking's — REQUESTED and ACTIVE freezes both count as conflicting, unlike
+Room Booking's single CONFIRMED status); Nutrition Logs (per-meal calorie
+and macro tracking, a point-in-time fact distinct from the coach-authored
+Nutrition Plan target); Personal Records (a client's best-ever result per
+exercise and record type — one-rep max, max reps, max weight, max
+duration — rejecting any new or edited value that doesn't beat the
+current best); Refund Records (refunds against a Payment, co-located with
+the Payment module so the sum of a payment's non-deleted refunds can never
+exceed the payment's own amount, REQUESTED → APPROVED → PROCESSED with a
+processed-at timestamp stamped once); and Client Feedback (an NPS-style
+0-10 rating plus optional comments about a session, class, or the
+business overall).
 
 **Marketing & content** — Campaigns with member tracking (Leads/Contacts
 through an engagement funnel) and per-status stats; Email Templates;

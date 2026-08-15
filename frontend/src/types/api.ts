@@ -3760,3 +3760,258 @@ export interface UpdateIntakeFormSubmissionRequest {
   responses?: string | null;
   notes?: string | null;
 }
+
+// See backend/crm-platform/src/main/resources/db/migration/V61__class_waitlists.sql - a client
+// queued for a spot in a full class session. Owner-scoped (contactId is the client, ownerId is
+// the staff member who owns the entry). position is computed server-side at creation (count of
+// WAITING entries for the session, plus one) - never sent in a create request. Free WAITING/
+// NOTIFIED/CONVERTED/EXPIRED status, with notifiedAt stamped once the first time status moves to
+// NOTIFIED.
+
+export type ClassWaitlistStatus = "WAITING" | "NOTIFIED" | "CONVERTED" | "EXPIRED";
+
+export const CLASS_WAITLIST_STATUSES: ClassWaitlistStatus[] = ["WAITING", "NOTIFIED", "CONVERTED", "EXPIRED"];
+
+export interface ClassWaitlistDto {
+  id: string;
+  classSessionId: string;
+  contactId: string;
+  ownerId: string;
+  position: number;
+  status: ClassWaitlistStatus;
+  notifiedAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateClassWaitlistRequest {
+  classSessionId: string;
+  contactId: string;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateClassWaitlistRequest {
+  notes?: string | null;
+}
+
+export interface UpdateClassWaitlistStatusRequest {
+  status: ClassWaitlistStatus;
+}
+
+// See backend/crm-platform/src/main/resources/db/migration/V62__membership_freezes.sql - a
+// client pausing an active membership for a date range. Owner-scoped (ownerId is the staff
+// member who owns the freeze). freezeStart/freezeEnd are plain "YYYY-MM-DD" date strings, not
+// timestamps. Free REQUESTED/ACTIVE/ENDED status. Two business rules enforced server-side:
+// freezeEnd must be after freezeStart, and a membership can't hold two REQUESTED/ACTIVE freezes
+// with overlapping date ranges.
+
+export type MembershipFreezeStatus = "REQUESTED" | "ACTIVE" | "ENDED";
+
+export const MEMBERSHIP_FREEZE_STATUSES: MembershipFreezeStatus[] = ["REQUESTED", "ACTIVE", "ENDED"];
+
+export interface MembershipFreezeDto {
+  id: string;
+  membershipId: string;
+  ownerId: string;
+  freezeStart: string;
+  freezeEnd: string;
+  reason: string | null;
+  status: MembershipFreezeStatus;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMembershipFreezeRequest {
+  membershipId: string;
+  freezeStart: string;
+  freezeEnd: string;
+  reason?: string | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateMembershipFreezeRequest {
+  freezeStart: string;
+  freezeEnd: string;
+  reason?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdateMembershipFreezeStatusRequest {
+  status: MembershipFreezeStatus;
+}
+
+// See backend/crm-platform/src/main/resources/db/migration/V63__nutrition_logs.sql - one meal a
+// client logged. Distinct from NutritionPlan (a coach-authored target plan) - this is the
+// client's actual intake. Owner-scoped, no status field - a logged meal is a point-in-time fact.
+// proteinGrams/carbGrams/fatGrams are independently optional since not every client logs full
+// macros.
+
+export type NutritionLogMealType = "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK";
+
+export const NUTRITION_LOG_MEAL_TYPES: NutritionLogMealType[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACK"];
+
+export interface NutritionLogDto {
+  id: string;
+  contactId: string;
+  ownerId: string;
+  loggedAt: string;
+  mealType: NutritionLogMealType;
+  calories: number | null;
+  proteinGrams: number | null;
+  carbGrams: number | null;
+  fatGrams: number | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateNutritionLogRequest {
+  contactId: string;
+  loggedAt: string;
+  mealType: NutritionLogMealType;
+  calories?: number | null;
+  proteinGrams?: number | null;
+  carbGrams?: number | null;
+  fatGrams?: number | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateNutritionLogRequest {
+  loggedAt: string;
+  mealType: NutritionLogMealType;
+  calories?: number | null;
+  proteinGrams?: number | null;
+  carbGrams?: number | null;
+  fatGrams?: number | null;
+  notes?: string | null;
+}
+
+// See backend/crm-platform/src/main/resources/db/migration/V64__personal_records.sql - a
+// client's best-ever result for one exercise, in one of four record types. Co-located with
+// Exercise since PersonalRecordService reuses ExerciseService's findOrThrow. Owner-scoped. All
+// four record types share "higher is better" semantics. A new record must beat the contact's
+// current best for that exact exercise+recordType combination or the create/update is rejected
+// server-side (PERSONAL_RECORD_NOT_AN_IMPROVEMENT).
+
+export type PersonalRecordType = "ONE_REP_MAX" | "MAX_REPS" | "MAX_WEIGHT" | "MAX_DURATION_SECONDS";
+
+export const PERSONAL_RECORD_TYPES: PersonalRecordType[] = ["ONE_REP_MAX", "MAX_REPS", "MAX_WEIGHT", "MAX_DURATION_SECONDS"];
+
+export interface PersonalRecordDto {
+  id: string;
+  contactId: string;
+  exerciseId: string;
+  ownerId: string;
+  recordType: PersonalRecordType;
+  value: number;
+  achievedAt: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePersonalRecordRequest {
+  contactId: string;
+  exerciseId: string;
+  recordType: PersonalRecordType;
+  value: number;
+  achievedAt?: string | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdatePersonalRecordRequest {
+  value: number;
+  achievedAt?: string | null;
+  notes?: string | null;
+}
+
+// See backend/crm-platform/src/main/resources/db/migration/V65__refund_records.sql - a refund
+// issued against a Payment. Co-located with Payment since RefundRecordService reuses
+// PaymentService's findOrThrow. Owner-scoped (unlike Payment itself, a specific staff member
+// processes each refund). The sum of a payment's non-deleted refunds can never exceed the
+// payment's own amount (REFUND_RECORD_EXCEEDS_PAYMENT). Status is a free REQUESTED/APPROVED/
+// PROCESSED machine - moving backward is a legitimate correction - with processedAt stamped once,
+// the first time status moves to PROCESSED.
+
+export type RefundRecordReason = "CUSTOMER_REQUEST" | "BILLING_ERROR" | "SERVICE_ISSUE" | "OTHER";
+
+export const REFUND_RECORD_REASONS: RefundRecordReason[] = ["CUSTOMER_REQUEST", "BILLING_ERROR", "SERVICE_ISSUE", "OTHER"];
+
+export type RefundRecordStatus = "REQUESTED" | "APPROVED" | "PROCESSED";
+
+export const REFUND_RECORD_STATUSES: RefundRecordStatus[] = ["REQUESTED", "APPROVED", "PROCESSED"];
+
+export interface RefundRecordDto {
+  id: string;
+  paymentId: string;
+  ownerId: string;
+  amount: number;
+  reason: RefundRecordReason;
+  status: RefundRecordStatus;
+  processedAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRefundRecordRequest {
+  paymentId: string;
+  amount: number;
+  reason: RefundRecordReason;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateRefundRecordRequest {
+  amount: number;
+  reason: RefundRecordReason;
+  notes?: string | null;
+}
+
+export interface UpdateRefundRecordStatusRequest {
+  status: RefundRecordStatus;
+}
+
+// See backend/crm-platform/src/main/resources/db/migration/V66__client_feedback.sql - an
+// NPS-style rating (0-10) plus optional comments a client gave about one session, class, or the
+// business in general. Owner-scoped, no status field - a submitted rating is a point-in-time
+// fact, same shape as NutritionLog/ProgressPhoto. relatedType distinguishes what the feedback was
+// about without an FK to a specific session row.
+
+export type ClientFeedbackRelatedType = "SESSION" | "CLASS" | "GENERAL";
+
+export const CLIENT_FEEDBACK_RELATED_TYPES: ClientFeedbackRelatedType[] = ["SESSION", "CLASS", "GENERAL"];
+
+export interface ClientFeedbackDto {
+  id: string;
+  contactId: string;
+  ownerId: string;
+  npsScore: number;
+  relatedType: ClientFeedbackRelatedType;
+  submittedAt: string;
+  comments: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateClientFeedbackRequest {
+  contactId: string;
+  npsScore: number;
+  relatedType: ClientFeedbackRelatedType;
+  submittedAt: string;
+  comments?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateClientFeedbackRequest {
+  npsScore: number;
+  relatedType: ClientFeedbackRelatedType;
+  submittedAt: string;
+  comments?: string | null;
+}

@@ -152,6 +152,24 @@ import IntakeFormListPage from "./pages/intakeForms/IntakeFormListPage";
 import IntakeFormSubmissionCreatePage from "./pages/intakeFormSubmissions/IntakeFormSubmissionCreatePage";
 import IntakeFormSubmissionDetailPage from "./pages/intakeFormSubmissions/IntakeFormSubmissionDetailPage";
 import IntakeFormSubmissionListPage from "./pages/intakeFormSubmissions/IntakeFormSubmissionListPage";
+import ClassWaitlistCreatePage from "./pages/classWaitlists/ClassWaitlistCreatePage";
+import ClassWaitlistDetailPage from "./pages/classWaitlists/ClassWaitlistDetailPage";
+import ClassWaitlistListPage from "./pages/classWaitlists/ClassWaitlistListPage";
+import MembershipFreezeCreatePage from "./pages/membershipFreezes/MembershipFreezeCreatePage";
+import MembershipFreezeDetailPage from "./pages/membershipFreezes/MembershipFreezeDetailPage";
+import MembershipFreezeListPage from "./pages/membershipFreezes/MembershipFreezeListPage";
+import NutritionLogCreatePage from "./pages/nutritionLogs/NutritionLogCreatePage";
+import NutritionLogDetailPage from "./pages/nutritionLogs/NutritionLogDetailPage";
+import NutritionLogListPage from "./pages/nutritionLogs/NutritionLogListPage";
+import PersonalRecordCreatePage from "./pages/personalRecords/PersonalRecordCreatePage";
+import PersonalRecordDetailPage from "./pages/personalRecords/PersonalRecordDetailPage";
+import PersonalRecordListPage from "./pages/personalRecords/PersonalRecordListPage";
+import RefundRecordCreatePage from "./pages/refundRecords/RefundRecordCreatePage";
+import RefundRecordDetailPage from "./pages/refundRecords/RefundRecordDetailPage";
+import RefundRecordListPage from "./pages/refundRecords/RefundRecordListPage";
+import ClientFeedbackCreatePage from "./pages/clientFeedback/ClientFeedbackCreatePage";
+import ClientFeedbackDetailPage from "./pages/clientFeedback/ClientFeedbackDetailPage";
+import ClientFeedbackListPage from "./pages/clientFeedback/ClientFeedbackListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -422,6 +440,24 @@ export default function App() {
           <Route path="/intake-form-submissions" element={<IntakeFormSubmissionListPage />} />
           <Route path="/intake-form-submissions/new" element={<IntakeFormSubmissionCreatePage />} />
           <Route path="/intake-form-submissions/:intakeFormSubmissionId" element={<IntakeFormSubmissionDetailPage />} />
+          <Route path="/class-waitlists" element={<ClassWaitlistListPage />} />
+          <Route path="/class-waitlists/new" element={<ClassWaitlistCreatePage />} />
+          <Route path="/class-waitlists/:classWaitlistId" element={<ClassWaitlistDetailPage />} />
+          <Route path="/membership-freezes" element={<MembershipFreezeListPage />} />
+          <Route path="/membership-freezes/new" element={<MembershipFreezeCreatePage />} />
+          <Route path="/membership-freezes/:membershipFreezeId" element={<MembershipFreezeDetailPage />} />
+          <Route path="/nutrition-logs" element={<NutritionLogListPage />} />
+          <Route path="/nutrition-logs/new" element={<NutritionLogCreatePage />} />
+          <Route path="/nutrition-logs/:nutritionLogId" element={<NutritionLogDetailPage />} />
+          <Route path="/personal-records" element={<PersonalRecordListPage />} />
+          <Route path="/personal-records/new" element={<PersonalRecordCreatePage />} />
+          <Route path="/personal-records/:personalRecordId" element={<PersonalRecordDetailPage />} />
+          <Route path="/refund-records" element={<RefundRecordListPage />} />
+          <Route path="/refund-records/new" element={<RefundRecordCreatePage />} />
+          <Route path="/refund-records/:refundRecordId" element={<RefundRecordDetailPage />} />
+          <Route path="/client-feedback" element={<ClientFeedbackListPage />} />
+          <Route path="/client-feedback/new" element={<ClientFeedbackCreatePage />} />
+          <Route path="/client-feedback/:clientFeedbackId" element={<ClientFeedbackDetailPage />} />
           <Route path="/vendors" element={<VendorListPage />} />
           <Route path="/vendors/new" element={<VendorCreatePage />} />
           <Route path="/vendors/:vendorId" element={<VendorDetailPage />} />

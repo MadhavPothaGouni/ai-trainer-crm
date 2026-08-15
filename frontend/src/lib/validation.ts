@@ -1543,3 +1543,108 @@ export type CreateIntakeFormSubmissionFormValues = z.infer<typeof createIntakeFo
 
 export const updateIntakeFormSubmissionSchema = z.object({ ...intakeFormSubmissionFields });
 export type UpdateIntakeFormSubmissionFormValues = z.infer<typeof updateIntakeFormSubmissionSchema>;
+
+// ---- Class Waitlist (V61) ----
+
+export const createClassWaitlistSchema = z.object({
+  classSessionId: z.string().min(1, "Class session is required"),
+  contactId: z.string().min(1, "Client is required"),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+});
+export type CreateClassWaitlistFormValues = z.infer<typeof createClassWaitlistSchema>;
+
+export const updateClassWaitlistSchema = z.object({
+  notes: z.string().max(2000).optional().or(z.literal("")),
+});
+export type UpdateClassWaitlistFormValues = z.infer<typeof updateClassWaitlistSchema>;
+
+// ---- Membership Freeze (V62) ----
+
+const membershipFreezeFields = {
+  freezeStart: z.string().min(1, "Start date is required"),
+  freezeEnd: z.string().min(1, "End date is required"),
+  reason: z.string().max(500).optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+/** freezeEnd must be after freezeStart - both are plain "YYYY-MM-DD" date strings, which compare correctly lexicographically. */
+function refineFreezeRange<T extends { freezeStart: string; freezeEnd: string }>(data: T): boolean {
+  return !data.freezeStart || !data.freezeEnd || data.freezeEnd > data.freezeStart;
+}
+
+export const createMembershipFreezeSchema = z
+  .object({ membershipId: z.string().min(1, "Membership is required"), ...membershipFreezeFields })
+  .refine(refineFreezeRange, { message: "End date must be after the start date", path: ["freezeEnd"] });
+export type CreateMembershipFreezeFormValues = z.infer<typeof createMembershipFreezeSchema>;
+
+export const updateMembershipFreezeSchema = z.object({ ...membershipFreezeFields }).refine(refineFreezeRange, {
+  message: "End date must be after the start date",
+  path: ["freezeEnd"],
+});
+export type UpdateMembershipFreezeFormValues = z.infer<typeof updateMembershipFreezeSchema>;
+
+// ---- Nutrition Log (V63) ----
+
+const nutritionLogFields = {
+  loggedAt: z.string().min(1, "Date/time is required"),
+  mealType: z.string().min(1, "Meal type is required"),
+  calories: optionalNumberString,
+  proteinGrams: optionalNumberString,
+  carbGrams: optionalNumberString,
+  fatGrams: optionalNumberString,
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createNutritionLogSchema = z.object({ contactId: z.string().min(1, "Client is required"), ...nutritionLogFields });
+export type CreateNutritionLogFormValues = z.infer<typeof createNutritionLogSchema>;
+
+export const updateNutritionLogSchema = z.object({ ...nutritionLogFields });
+export type UpdateNutritionLogFormValues = z.infer<typeof updateNutritionLogSchema>;
+
+// ---- Personal Record (V64) ----
+
+export const createPersonalRecordSchema = z.object({
+  contactId: z.string().min(1, "Client is required"),
+  exerciseId: z.string().min(1, "Exercise is required"),
+  recordType: z.string().min(1, "Record type is required"),
+  value: z.string().min(1, "Value is required"),
+  achievedAt: z.string().optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+});
+export type CreatePersonalRecordFormValues = z.infer<typeof createPersonalRecordSchema>;
+
+export const updatePersonalRecordSchema = z.object({
+  value: z.string().min(1, "Value is required"),
+  achievedAt: z.string().optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+});
+export type UpdatePersonalRecordFormValues = z.infer<typeof updatePersonalRecordSchema>;
+
+// ---- Refund Record (V65) ----
+
+const refundRecordFields = {
+  amount: z.string().min(1, "Amount is required"),
+  reason: z.string().min(1, "Reason is required"),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createRefundRecordSchema = z.object({ paymentId: z.string().min(1, "Payment is required"), ...refundRecordFields });
+export type CreateRefundRecordFormValues = z.infer<typeof createRefundRecordSchema>;
+
+export const updateRefundRecordSchema = z.object({ ...refundRecordFields });
+export type UpdateRefundRecordFormValues = z.infer<typeof updateRefundRecordSchema>;
+
+// ---- Client Feedback (V66) ----
+
+const clientFeedbackFields = {
+  npsScore: z.string().min(1, "Score is required"),
+  relatedType: z.string().min(1, "Type is required"),
+  submittedAt: z.string().min(1, "Date/time is required"),
+  comments: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createClientFeedbackSchema = z.object({ contactId: z.string().min(1, "Client is required"), ...clientFeedbackFields });
+export type CreateClientFeedbackFormValues = z.infer<typeof createClientFeedbackSchema>;
+
+export const updateClientFeedbackSchema = z.object({ ...clientFeedbackFields });
+export type UpdateClientFeedbackFormValues = z.infer<typeof updateClientFeedbackSchema>;
