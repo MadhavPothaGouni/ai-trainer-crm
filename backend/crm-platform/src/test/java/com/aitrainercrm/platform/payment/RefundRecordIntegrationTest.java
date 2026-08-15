@@ -205,7 +205,7 @@ class RefundRecordIntegrationTest extends AbstractIntegrationTest {
                 .perform(authed(post("/api/v1/products"), ownerToken)
                         .content(
                                 """
-                                {"name":"Refund Test Product","sku":"SKU-REFUND-%d","price":%s,"currency":"USD"}
+                                {"name":"Refund Test Product","sku":"SKU-REFUND-%d","unitPrice":%s,"currency":"USD"}
                                 """
                                         .formatted(System.nanoTime(), amount)))
                 .andExpect(status().isCreated())

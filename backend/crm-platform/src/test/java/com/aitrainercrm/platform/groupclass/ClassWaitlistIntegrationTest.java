@@ -17,6 +17,7 @@ import com.aitrainercrm.platform.user.entity.User;
 import com.aitrainercrm.platform.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -105,7 +106,13 @@ class ClassWaitlistIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("CONVERTED"))
                 .andReturn();
-        assertThat(readField(convertedResult, "data", "notifiedAt")).isEqualTo(firstNotifiedAt);
+        // Compared via Instant equality (not raw string equality) since the first response returns
+        // the in-memory Instant.now() at full nanosecond precision while this second response was
+        // re-fetched from Postgres, whose timestamptz column only holds microsecond precision -
+        // the two ISO strings can legitimately differ in their last digit while still being the
+        // same instant once Postgres's rounding is accounted for.
+        assertThat(Instant.parse(readField(convertedResult, "data", "notifiedAt")))
+                .isCloseTo(Instant.parse(firstNotifiedAt), org.assertj.core.api.Assertions.within(1, java.time.temporal.ChronoUnit.MICROS));
 
         // Free state machine: moving CONVERTED back to WAITING is a legitimate correction.
         mockMvc.perform(authed(patch("/api/v1/class-waitlists/" + jamieEntryId + "/status"), ownerToken).content("{\"status\":\"WAITING\"}"))
