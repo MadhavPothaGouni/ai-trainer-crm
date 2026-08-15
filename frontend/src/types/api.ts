@@ -3113,3 +3113,246 @@ export interface UpdateClientDocumentRequest {
 export interface UpdateClientDocumentStatusRequest {
   status: ClientDocumentStatus;
 }
+
+//
+// See backend/crm-platform/src/main/resources/db/migration/V49__time_off_requests.sql - staff
+// PTO requests, complementing Shift Scheduling. Single owner-scoped entity, same shape as
+// ClientGoal/Referral/ClientDocument. approvedAt is stamped once via PATCH .../status, the first
+// time status moves to APPROVED.
+
+export type TimeOffRequestType = "VACATION" | "SICK" | "PERSONAL" | "UNPAID" | "OTHER";
+
+export const TIME_OFF_REQUEST_TYPES: TimeOffRequestType[] = ["VACATION", "SICK", "PERSONAL", "UNPAID", "OTHER"];
+
+export type TimeOffRequestStatus = "PENDING" | "APPROVED" | "DENIED" | "CANCELLED";
+
+export const TIME_OFF_REQUEST_STATUSES: TimeOffRequestStatus[] = ["PENDING", "APPROVED", "DENIED", "CANCELLED"];
+
+export interface TimeOffRequestDto {
+  id: string;
+  ownerId: string;
+  startDate: string;
+  endDate: string;
+  type: TimeOffRequestType;
+  status: TimeOffRequestStatus;
+  approvedAt: string | null;
+  reason: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTimeOffRequestRequest {
+  startDate: string;
+  endDate: string;
+  type: TimeOffRequestType;
+  reason?: string | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateTimeOffRequestRequest {
+  startDate: string;
+  endDate: string;
+  type: TimeOffRequestType;
+  reason?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdateTimeOffRequestStatusRequest {
+  status: TimeOffRequestStatus;
+}
+
+//
+// See backend/crm-platform/src/main/resources/db/migration/V50__lockers.sql - physical facility
+// storage, complementing Equipment (training/maintenance gear, not client-facing storage). Same
+// catalog/occurrence shape as Vendor/PurchaseOrder: Locker is the shared organization catalog of
+// physical lockers (no OWN scope); LockerAssignment is the owner-scoped occurrence, one client's
+// assignment to a locker, with returnedAt stamped once on entering RETURNED.
+
+export type LockerSize = "SMALL" | "MEDIUM" | "LARGE";
+
+export const LOCKER_SIZES: LockerSize[] = ["SMALL", "MEDIUM", "LARGE"];
+
+export type LockerStatus = "ACTIVE" | "OUT_OF_SERVICE";
+
+export const LOCKER_STATUSES: LockerStatus[] = ["ACTIVE", "OUT_OF_SERVICE"];
+
+export interface LockerDto {
+  id: string;
+  label: string;
+  location: string | null;
+  size: LockerSize;
+  status: LockerStatus;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLockerRequest {
+  label: string;
+  location?: string | null;
+  size: LockerSize;
+  notes?: string | null;
+}
+
+export interface UpdateLockerRequest {
+  label: string;
+  location?: string | null;
+  size: LockerSize;
+  status: LockerStatus;
+  notes?: string | null;
+}
+
+export type LockerAssignmentStatus = "ACTIVE" | "RETURNED" | "EXPIRED";
+
+export const LOCKER_ASSIGNMENT_STATUSES: LockerAssignmentStatus[] = ["ACTIVE", "RETURNED", "EXPIRED"];
+
+export interface LockerAssignmentDto {
+  id: string;
+  lockerId: string;
+  contactId: string;
+  ownerId: string;
+  assignedAt: string;
+  expiresAt: string | null;
+  status: LockerAssignmentStatus;
+  returnedAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLockerAssignmentRequest {
+  lockerId: string;
+  contactId: string;
+  expiresAt?: string | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateLockerAssignmentRequest {
+  expiresAt?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdateLockerAssignmentStatusRequest {
+  status: LockerAssignmentStatus;
+}
+
+//
+// See backend/crm-platform/src/main/resources/db/migration/V51__promo_codes.sql - discount codes
+// clients redeem, and the record of each redemption. Same catalog/occurrence shape as
+// Locker/LockerAssignment: PromoCode is the shared organization catalog (no OWN scope);
+// PromoRedemption is the owner-scoped occurrence, but unlike its siblings has no status lifecycle
+// - a redemption is a point-in-time fact, so there's no PATCH .../status endpoint.
+
+export type PromoCodeDiscountType = "PERCENTAGE" | "FIXED_AMOUNT";
+
+export const PROMO_CODE_DISCOUNT_TYPES: PromoCodeDiscountType[] = ["PERCENTAGE", "FIXED_AMOUNT"];
+
+export interface PromoCodeDto {
+  id: string;
+  code: string;
+  description: string | null;
+  discountType: PromoCodeDiscountType;
+  discountValue: number;
+  maxRedemptions: number | null;
+  active: boolean;
+  expiresAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePromoCodeRequest {
+  code: string;
+  description?: string | null;
+  discountType: PromoCodeDiscountType;
+  discountValue: number;
+  maxRedemptions?: number | null;
+  expiresAt?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdatePromoCodeRequest {
+  code: string;
+  description?: string | null;
+  discountType: PromoCodeDiscountType;
+  discountValue: number;
+  maxRedemptions?: number | null;
+  active: boolean;
+  expiresAt?: string | null;
+  notes?: string | null;
+}
+
+export interface PromoRedemptionDto {
+  id: string;
+  promoCodeId: string;
+  contactId: string;
+  ownerId: string;
+  redeemedAt: string;
+  orderId: string | null;
+  amountDiscounted: number | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePromoRedemptionRequest {
+  promoCodeId: string;
+  contactId: string;
+  orderId?: string | null;
+  amountDiscounted?: number | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdatePromoRedemptionRequest {
+  orderId?: string | null;
+  amountDiscounted?: number | null;
+  notes?: string | null;
+}
+
+//
+// See backend/crm-platform/src/main/resources/db/migration/V52__client_check_ins.sql - a facility
+// access log entry, distinct from ClassAttendance (tied to one class session) and TrainingSession
+// (tied to one coaching appointment). Single owner-scoped entity, same shape as
+// ClientGoal/Referral/TimeOffRequest. checkedOutAt is stamped once via PATCH .../status, the first
+// time status moves to CHECKED_OUT.
+
+export type ClientCheckInStatus = "CHECKED_IN" | "CHECKED_OUT";
+
+export const CLIENT_CHECK_IN_STATUSES: ClientCheckInStatus[] = ["CHECKED_IN", "CHECKED_OUT"];
+
+export type ClientCheckInMethod = "MANUAL" | "KIOSK" | "MOBILE_APP" | "KEY_FOB";
+
+export const CLIENT_CHECK_IN_METHODS: ClientCheckInMethod[] = ["MANUAL", "KIOSK", "MOBILE_APP", "KEY_FOB"];
+
+export interface ClientCheckInDto {
+  id: string;
+  contactId: string;
+  ownerId: string;
+  checkedInAt: string;
+  status: ClientCheckInStatus;
+  checkedOutAt: string | null;
+  method: ClientCheckInMethod;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateClientCheckInRequest {
+  contactId: string;
+  method: ClientCheckInMethod;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateClientCheckInRequest {
+  method: ClientCheckInMethod;
+  notes?: string | null;
+}
+
+export interface UpdateClientCheckInStatusRequest {
+  status: ClientCheckInStatus;
+}

@@ -104,6 +104,24 @@ import PurchaseOrderListPage from "./pages/purchaseOrders/PurchaseOrderListPage"
 import ClientDocumentCreatePage from "./pages/clientDocuments/ClientDocumentCreatePage";
 import ClientDocumentDetailPage from "./pages/clientDocuments/ClientDocumentDetailPage";
 import ClientDocumentListPage from "./pages/clientDocuments/ClientDocumentListPage";
+import TimeOffRequestCreatePage from "./pages/timeOffRequests/TimeOffRequestCreatePage";
+import TimeOffRequestDetailPage from "./pages/timeOffRequests/TimeOffRequestDetailPage";
+import TimeOffRequestListPage from "./pages/timeOffRequests/TimeOffRequestListPage";
+import LockerCreatePage from "./pages/lockers/LockerCreatePage";
+import LockerDetailPage from "./pages/lockers/LockerDetailPage";
+import LockerListPage from "./pages/lockers/LockerListPage";
+import LockerAssignmentCreatePage from "./pages/lockerAssignments/LockerAssignmentCreatePage";
+import LockerAssignmentDetailPage from "./pages/lockerAssignments/LockerAssignmentDetailPage";
+import LockerAssignmentListPage from "./pages/lockerAssignments/LockerAssignmentListPage";
+import PromoCodeCreatePage from "./pages/promoCodes/PromoCodeCreatePage";
+import PromoCodeDetailPage from "./pages/promoCodes/PromoCodeDetailPage";
+import PromoCodeListPage from "./pages/promoCodes/PromoCodeListPage";
+import PromoRedemptionCreatePage from "./pages/promoRedemptions/PromoRedemptionCreatePage";
+import PromoRedemptionDetailPage from "./pages/promoRedemptions/PromoRedemptionDetailPage";
+import PromoRedemptionListPage from "./pages/promoRedemptions/PromoRedemptionListPage";
+import ClientCheckInCreatePage from "./pages/clientCheckIns/ClientCheckInCreatePage";
+import ClientCheckInDetailPage from "./pages/clientCheckIns/ClientCheckInDetailPage";
+import ClientCheckInListPage from "./pages/clientCheckIns/ClientCheckInListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -326,6 +344,24 @@ export default function App() {
           <Route path="/referrals" element={<ReferralListPage />} />
           <Route path="/referrals/new" element={<ReferralCreatePage />} />
           <Route path="/referrals/:referralId" element={<ReferralDetailPage />} />
+          <Route path="/time-off-requests" element={<TimeOffRequestListPage />} />
+          <Route path="/time-off-requests/new" element={<TimeOffRequestCreatePage />} />
+          <Route path="/time-off-requests/:timeOffRequestId" element={<TimeOffRequestDetailPage />} />
+          <Route path="/lockers" element={<LockerListPage />} />
+          <Route path="/lockers/new" element={<LockerCreatePage />} />
+          <Route path="/lockers/:lockerId" element={<LockerDetailPage />} />
+          <Route path="/locker-assignments" element={<LockerAssignmentListPage />} />
+          <Route path="/locker-assignments/new" element={<LockerAssignmentCreatePage />} />
+          <Route path="/locker-assignments/:lockerAssignmentId" element={<LockerAssignmentDetailPage />} />
+          <Route path="/promo-codes" element={<PromoCodeListPage />} />
+          <Route path="/promo-codes/new" element={<PromoCodeCreatePage />} />
+          <Route path="/promo-codes/:promoCodeId" element={<PromoCodeDetailPage />} />
+          <Route path="/promo-redemptions" element={<PromoRedemptionListPage />} />
+          <Route path="/promo-redemptions/new" element={<PromoRedemptionCreatePage />} />
+          <Route path="/promo-redemptions/:promoRedemptionId" element={<PromoRedemptionDetailPage />} />
+          <Route path="/client-check-ins" element={<ClientCheckInListPage />} />
+          <Route path="/client-check-ins/new" element={<ClientCheckInCreatePage />} />
+          <Route path="/client-check-ins/:clientCheckInId" element={<ClientCheckInDetailPage />} />
           <Route path="/vendors" element={<VendorListPage />} />
           <Route path="/vendors/new" element={<VendorCreatePage />} />
           <Route path="/vendors/:vendorId" element={<VendorDetailPage />} />

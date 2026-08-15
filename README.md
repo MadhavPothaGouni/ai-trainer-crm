@@ -186,8 +186,11 @@ auto-calculates rep commission on closed-won deals; Sales Goals (rep/team
 quotas); Forecasting (daily pipeline snapshots for trend reporting); a
 Referral Program (clients referring people they know, worked through
 PENDING → CONTACTED → CONVERTED, with an optional reward issued once and
-never re-issued); and a Vendor catalog with Purchase Orders (DRAFT →
-ORDERED → RECEIVED, received-at timestamp stamped once).
+never re-issued); a Vendor catalog with Purchase Orders (DRAFT →
+ORDERED → RECEIVED, received-at timestamp stamped once); and a Promo Code
+catalog with Redemptions (discount codes checked for active/unexpired/
+under-cap before a redemption is recorded, with amount-discounted tracked
+per redemption).
 
 **Support & service** — Support Tickets (free, non-linear status
 transitions, since reopening a resolved ticket is normal); SLA policies
@@ -204,9 +207,15 @@ scheduled Class Sessions, and a capacity-enforced attendance roster —
 distinct from the 1:1 Training Session/Booking Link); an Equipment
 inventory with Maintenance Logs tracking service history per asset; Staff
 Shift Scheduling (recurring shift templates plus actual scheduled shifts,
-with clock-in/out timestamps stamped once per shift); and Client
-Documents (waivers, medical clearances, photo releases, tracked
-PENDING → SIGNED with a signed-at timestamp stamped once).
+with clock-in/out timestamps stamped once per shift); Time-Off Requests
+(staff PTO, PENDING → APPROVED/DENIED, with an approved-at timestamp
+stamped once); Client Documents (waivers, medical clearances, photo
+releases, tracked PENDING → SIGNED with a signed-at timestamp stamped
+once); a Locker catalog with Locker Assignments (which client has which
+locker, ACTIVE → RETURNED/EXPIRED, with a returned-at timestamp stamped
+once); and Client Check-Ins (a facility access log distinct from Class
+Attendance/Training Sessions, CHECKED_IN → CHECKED_OUT with a
+checked-out-at timestamp stamped once).
 
 **Marketing & content** — Campaigns with member tracking (Leads/Contacts
 through an engagement funnel) and per-status stats; Email Templates;

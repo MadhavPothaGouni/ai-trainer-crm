@@ -1260,3 +1260,105 @@ export type CreateClientDocumentFormValues = z.infer<typeof createClientDocument
 
 export const updateClientDocumentSchema = z.object({ ...clientDocumentFields });
 export type UpdateClientDocumentFormValues = z.infer<typeof updateClientDocumentSchema>;
+
+// ---- Time-Off Request (V49) ----
+
+const timeOffRequestDateFields = {
+  startDate: z.string().min(1, "Start date is required"),
+  endDate: z.string().min(1, "End date is required"),
+  type: z.string().min(1, "Type is required"),
+  reason: z.string().max(2000).optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+function refineTimeOffDates<T extends { startDate: string; endDate: string }>(data: T): boolean {
+  if (!data.startDate || !data.endDate) return true;
+  return data.endDate >= data.startDate;
+}
+
+export const createTimeOffRequestSchema = z
+  .object({ ...timeOffRequestDateFields })
+  .refine(refineTimeOffDates, { message: "End date must be on or after the start date", path: ["endDate"] });
+export type CreateTimeOffRequestFormValues = z.infer<typeof createTimeOffRequestSchema>;
+
+export const updateTimeOffRequestSchema = z.object({ ...timeOffRequestDateFields }).refine(refineTimeOffDates, {
+  message: "End date must be on or after the start date",
+  path: ["endDate"],
+});
+export type UpdateTimeOffRequestFormValues = z.infer<typeof updateTimeOffRequestSchema>;
+
+// ---- Locker / Locker Assignment (V50) ----
+
+const lockerFields = {
+  label: z.string().min(1, "Label is required").max(50),
+  location: z.string().max(200).optional().or(z.literal("")),
+  size: z.string().min(1, "Size is required"),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createLockerSchema = z.object({ ...lockerFields });
+export type CreateLockerFormValues = z.infer<typeof createLockerSchema>;
+
+export const updateLockerSchema = z.object({ ...lockerFields, status: z.string().min(1, "Status is required") });
+export type UpdateLockerFormValues = z.infer<typeof updateLockerSchema>;
+
+const lockerAssignmentFields = {
+  expiresAt: z.string().optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createLockerAssignmentSchema = z.object({
+  lockerId: z.string().min(1, "Locker is required"),
+  contactId: z.string().min(1, "Client is required"),
+  ...lockerAssignmentFields,
+});
+export type CreateLockerAssignmentFormValues = z.infer<typeof createLockerAssignmentSchema>;
+
+export const updateLockerAssignmentSchema = z.object({ ...lockerAssignmentFields });
+export type UpdateLockerAssignmentFormValues = z.infer<typeof updateLockerAssignmentSchema>;
+
+// ---- Promo Code / Promo Redemption (V51) ----
+
+const promoCodeFields = {
+  code: z.string().min(1, "Code is required").max(50),
+  description: z.string().max(500).optional().or(z.literal("")),
+  discountType: z.string().min(1, "Discount type is required"),
+  discountValue: z.string().min(1, "Discount value is required"),
+  maxRedemptions: z.string().optional().or(z.literal("")),
+  expiresAt: z.string().optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createPromoCodeSchema = z.object({ ...promoCodeFields });
+export type CreatePromoCodeFormValues = z.infer<typeof createPromoCodeSchema>;
+
+export const updatePromoCodeSchema = z.object({ ...promoCodeFields, active: z.boolean().optional() });
+export type UpdatePromoCodeFormValues = z.infer<typeof updatePromoCodeSchema>;
+
+const promoRedemptionFields = {
+  amountDiscounted: optionalNumberString,
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createPromoRedemptionSchema = z.object({
+  promoCodeId: z.string().min(1, "Promo code is required"),
+  contactId: z.string().min(1, "Client is required"),
+  ...promoRedemptionFields,
+});
+export type CreatePromoRedemptionFormValues = z.infer<typeof createPromoRedemptionSchema>;
+
+export const updatePromoRedemptionSchema = z.object({ ...promoRedemptionFields });
+export type UpdatePromoRedemptionFormValues = z.infer<typeof updatePromoRedemptionSchema>;
+
+// ---- Client Check-In (V52) ----
+
+const clientCheckInFields = {
+  method: z.string().min(1, "Method is required"),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createClientCheckInSchema = z.object({ contactId: z.string().min(1, "Client is required"), ...clientCheckInFields });
+export type CreateClientCheckInFormValues = z.infer<typeof createClientCheckInSchema>;
+
+export const updateClientCheckInSchema = z.object({ ...clientCheckInFields });
+export type UpdateClientCheckInFormValues = z.infer<typeof updateClientCheckInSchema>;
