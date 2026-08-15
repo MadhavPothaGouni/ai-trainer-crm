@@ -80,6 +80,12 @@ import GroupClassListPage from "./pages/groupClasses/GroupClassListPage";
 import ClassSessionCreatePage from "./pages/classSessions/ClassSessionCreatePage";
 import ClassSessionDetailPage from "./pages/classSessions/ClassSessionDetailPage";
 import ClassSessionListPage from "./pages/classSessions/ClassSessionListPage";
+import EquipmentCreatePage from "./pages/equipment/EquipmentCreatePage";
+import EquipmentDetailPage from "./pages/equipment/EquipmentDetailPage";
+import EquipmentListPage from "./pages/equipment/EquipmentListPage";
+import MaintenanceLogCreatePage from "./pages/maintenanceLogs/MaintenanceLogCreatePage";
+import MaintenanceLogDetailPage from "./pages/maintenanceLogs/MaintenanceLogDetailPage";
+import MaintenanceLogListPage from "./pages/maintenanceLogs/MaintenanceLogListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -287,6 +293,12 @@ export default function App() {
           <Route path="/class-sessions" element={<ClassSessionListPage />} />
           <Route path="/class-sessions/new" element={<ClassSessionCreatePage />} />
           <Route path="/class-sessions/:classSessionId" element={<ClassSessionDetailPage />} />
+          <Route path="/equipment" element={<EquipmentListPage />} />
+          <Route path="/equipment/new" element={<EquipmentCreatePage />} />
+          <Route path="/equipment/:equipmentId" element={<EquipmentDetailPage />} />
+          <Route path="/maintenance-logs" element={<MaintenanceLogListPage />} />
+          <Route path="/maintenance-logs/new" element={<MaintenanceLogCreatePage />} />
+          <Route path="/maintenance-logs/:maintenanceLogId" element={<MaintenanceLogDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />

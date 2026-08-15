@@ -74,6 +74,8 @@ const CRM_NAV_GROUPS: NavGroup[] = [
       { to: "/memberships", label: "Memberships" },
       { to: "/group-classes", label: "Group Classes" },
       { to: "/class-sessions", label: "Class Sessions" },
+      { to: "/equipment", label: "Equipment" },
+      { to: "/maintenance-logs", label: "Maintenance Logs" },
       { to: "/training-sessions", label: "Training Sessions" },
       { to: "/nutrition-plans", label: "Nutrition Plans" },
       { to: "/body-measurements", label: "Body Measurements" },

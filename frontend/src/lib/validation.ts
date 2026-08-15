@@ -1128,3 +1128,34 @@ export const createClassAttendanceSchema = z.object({
   notes: z.string().max(500).optional().or(z.literal("")),
 });
 export type CreateClassAttendanceFormValues = z.infer<typeof createClassAttendanceSchema>;
+
+// ---- Equipment / Maintenance Log (V44) ----
+
+const equipmentFields = {
+  name: z.string().min(1, "Name is required").max(200),
+  category: z.string().max(100).optional().or(z.literal("")),
+  serialNumber: z.string().max(100).optional().or(z.literal("")),
+  location: z.string().max(200).optional().or(z.literal("")),
+  purchaseDate: z.string().optional().or(z.literal("")),
+  purchasePrice: optionalNumberString,
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createEquipmentSchema = z.object({ ...equipmentFields });
+export type CreateEquipmentFormValues = z.infer<typeof createEquipmentSchema>;
+
+export const updateEquipmentSchema = z.object({ ...equipmentFields, status: z.string().min(1, "Status is required") });
+export type UpdateEquipmentFormValues = z.infer<typeof updateEquipmentSchema>;
+
+export const createMaintenanceLogSchema = z.object({
+  equipmentId: z.string().min(1, "Equipment is required"),
+  performedAt: z.string().min(1, "Date is required"),
+  type: z.string().min(1, "Type is required"),
+  cost: optionalNumberString,
+  notes: z.string().max(2000).optional().or(z.literal("")),
+  nextDueDate: z.string().optional().or(z.literal("")),
+});
+export type CreateMaintenanceLogFormValues = z.infer<typeof createMaintenanceLogSchema>;
+
+export const updateMaintenanceLogSchema = createMaintenanceLogSchema.omit({ equipmentId: true });
+export type UpdateMaintenanceLogFormValues = z.infer<typeof updateMaintenanceLogSchema>;

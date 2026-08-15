@@ -2768,3 +2768,83 @@ export interface UpdateClassAttendanceRequest {
 export interface UpdateClassAttendanceStatusRequest {
   status: ClassAttendanceStatus;
 }
+
+//
+// See backend/crm-platform/README.md's module layout for `equipment` (V44) - physical asset
+// inventory and its service history. Equipment is the shared organization catalog (no OWN scope,
+// same as Product/GroupClass). MaintenanceLog is an owner-scoped record of one service event -
+// it has no status field of its own, since it's a record of something that already happened.
+
+export type EquipmentStatus = "ACTIVE" | "OUT_OF_SERVICE" | "RETIRED";
+
+export const EQUIPMENT_STATUSES: EquipmentStatus[] = ["ACTIVE", "OUT_OF_SERVICE", "RETIRED"];
+
+export type MaintenanceLogType = "ROUTINE" | "REPAIR" | "INSPECTION" | "CLEANING";
+
+export const MAINTENANCE_LOG_TYPES: MaintenanceLogType[] = ["ROUTINE", "REPAIR", "INSPECTION", "CLEANING"];
+
+export interface EquipmentDto {
+  id: string;
+  name: string;
+  category: string | null;
+  serialNumber: string | null;
+  location: string | null;
+  status: EquipmentStatus;
+  purchaseDate: string | null;
+  purchasePrice: number | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateEquipmentRequest {
+  name: string;
+  category?: string | null;
+  serialNumber?: string | null;
+  location?: string | null;
+  purchaseDate?: string | null;
+  purchasePrice?: number | null;
+  notes?: string | null;
+}
+
+export interface UpdateEquipmentRequest {
+  name: string;
+  category?: string | null;
+  serialNumber?: string | null;
+  location?: string | null;
+  status: EquipmentStatus;
+  purchaseDate?: string | null;
+  purchasePrice?: number | null;
+  notes?: string | null;
+}
+
+export interface MaintenanceLogDto {
+  id: string;
+  equipmentId: string;
+  ownerId: string;
+  performedAt: string;
+  type: MaintenanceLogType;
+  cost: number | null;
+  notes: string | null;
+  nextDueDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMaintenanceLogRequest {
+  equipmentId: string;
+  performedAt: string;
+  type: MaintenanceLogType;
+  cost?: number | null;
+  notes?: string | null;
+  nextDueDate?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateMaintenanceLogRequest {
+  performedAt: string;
+  type: MaintenanceLogType;
+  cost?: number | null;
+  notes?: string | null;
+  nextDueDate?: string | null;
+}

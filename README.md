@@ -195,9 +195,10 @@ view counts).
 enrollment and credential awarding; Client Goals (coach-defined measurable
 objectives); Training Sessions with per-session exercises logged; an
 Exercise library; Nutrition Plans; Body Measurement check-ins; Booking
-Links for client self-scheduling; and Group Classes (a class-type catalog,
+Links for client self-scheduling; Group Classes (a class-type catalog,
 scheduled Class Sessions, and a capacity-enforced attendance roster —
-distinct from the 1:1 Training Session/Booking Link).
+distinct from the 1:1 Training Session/Booking Link); and an Equipment
+inventory with Maintenance Logs tracking service history per asset.
 
 **Marketing & content** — Campaigns with member tracking (Leads/Contacts
 through an engagement funnel) and per-status stats; Email Templates;
