@@ -2657,3 +2657,114 @@ export interface UpdateMembershipRequest {
 export interface UpdateMembershipStatusRequest {
   status: MembershipStatus;
 }
+
+//
+// See backend/crm-platform/README.md's module layout for `groupclass` (V43) - group fitness
+// classes as opposed to the 1:1 TrainingSession/BookingLink. Three resources, a catalog/
+// occurrence/roster shape: GroupClass is the shared organization catalog of class types (no OWN
+// scope, same as Product/MembershipPlan); ClassSession is one scheduled occurrence, owner-scoped
+// to the instructor running it; ClassAttendance is one contact's roster row on a session, also
+// owner-scoped (copied from the session's owner, never independently assigned).
+
+export type ClassSessionStatus = "SCHEDULED" | "CANCELLED" | "COMPLETED";
+
+export const CLASS_SESSION_STATUSES: ClassSessionStatus[] = ["SCHEDULED", "CANCELLED", "COMPLETED"];
+
+export type ClassAttendanceStatus = "REGISTERED" | "ATTENDED" | "NO_SHOW" | "CANCELLED";
+
+export const CLASS_ATTENDANCE_STATUSES: ClassAttendanceStatus[] = ["REGISTERED", "ATTENDED", "NO_SHOW", "CANCELLED"];
+
+export interface GroupClassDto {
+  id: string;
+  name: string;
+  description: string | null;
+  defaultInstructorId: string | null;
+  durationMinutes: number;
+  /** Null means unlimited attendance for sessions of this class type unless a session overrides it. */
+  capacity: number | null;
+  location: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateGroupClassRequest {
+  name: string;
+  description?: string | null;
+  defaultInstructorId?: string | null;
+  durationMinutes: number;
+  capacity?: number | null;
+  location?: string | null;
+}
+
+export interface UpdateGroupClassRequest {
+  name: string;
+  description?: string | null;
+  defaultInstructorId?: string | null;
+  durationMinutes: number;
+  capacity?: number | null;
+  location?: string | null;
+  active: boolean;
+}
+
+export interface ClassSessionDto {
+  id: string;
+  groupClassId: string;
+  ownerId: string;
+  startsAt: string;
+  endsAt: string;
+  /** Null means "use the parent GroupClass's capacity"; a number (including 0) overrides it for just this session. */
+  capacityOverride: number | null;
+  status: ClassSessionStatus;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateClassSessionRequest {
+  groupClassId: string;
+  startsAt: string;
+  endsAt: string;
+  capacityOverride?: number | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateClassSessionRequest {
+  startsAt: string;
+  endsAt: string;
+  capacityOverride?: number | null;
+  notes?: string | null;
+}
+
+export interface UpdateClassSessionStatusRequest {
+  status: ClassSessionStatus;
+}
+
+export interface ClassAttendanceDto {
+  id: string;
+  classSessionId: string;
+  contactId: string;
+  ownerId: string;
+  status: ClassAttendanceStatus;
+  registeredAt: string;
+  /** Stamped once, the first time status moves to ATTENDED - never overwritten by a later correction. */
+  checkedInAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateClassAttendanceRequest {
+  classSessionId: string;
+  contactId: string;
+  notes?: string | null;
+}
+
+export interface UpdateClassAttendanceRequest {
+  notes?: string | null;
+}
+
+export interface UpdateClassAttendanceStatusRequest {
+  status: ClassAttendanceStatus;
+}

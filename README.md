@@ -194,8 +194,10 @@ view counts).
 **Training & fitness coaching** — Course/Certification management with
 enrollment and credential awarding; Client Goals (coach-defined measurable
 objectives); Training Sessions with per-session exercises logged; an
-Exercise library; Nutrition Plans; Body Measurement check-ins; and Booking
-Links for client self-scheduling.
+Exercise library; Nutrition Plans; Body Measurement check-ins; Booking
+Links for client self-scheduling; and Group Classes (a class-type catalog,
+scheduled Class Sessions, and a capacity-enforced attendance roster —
+distinct from the 1:1 Training Session/Booking Link).
 
 **Marketing & content** — Campaigns with member tracking (Leads/Contacts
 through an engagement funnel) and per-status stats; Email Templates;

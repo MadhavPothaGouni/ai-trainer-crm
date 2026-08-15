@@ -74,6 +74,12 @@ import MembershipPlanListPage from "./pages/membershipPlans/MembershipPlanListPa
 import MembershipCreatePage from "./pages/memberships/MembershipCreatePage";
 import MembershipDetailPage from "./pages/memberships/MembershipDetailPage";
 import MembershipListPage from "./pages/memberships/MembershipListPage";
+import GroupClassCreatePage from "./pages/groupClasses/GroupClassCreatePage";
+import GroupClassDetailPage from "./pages/groupClasses/GroupClassDetailPage";
+import GroupClassListPage from "./pages/groupClasses/GroupClassListPage";
+import ClassSessionCreatePage from "./pages/classSessions/ClassSessionCreatePage";
+import ClassSessionDetailPage from "./pages/classSessions/ClassSessionDetailPage";
+import ClassSessionListPage from "./pages/classSessions/ClassSessionListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -275,6 +281,12 @@ export default function App() {
           <Route path="/memberships" element={<MembershipListPage />} />
           <Route path="/memberships/new" element={<MembershipCreatePage />} />
           <Route path="/memberships/:membershipId" element={<MembershipDetailPage />} />
+          <Route path="/group-classes" element={<GroupClassListPage />} />
+          <Route path="/group-classes/new" element={<GroupClassCreatePage />} />
+          <Route path="/group-classes/:groupClassId" element={<GroupClassDetailPage />} />
+          <Route path="/class-sessions" element={<ClassSessionListPage />} />
+          <Route path="/class-sessions/new" element={<ClassSessionCreatePage />} />
+          <Route path="/class-sessions/:classSessionId" element={<ClassSessionDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />

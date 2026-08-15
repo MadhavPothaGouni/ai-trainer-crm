@@ -1077,3 +1077,54 @@ export const updateMembershipSchema = z.object({
   notes: z.string().max(2000).optional().or(z.literal("")),
 });
 export type UpdateMembershipFormValues = z.infer<typeof updateMembershipSchema>;
+
+// ---- Group Class / Class Session / Class Attendance (V43) ----
+
+const groupClassFields = {
+  name: z.string().min(1, "Name is required").max(200),
+  description: z.string().max(2000).optional().or(z.literal("")),
+  durationMinutes: requiredPositiveIntegerString,
+  capacity: z
+    .string()
+    .optional()
+    .refine((value) => value === undefined || value === "" || (Number.isInteger(Number(value)) && Number(value) >= 1), "Must be a whole number of at least 1"),
+  location: z.string().max(200).optional().or(z.literal("")),
+};
+
+export const createGroupClassSchema = z.object({ ...groupClassFields });
+export type CreateGroupClassFormValues = z.infer<typeof createGroupClassSchema>;
+
+export const updateGroupClassSchema = z.object({ ...groupClassFields, active: z.boolean().optional() });
+export type UpdateGroupClassFormValues = z.infer<typeof updateGroupClassSchema>;
+
+const classSessionDateFields = {
+  startsAt: z.string().min(1, "Start time is required"),
+  endsAt: z.string().min(1, "End time is required"),
+  capacityOverride: z
+    .string()
+    .optional()
+    .refine((value) => value === undefined || value === "" || (Number.isInteger(Number(value)) && Number(value) >= 0), "Must be a whole number"),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+/** endsAt must be after startsAt - both are datetime-local strings, which compare correctly as plain strings only once both share the same format, so this compares parsed Dates instead. */
+function refineSessionTimes<T extends { startsAt: string; endsAt: string }>(data: T): boolean {
+  return !data.startsAt || !data.endsAt || new Date(data.endsAt) > new Date(data.startsAt);
+}
+
+export const createClassSessionSchema = z
+  .object({ groupClassId: z.string().min(1, "Class is required"), ...classSessionDateFields })
+  .refine(refineSessionTimes, { message: "End time must be after the start time", path: ["endsAt"] });
+export type CreateClassSessionFormValues = z.infer<typeof createClassSessionSchema>;
+
+export const updateClassSessionSchema = z.object({ ...classSessionDateFields }).refine(refineSessionTimes, {
+  message: "End time must be after the start time",
+  path: ["endsAt"],
+});
+export type UpdateClassSessionFormValues = z.infer<typeof updateClassSessionSchema>;
+
+export const createClassAttendanceSchema = z.object({
+  contactId: z.string().min(1, "Client is required"),
+  notes: z.string().max(500).optional().or(z.literal("")),
+});
+export type CreateClassAttendanceFormValues = z.infer<typeof createClassAttendanceSchema>;
