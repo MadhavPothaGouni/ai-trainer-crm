@@ -17,6 +17,7 @@ import com.aitrainercrm.platform.user.entity.User;
 import com.aitrainercrm.platform.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -81,9 +82,17 @@ class LockerAssignmentIntegrationTest extends AbstractIntegrationTest {
         // A later correction back through ACTIVE and to RETURNED again must not move returnedAt.
         mockMvc.perform(authed(patch("/api/v1/locker-assignments/" + assignmentId + "/status"), ownerToken).content("{\"status\":\"ACTIVE\"}"))
                 .andExpect(status().isOk());
-        mockMvc.perform(authed(patch("/api/v1/locker-assignments/" + assignmentId + "/status"), ownerToken).content("{\"status\":\"RETURNED\"}"))
+        MvcResult reReturnedResult = mockMvc
+                .perform(authed(patch("/api/v1/locker-assignments/" + assignmentId + "/status"), ownerToken).content("{\"status\":\"RETURNED\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.returnedAt").value(returnedAt));
+                .andReturn();
+        // Compared via Instant equality (not raw string/jsonPath equality) - the first response
+        // returns the in-memory Instant.now() at full nanosecond precision, while this later
+        // response was re-fetched from Postgres, whose timestamptz column only holds microsecond
+        // precision, so the two ISO strings can legitimately differ in their last digit while still
+        // being the same instant.
+        assertThat(Instant.parse(readField(reReturnedResult, "data", "returnedAt")))
+                .isCloseTo(Instant.parse(returnedAt), org.assertj.core.api.Assertions.within(1, java.time.temporal.ChronoUnit.MICROS));
 
         mockMvc.perform(authed(put("/api/v1/lockers/" + lockerId), ownerToken)
                         .content("{\"label\":\"A-12\",\"size\":\"MEDIUM\",\"status\":\"OUT_OF_SERVICE\"}"))

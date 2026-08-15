@@ -12,6 +12,7 @@ import com.aitrainercrm.platform.auth.dto.RegisterRequest;
 import com.aitrainercrm.platform.support.AbstractIntegrationTest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -55,11 +56,19 @@ class ProgressPhotoIntegrationTest extends AbstractIntegrationTest {
         String takenAt = readField(photoResult, "data", "takenAt");
 
         // Editing other fields must never move takenAt - it's a point-in-time fact, not a lifecycle.
-        mockMvc.perform(authed(put("/api/v1/progress-photos/" + photoId), ownerToken)
+        MvcResult editedResult = mockMvc
+                .perform(authed(put("/api/v1/progress-photos/" + photoId), ownerToken)
                         .content("{\"photoUrl\":\"https://example.com/front-2.jpg\",\"category\":\"SIDE\",\"notes\":\"After 4 weeks\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.category").value("SIDE"))
-                .andExpect(jsonPath("$.data.takenAt").value(takenAt));
+                .andReturn();
+        // Compared via Instant equality (not raw string/jsonPath equality) - the first response
+        // returns the in-memory Instant.now() at full nanosecond precision, while this later
+        // response was re-fetched from Postgres, whose timestamptz column only holds microsecond
+        // precision, so the two ISO strings can legitimately differ in their last digit while still
+        // being the same instant.
+        assertThat(Instant.parse(readField(editedResult, "data", "takenAt")))
+                .isCloseTo(Instant.parse(takenAt), org.assertj.core.api.Assertions.within(1, java.time.temporal.ChronoUnit.MICROS));
 
         mockMvc.perform(authed(get("/api/v1/progress-photos"), ownerToken))
                 .andExpect(status().isOk())

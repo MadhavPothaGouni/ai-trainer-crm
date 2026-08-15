@@ -12,6 +12,7 @@ import com.aitrainercrm.platform.auth.dto.RegisterRequest;
 import com.aitrainercrm.platform.support.AbstractIntegrationTest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -73,9 +74,17 @@ class CompensationRecordIntegrationTest extends AbstractIntegrationTest {
         // A later correction back through DRAFT and to PAID again must not move paidAt.
         mockMvc.perform(authed(patch("/api/v1/compensation-records/" + recordId + "/status"), ownerToken).content("{\"status\":\"DRAFT\"}"))
                 .andExpect(status().isOk());
-        mockMvc.perform(authed(patch("/api/v1/compensation-records/" + recordId + "/status"), ownerToken).content("{\"status\":\"PAID\"}"))
+        MvcResult repaidResult = mockMvc
+                .perform(authed(patch("/api/v1/compensation-records/" + recordId + "/status"), ownerToken).content("{\"status\":\"PAID\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.paidAt").value(paidAt));
+                .andReturn();
+        // Compared via Instant equality (not raw string/jsonPath equality) - the first response
+        // returns the in-memory Instant.now() at full nanosecond precision, while this later
+        // response was re-fetched from Postgres, whose timestamptz column only holds microsecond
+        // precision, so the two ISO strings can legitimately differ in their last digit while still
+        // being the same instant.
+        assertThat(Instant.parse(readField(repaidResult, "data", "paidAt")))
+                .isCloseTo(Instant.parse(paidAt), org.assertj.core.api.Assertions.within(1, java.time.temporal.ChronoUnit.MICROS));
 
         mockMvc.perform(authed(get("/api/v1/compensation-records"), ownerToken))
                 .andExpect(status().isOk())

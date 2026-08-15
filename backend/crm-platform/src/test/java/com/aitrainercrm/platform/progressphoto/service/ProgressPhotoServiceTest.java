@@ -2,6 +2,8 @@ package com.aitrainercrm.platform.progressphoto.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.aitrainercrm.platform.common.exception.ForbiddenException;
@@ -61,7 +63,11 @@ class ProgressPhotoServiceTest {
     @Test
     void create_assigningSomeoneElseWithoutOrganizationScope_isForbidden() {
         UUID otherUserId = UUID.randomUUID();
-        when(scopeAuthorizationService.highestGranted(principal(), Permission.Resource.PROGRESS_PHOTO, Permission.Action.CREATE))
+        // UserPrincipal has no equals() override, so a second principal() call here would create a
+        // reference-distinct instance the real invocation's argument would never match - use
+        // any()/eq() matchers instead of a second principal() call, same fix applied to every other
+        // owner-scoped service test in this codebase.
+        when(scopeAuthorizationService.highestGranted(any(UserPrincipal.class), eq(Permission.Resource.PROGRESS_PHOTO), eq(Permission.Action.CREATE)))
                 .thenReturn(ScopeAuthorizationService.Access.TEAM);
 
         assertThatThrownBy(() -> service.create(

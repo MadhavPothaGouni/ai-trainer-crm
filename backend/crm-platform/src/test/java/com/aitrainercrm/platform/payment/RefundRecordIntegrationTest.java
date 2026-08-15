@@ -17,6 +17,7 @@ import com.aitrainercrm.platform.user.entity.User;
 import com.aitrainercrm.platform.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -132,7 +133,12 @@ class RefundRecordIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("REQUESTED"))
                 .andReturn();
-        assertThat(readField(revertedResult, "data", "processedAt")).isEqualTo(firstProcessedAt);
+        // Compared via Instant equality (not raw string equality) - the first response returns the
+        // in-memory Instant.now() at full nanosecond precision, while later responses are re-fetched
+        // from Postgres, whose timestamptz column only holds microsecond precision, so the two ISO
+        // strings can legitimately differ in their last digit while still being the same instant.
+        assertThat(Instant.parse(readField(revertedResult, "data", "processedAt")))
+                .isCloseTo(Instant.parse(firstProcessedAt), org.assertj.core.api.Assertions.within(1, java.time.temporal.ChronoUnit.MICROS));
 
         // Moving to PROCESSED again does not overwrite the original processedAt stamp.
         MvcResult reprocessedResult = mockMvc
@@ -140,7 +146,8 @@ class RefundRecordIntegrationTest extends AbstractIntegrationTest {
                         .content("{\"status\":\"PROCESSED\"}"))
                 .andExpect(status().isOk())
                 .andReturn();
-        assertThat(readField(reprocessedResult, "data", "processedAt")).isEqualTo(firstProcessedAt);
+        assertThat(Instant.parse(readField(reprocessedResult, "data", "processedAt")))
+                .isCloseTo(Instant.parse(firstProcessedAt), org.assertj.core.api.Assertions.within(1, java.time.temporal.ChronoUnit.MICROS));
 
         mockMvc.perform(authed(get("/api/v1/refund-records"), ownerToken))
                 .andExpect(status().isOk())

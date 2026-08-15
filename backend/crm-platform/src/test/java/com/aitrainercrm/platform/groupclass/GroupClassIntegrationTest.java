@@ -16,6 +16,7 @@ import com.aitrainercrm.platform.user.entity.User;
 import com.aitrainercrm.platform.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -116,7 +117,13 @@ class GroupClassIntegrationTest extends AbstractIntegrationTest {
                 .perform(authed(patch("/api/v1/class-attendances/" + jamieAttendanceId + "/status"), ownerToken).content("{\"status\":\"ATTENDED\"}"))
                 .andExpect(status().isOk())
                 .andReturn();
-        assertThat(readField(recheckedResult, "data", "checkedInAt")).isEqualTo(firstCheckedInAt);
+        // Compared via Instant equality (not raw string equality) - the first response returns the
+        // in-memory Instant.now() at full nanosecond precision, while this later response was
+        // re-fetched from Postgres, whose timestamptz column only holds microsecond precision, so
+        // the two ISO strings can legitimately differ in their last digit while still being the
+        // same instant.
+        assertThat(Instant.parse(readField(recheckedResult, "data", "checkedInAt")))
+                .isCloseTo(Instant.parse(firstCheckedInAt), org.assertj.core.api.Assertions.within(1, java.time.temporal.ChronoUnit.MICROS));
 
         // --- Cancelling a registration frees the seat back up ---
         mockMvc.perform(authed(patch("/api/v1/class-attendances/" + alexAttendanceId + "/status"), ownerToken).content("{\"status\":\"CANCELLED\"}"))

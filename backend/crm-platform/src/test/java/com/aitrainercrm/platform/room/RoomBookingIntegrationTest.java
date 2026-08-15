@@ -69,9 +69,12 @@ class RoomBookingIntegrationTest extends AbstractIntegrationTest {
         String bookingId = readField(bookingResult, "data", "id");
         assertThat(bookingId).isNotBlank();
 
-        // An overlapping second booking for the same room is rejected.
+        // An overlapping second booking for the same room is rejected. Kept entirely inside the
+        // original [startsAt, endsAt) window (rather than extending an hour past overlapStartsAt)
+        // so that once the back-to-back Pilates booking below occupies [endsAt, endsAt+1h), this
+        // slot still only overlaps the original booking and not Pilates too.
         Instant overlapStartsAt = startsAt.plus(30, ChronoUnit.MINUTES);
-        Instant overlapEndsAt = overlapStartsAt.plus(1, ChronoUnit.HOURS);
+        Instant overlapEndsAt = endsAt;
         mockMvc.perform(authed(post("/api/v1/room-bookings"), ownerToken)
                         .content("{\"roomId\":\"%s\",\"purpose\":\"Yoga\",\"startsAt\":\"%s\",\"endsAt\":\"%s\"}"
                                 .formatted(roomId, overlapStartsAt, overlapEndsAt)))
