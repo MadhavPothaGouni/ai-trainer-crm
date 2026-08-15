@@ -2565,3 +2565,95 @@ export interface UpdateBodyMeasurementRequest {
   hipsCm?: number | null;
   notes?: string | null;
 }
+
+// ---- Membership & Membership Plan ----
+//
+// See backend/crm-platform/README.md's module layout for `membership` (V42) - a recurring
+// billing relationship between the organization and a client, distinct from Order/Invoice/
+// Payment (a one-off sale) and Contract (legal terms with no billing-cycle concept). Two
+// resources, mirroring the Product/Quote split: MembershipPlan is the shared organization
+// catalog (no OWN scope, same as Product), Membership is one Contact's actual owner-scoped
+// subscription to a plan.
+
+export type MembershipBillingCycle = "WEEKLY" | "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME";
+
+export const MEMBERSHIP_BILLING_CYCLES: MembershipBillingCycle[] = ["WEEKLY", "MONTHLY", "QUARTERLY", "ANNUAL", "ONE_TIME"];
+
+export type MembershipStatus = "ACTIVE" | "PAUSED" | "CANCELLED" | "EXPIRED";
+
+export const MEMBERSHIP_STATUSES: MembershipStatus[] = ["ACTIVE", "PAUSED", "CANCELLED", "EXPIRED"];
+
+export interface MembershipPlanDto {
+  id: string;
+  name: string;
+  description: string | null;
+  billingCycle: MembershipBillingCycle;
+  price: number;
+  currency: string | null;
+  /** Null means unlimited access for the cycle; a number is a fixed session count the plan grants per cycle. */
+  sessionCredits: number | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMembershipPlanRequest {
+  name: string;
+  description?: string | null;
+  billingCycle: MembershipBillingCycle;
+  price: number;
+  currency?: string | null;
+  sessionCredits?: number | null;
+}
+
+export interface UpdateMembershipPlanRequest {
+  name: string;
+  description?: string | null;
+  billingCycle: MembershipBillingCycle;
+  price: number;
+  currency?: string | null;
+  sessionCredits?: number | null;
+  active: boolean;
+}
+
+export interface MembershipDto {
+  id: string;
+  contactId: string;
+  membershipPlanId: string;
+  ownerId: string;
+  status: MembershipStatus;
+  /** Snapshotted from the plan's price at creation time - never recomputed if the plan's price changes later. */
+  billingCyclePrice: number;
+  startDate: string;
+  endDate: string | null;
+  nextBillingDate: string | null;
+  autoRenew: boolean;
+  remainingCredits: number | null;
+  pausedAt: string | null;
+  cancelledAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMembershipRequest {
+  contactId: string;
+  membershipPlanId: string;
+  startDate: string;
+  nextBillingDate?: string | null;
+  autoRenew: boolean;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateMembershipRequest {
+  endDate?: string | null;
+  nextBillingDate?: string | null;
+  autoRenew: boolean;
+  remainingCredits?: number | null;
+  notes?: string | null;
+}
+
+export interface UpdateMembershipStatusRequest {
+  status: MembershipStatus;
+}

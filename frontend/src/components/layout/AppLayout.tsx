@@ -63,6 +63,7 @@ const CRM_NAV_GROUPS: NavGroup[] = [
       { to: "/invoices", label: "Invoices" },
       { to: "/contracts", label: "Contracts" },
       { to: "/products", label: "Products" },
+      { to: "/membership-plans", label: "Membership Plans" },
       { to: "/email-templates", label: "Email Templates" },
     ],
   },
@@ -70,6 +71,7 @@ const CRM_NAV_GROUPS: NavGroup[] = [
     heading: "Training & Clients",
     items: [
       { to: "/client-goals", label: "Client Goals" },
+      { to: "/memberships", label: "Memberships" },
       { to: "/training-sessions", label: "Training Sessions" },
       { to: "/nutrition-plans", label: "Nutrition Plans" },
       { to: "/body-measurements", label: "Body Measurements" },

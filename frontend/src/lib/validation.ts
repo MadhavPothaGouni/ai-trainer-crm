@@ -1039,3 +1039,41 @@ export type CreateBodyMeasurementFormValues = z.infer<typeof createBodyMeasureme
 
 export const updateBodyMeasurementSchema = z.object({ ...bodyMeasurementFields });
 export type UpdateBodyMeasurementFormValues = z.infer<typeof updateBodyMeasurementSchema>;
+
+// ---- Membership Plan (V42) ----
+
+const membershipPlanFields = {
+  name: z.string().min(1, "Name is required").max(200),
+  description: z.string().max(2000).optional().or(z.literal("")),
+  billingCycle: z.string().min(1, "Billing cycle is required"),
+  price: requiredNumberString,
+  currency: z.string().max(3).optional().or(z.literal("")),
+  sessionCredits: z.string().optional().refine((value) => value === undefined || value === "" || (Number.isInteger(Number(value)) && Number(value) >= 1), "Must be a whole number of at least 1"),
+};
+
+export const createMembershipPlanSchema = z.object({ ...membershipPlanFields });
+export type CreateMembershipPlanFormValues = z.infer<typeof createMembershipPlanSchema>;
+
+export const updateMembershipPlanSchema = z.object({ ...membershipPlanFields, active: z.boolean().optional() });
+export type UpdateMembershipPlanFormValues = z.infer<typeof updateMembershipPlanSchema>;
+
+// ---- Membership (V42) ----
+
+export const createMembershipSchema = z.object({
+  contactId: z.string().min(1, "Client is required"),
+  membershipPlanId: z.string().min(1, "Plan is required"),
+  startDate: z.string().min(1, "Start date is required"),
+  nextBillingDate: z.string().optional().or(z.literal("")),
+  autoRenew: z.boolean().optional(),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+});
+export type CreateMembershipFormValues = z.infer<typeof createMembershipSchema>;
+
+export const updateMembershipSchema = z.object({
+  endDate: z.string().optional().or(z.literal("")),
+  nextBillingDate: z.string().optional().or(z.literal("")),
+  autoRenew: z.boolean().optional(),
+  remainingCredits: z.string().optional().refine((value) => value === undefined || value === "" || (Number.isInteger(Number(value)) && Number(value) >= 0), "Must be a whole number"),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+});
+export type UpdateMembershipFormValues = z.infer<typeof updateMembershipSchema>;

@@ -68,6 +68,12 @@ import NutritionPlanListPage from "./pages/nutritionPlans/NutritionPlanListPage"
 import BodyMeasurementCreatePage from "./pages/bodyMeasurements/BodyMeasurementCreatePage";
 import BodyMeasurementDetailPage from "./pages/bodyMeasurements/BodyMeasurementDetailPage";
 import BodyMeasurementListPage from "./pages/bodyMeasurements/BodyMeasurementListPage";
+import MembershipPlanCreatePage from "./pages/membershipPlans/MembershipPlanCreatePage";
+import MembershipPlanDetailPage from "./pages/membershipPlans/MembershipPlanDetailPage";
+import MembershipPlanListPage from "./pages/membershipPlans/MembershipPlanListPage";
+import MembershipCreatePage from "./pages/memberships/MembershipCreatePage";
+import MembershipDetailPage from "./pages/memberships/MembershipDetailPage";
+import MembershipListPage from "./pages/memberships/MembershipListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -263,6 +269,12 @@ export default function App() {
           <Route path="/body-measurements" element={<BodyMeasurementListPage />} />
           <Route path="/body-measurements/new" element={<BodyMeasurementCreatePage />} />
           <Route path="/body-measurements/:bodyMeasurementId" element={<BodyMeasurementDetailPage />} />
+          <Route path="/membership-plans" element={<MembershipPlanListPage />} />
+          <Route path="/membership-plans/new" element={<MembershipPlanCreatePage />} />
+          <Route path="/membership-plans/:membershipPlanId" element={<MembershipPlanDetailPage />} />
+          <Route path="/memberships" element={<MembershipListPage />} />
+          <Route path="/memberships/new" element={<MembershipCreatePage />} />
+          <Route path="/memberships/:membershipId" element={<MembershipDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />

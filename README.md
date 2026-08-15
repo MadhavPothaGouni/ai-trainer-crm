@@ -179,9 +179,11 @@ ORGANIZATION scope authorization.
 an Opportunity); Orders (converted from a Quote, DRAFT → CONFIRMED →
 FULFILLED); Invoices (generated from an Order, DRAFT → SENT → PAID, driven
 automatically by recorded Payments rather than settable directly);
-Contracts; a Commission engine that auto-calculates rep commission on
-closed-won deals; Sales Goals (rep/team quotas); and Forecasting (daily
-pipeline snapshots for trend reporting).
+Contracts; Membership Plans and Memberships (recurring client billing,
+price/credits snapshotted at signup so later plan-price changes don't
+retroactively affect existing members); a Commission engine that
+auto-calculates rep commission on closed-won deals; Sales Goals (rep/team
+quotas); and Forecasting (daily pipeline snapshots for trend reporting).
 
 **Support & service** — Support Tickets (free, non-linear status
 transitions, since reopening a resolved ticket is normal); SLA policies
