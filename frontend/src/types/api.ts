@@ -3356,3 +3356,407 @@ export interface UpdateClientCheckInRequest {
 export interface UpdateClientCheckInStatusRequest {
   status: ClientCheckInStatus;
 }
+
+//
+// See backend/crm-platform/src/main/resources/db/migration/V53__rooms.sql - physical bookable
+// spaces at the facility, distinct from Locker (client storage) and Equipment (movable gear).
+// Same catalog/occurrence shape as Locker/LockerAssignment: Room is the shared organization
+// catalog (no OWN scope); RoomBooking is the owner-scoped occurrence, one reservation of a room
+// for a time window. Unlike its siblings, the backend also enforces a scheduling-conflict rule -
+// a room can't hold two CONFIRMED bookings with overlapping time windows - surfaced here as the
+// ROOM_BOOKING_CONFLICT error code on create/update/status-change.
+
+export type RoomStatus = "ACTIVE" | "OUT_OF_SERVICE";
+
+export const ROOM_STATUSES: RoomStatus[] = ["ACTIVE", "OUT_OF_SERVICE"];
+
+export interface RoomDto {
+  id: string;
+  label: string;
+  location: string | null;
+  capacity: number | null;
+  status: RoomStatus;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRoomRequest {
+  label: string;
+  location?: string | null;
+  capacity?: number | null;
+  notes?: string | null;
+}
+
+export interface UpdateRoomRequest {
+  label: string;
+  location?: string | null;
+  capacity?: number | null;
+  status: RoomStatus;
+  notes?: string | null;
+}
+
+export type RoomBookingStatus = "CONFIRMED" | "CANCELLED";
+
+export const ROOM_BOOKING_STATUSES: RoomBookingStatus[] = ["CONFIRMED", "CANCELLED"];
+
+export interface RoomBookingDto {
+  id: string;
+  roomId: string;
+  ownerId: string;
+  purpose: string;
+  startsAt: string;
+  endsAt: string;
+  status: RoomBookingStatus;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRoomBookingRequest {
+  roomId: string;
+  purpose: string;
+  startsAt: string;
+  endsAt: string;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateRoomBookingRequest {
+  purpose: string;
+  startsAt: string;
+  endsAt: string;
+  notes?: string | null;
+}
+
+export interface UpdateRoomBookingStatusRequest {
+  status: RoomBookingStatus;
+}
+
+//
+// See backend/crm-platform/src/main/resources/db/migration/V54__gift_cards.sql - a prepaid
+// balance issued to a client. Single owner-scoped entity (no separate catalog half, unlike recent
+// modules) - full OWN/TEAM/DEPARTMENT/ORGANIZATION ladder. Unlike a plain status machine,
+// redemption deducts from currentBalance via a dedicated POST .../redeem endpoint rather than a
+// status PATCH; currentBalance reaching zero auto-moves status to REDEEMED and stamps redeemedAt
+// once.
+
+export type GiftCardStatus = "ACTIVE" | "REDEEMED" | "EXPIRED" | "CANCELLED";
+
+export const GIFT_CARD_STATUSES: GiftCardStatus[] = ["ACTIVE", "REDEEMED", "EXPIRED", "CANCELLED"];
+
+export interface GiftCardDto {
+  id: string;
+  contactId: string;
+  ownerId: string;
+  code: string;
+  initialBalance: number;
+  currentBalance: number;
+  status: GiftCardStatus;
+  issuedAt: string;
+  expiresAt: string | null;
+  redeemedAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateGiftCardRequest {
+  contactId: string;
+  code: string;
+  initialBalance: number;
+  expiresAt?: string | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateGiftCardRequest {
+  expiresAt?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdateGiftCardStatusRequest {
+  status: GiftCardStatus;
+}
+
+export interface RedeemGiftCardRequest {
+  amount: number;
+}
+
+//
+// See backend/crm-platform/src/main/resources/db/migration/V55__progress_photos.sql - a client's
+// physical-progress photo, logged at a point in time. Same "point-in-time fact" shape as
+// PromoRedemption: owner-scoped, no status field, no PATCH .../status endpoint - takenAt is set
+// once at creation.
+
+export type ProgressPhotoCategory = "FRONT" | "SIDE" | "BACK" | "OTHER";
+
+export const PROGRESS_PHOTO_CATEGORIES: ProgressPhotoCategory[] = ["FRONT", "SIDE", "BACK", "OTHER"];
+
+export interface ProgressPhotoDto {
+  id: string;
+  contactId: string;
+  ownerId: string;
+  photoUrl: string;
+  category: ProgressPhotoCategory;
+  takenAt: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProgressPhotoRequest {
+  contactId: string;
+  photoUrl: string;
+  category: ProgressPhotoCategory;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateProgressPhotoRequest {
+  photoUrl: string;
+  category: ProgressPhotoCategory;
+  notes?: string | null;
+}
+
+//
+// See backend/crm-platform/src/main/resources/db/migration/V56__equipment_reservations.sql - a
+// booking of a specific Equipment item (V44) for a time slot. Reuses the existing Equipment
+// catalog, so there's no new catalog type here - just the owner-scoped occurrence, same free
+// CONFIRMED/CANCELLED status shape as RoomBooking minus the scheduling-conflict check.
+
+export type EquipmentReservationStatus = "CONFIRMED" | "CANCELLED";
+
+export const EQUIPMENT_RESERVATION_STATUSES: EquipmentReservationStatus[] = ["CONFIRMED", "CANCELLED"];
+
+export interface EquipmentReservationDto {
+  id: string;
+  equipmentId: string;
+  contactId: string | null;
+  ownerId: string;
+  startsAt: string;
+  endsAt: string;
+  status: EquipmentReservationStatus;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateEquipmentReservationRequest {
+  equipmentId: string;
+  contactId?: string | null;
+  startsAt: string;
+  endsAt: string;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateEquipmentReservationRequest {
+  contactId?: string | null;
+  startsAt: string;
+  endsAt: string;
+  notes?: string | null;
+}
+
+export interface UpdateEquipmentReservationStatusRequest {
+  status: EquipmentReservationStatus;
+}
+
+//
+// See backend/crm-platform/src/main/resources/db/migration/V57__compensation_records.sql - one
+// staff member's pay for one pay period. Owner-scoped (ownerId is whoever runs payroll,
+// staffUserId is who's being paid), free DRAFT/APPROVED/PAID status with paidAt stamped once.
+// totalAmount is always computed server-side from the other four money fields - never send it in
+// a create/update request, it's ignored either way.
+
+export type CompensationRecordStatus = "DRAFT" | "APPROVED" | "PAID";
+
+export const COMPENSATION_RECORD_STATUSES: CompensationRecordStatus[] = ["DRAFT", "APPROVED", "PAID"];
+
+export interface CompensationRecordDto {
+  id: string;
+  staffUserId: string;
+  ownerId: string;
+  payPeriodStart: string;
+  payPeriodEnd: string;
+  hoursWorked: number;
+  hourlyRate: number;
+  commissionAmount: number;
+  bonusAmount: number;
+  totalAmount: number;
+  status: CompensationRecordStatus;
+  paidAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCompensationRecordRequest {
+  staffUserId: string;
+  payPeriodStart: string;
+  payPeriodEnd: string;
+  hoursWorked: number;
+  hourlyRate: number;
+  commissionAmount?: number | null;
+  bonusAmount?: number | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateCompensationRecordRequest {
+  payPeriodStart: string;
+  payPeriodEnd: string;
+  hoursWorked: number;
+  hourlyRate: number;
+  commissionAmount?: number | null;
+  bonusAmount?: number | null;
+  notes?: string | null;
+}
+
+export interface UpdateCompensationRecordStatusRequest {
+  status: CompensationRecordStatus;
+}
+
+// See backend/crm-platform/src/main/resources/db/migration/V58__no_show_records.sql - a client
+// missing a scheduled booking without cancelling. Owner-scoped (contactId is the client, ownerId
+// is the staff member who owns the record). Has no status field - waived/waivedAt is flipped
+// exactly once via the dedicated POST .../waive action, never directly settable through create/update.
+
+export type NoShowRelatedType = "CLASS_SESSION" | "TRAINING_SESSION" | "OTHER";
+
+export const NO_SHOW_RELATED_TYPES: NoShowRelatedType[] = ["CLASS_SESSION", "TRAINING_SESSION", "OTHER"];
+
+export interface NoShowRecordDto {
+  id: string;
+  contactId: string;
+  ownerId: string;
+  occurredAt: string;
+  relatedType: NoShowRelatedType;
+  feeAmount: number | null;
+  waived: boolean;
+  waivedAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateNoShowRecordRequest {
+  contactId: string;
+  occurredAt: string;
+  relatedType: NoShowRelatedType;
+  feeAmount?: number | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateNoShowRecordRequest {
+  occurredAt: string;
+  relatedType: NoShowRelatedType;
+  feeAmount?: number | null;
+  notes?: string | null;
+}
+
+// See backend/crm-platform/src/main/resources/db/migration/V59__loyalty_transactions.sql - one
+// entry in a client's points ledger. Owner-scoped (contactId is the client, ownerId is the staff
+// member who owns the record). No status field - a ledger entry is a point-in-time fact. There's
+// no stored balance anywhere - a client's current balance is always the live sum of their
+// transactions, fetched via getLoyaltyBalance. points must be positive for EARNED_CHECKIN/
+// EARNED_REFERRAL, negative for REDEEMED_REWARD, and either for MANUAL_ADJUSTMENT - enforced
+// server-side.
+
+export type LoyaltyTransactionReason = "EARNED_CHECKIN" | "EARNED_REFERRAL" | "REDEEMED_REWARD" | "MANUAL_ADJUSTMENT";
+
+export const LOYALTY_TRANSACTION_REASONS: LoyaltyTransactionReason[] = [
+  "EARNED_CHECKIN",
+  "EARNED_REFERRAL",
+  "REDEEMED_REWARD",
+  "MANUAL_ADJUSTMENT",
+];
+
+export interface LoyaltyTransactionDto {
+  id: string;
+  contactId: string;
+  ownerId: string;
+  points: number;
+  reason: LoyaltyTransactionReason;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLoyaltyTransactionRequest {
+  contactId: string;
+  points: number;
+  reason: LoyaltyTransactionReason;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateLoyaltyTransactionRequest {
+  points: number;
+  reason: LoyaltyTransactionReason;
+  notes?: string | null;
+}
+
+export interface LoyaltyBalanceDto {
+  contactId: string;
+  balance: number;
+}
+
+// See backend/crm-platform/src/main/resources/db/migration/V60__intake_forms.sql - the intake
+// questionnaire catalog (IntakeForm, shared-organization-catalog, no ownerId) plus one client's
+// completed response to a form (IntakeFormSubmission, owner-scoped). No status field on the
+// submission - a completed intake is a point-in-time fact. responses is a free-text blob - the
+// frontend JSON-encodes the client's answers into it.
+
+export type IntakeFormType = "NEW_CLIENT" | "HEALTH_SCREENING" | "LIABILITY_WAIVER" | "OTHER";
+
+export const INTAKE_FORM_TYPES: IntakeFormType[] = ["NEW_CLIENT", "HEALTH_SCREENING", "LIABILITY_WAIVER", "OTHER"];
+
+export interface IntakeFormDto {
+  id: string;
+  title: string;
+  formType: IntakeFormType;
+  active: boolean;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateIntakeFormRequest {
+  title: string;
+  formType?: IntakeFormType | null;
+  notes?: string | null;
+}
+
+export interface UpdateIntakeFormRequest {
+  title: string;
+  formType: IntakeFormType;
+  active: boolean;
+  notes?: string | null;
+}
+
+export interface IntakeFormSubmissionDto {
+  id: string;
+  formId: string;
+  contactId: string;
+  ownerId: string;
+  submittedAt: string;
+  responses: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateIntakeFormSubmissionRequest {
+  formId: string;
+  contactId: string;
+  responses?: string | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateIntakeFormSubmissionRequest {
+  responses?: string | null;
+  notes?: string | null;
+}

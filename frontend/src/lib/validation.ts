@@ -1362,3 +1362,184 @@ export type CreateClientCheckInFormValues = z.infer<typeof createClientCheckInSc
 
 export const updateClientCheckInSchema = z.object({ ...clientCheckInFields });
 export type UpdateClientCheckInFormValues = z.infer<typeof updateClientCheckInSchema>;
+
+// ---- Room / Room Booking (V53) ----
+
+const roomFields = {
+  label: z.string().min(1, "Label is required").max(50),
+  location: z.string().max(200).optional().or(z.literal("")),
+  capacity: z
+    .string()
+    .optional()
+    .refine((value) => value === undefined || value === "" || (Number.isInteger(Number(value)) && Number(value) >= 1), "Must be a whole number of at least 1"),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createRoomSchema = z.object({ ...roomFields });
+export type CreateRoomFormValues = z.infer<typeof createRoomSchema>;
+
+export const updateRoomSchema = z.object({ ...roomFields, status: z.string().min(1, "Status is required") });
+export type UpdateRoomFormValues = z.infer<typeof updateRoomSchema>;
+
+const roomBookingDateFields = {
+  purpose: z.string().min(1, "Purpose is required").max(200),
+  startsAt: z.string().min(1, "Start time is required"),
+  endsAt: z.string().min(1, "End time is required"),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createRoomBookingSchema = z
+  .object({ roomId: z.string().min(1, "Room is required"), ...roomBookingDateFields })
+  .refine(refineSessionTimes, { message: "End time must be after the start time", path: ["endsAt"] });
+export type CreateRoomBookingFormValues = z.infer<typeof createRoomBookingSchema>;
+
+export const updateRoomBookingSchema = z.object({ ...roomBookingDateFields }).refine(refineSessionTimes, {
+  message: "End time must be after the start time",
+  path: ["endsAt"],
+});
+export type UpdateRoomBookingFormValues = z.infer<typeof updateRoomBookingSchema>;
+
+// ---- Gift Card (V54) ----
+
+export const createGiftCardSchema = z.object({
+  contactId: z.string().min(1, "Client is required"),
+  code: z.string().min(1, "Code is required").max(50),
+  initialBalance: z.string().min(1, "Initial balance is required"),
+  expiresAt: z.string().optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+});
+export type CreateGiftCardFormValues = z.infer<typeof createGiftCardSchema>;
+
+export const updateGiftCardSchema = z.object({
+  expiresAt: z.string().optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+});
+export type UpdateGiftCardFormValues = z.infer<typeof updateGiftCardSchema>;
+
+export const redeemGiftCardSchema = z.object({
+  amount: z.string().min(1, "Amount is required"),
+});
+export type RedeemGiftCardFormValues = z.infer<typeof redeemGiftCardSchema>;
+
+// ---- Progress Photo (V55) ----
+
+const progressPhotoFields = {
+  photoUrl: z.string().min(1, "Photo URL is required").max(1000),
+  category: z.string().min(1, "Category is required"),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createProgressPhotoSchema = z.object({ contactId: z.string().min(1, "Client is required"), ...progressPhotoFields });
+export type CreateProgressPhotoFormValues = z.infer<typeof createProgressPhotoSchema>;
+
+export const updateProgressPhotoSchema = z.object({ ...progressPhotoFields });
+export type UpdateProgressPhotoFormValues = z.infer<typeof updateProgressPhotoSchema>;
+
+// ---- Equipment Reservation (V56) ----
+
+const equipmentReservationDateFields = {
+  contactId: z.string().optional().or(z.literal("")),
+  startsAt: z.string().min(1, "Start time is required"),
+  endsAt: z.string().min(1, "End time is required"),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createEquipmentReservationSchema = z
+  .object({ equipmentId: z.string().min(1, "Equipment is required"), ...equipmentReservationDateFields })
+  .refine(refineSessionTimes, { message: "End time must be after the start time", path: ["endsAt"] });
+export type CreateEquipmentReservationFormValues = z.infer<typeof createEquipmentReservationSchema>;
+
+export const updateEquipmentReservationSchema = z.object({ ...equipmentReservationDateFields }).refine(refineSessionTimes, {
+  message: "End time must be after the start time",
+  path: ["endsAt"],
+});
+export type UpdateEquipmentReservationFormValues = z.infer<typeof updateEquipmentReservationSchema>;
+
+// ---- Compensation Record (V57) ----
+
+const compensationRecordFields = {
+  payPeriodStart: z.string().min(1, "Pay period start is required"),
+  payPeriodEnd: z.string().min(1, "Pay period end is required"),
+  hoursWorked: z.string().min(1, "Hours worked is required"),
+  hourlyRate: z.string().min(1, "Hourly rate is required"),
+  commissionAmount: optionalNumberString,
+  bonusAmount: optionalNumberString,
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+/** payPeriodEnd must not be before payPeriodStart - both are plain "YYYY-MM-DD" date strings, which compare correctly lexicographically. */
+function refinePayPeriod<T extends { payPeriodStart: string; payPeriodEnd: string }>(data: T): boolean {
+  return !data.payPeriodStart || !data.payPeriodEnd || data.payPeriodEnd >= data.payPeriodStart;
+}
+
+export const createCompensationRecordSchema = z
+  .object({ staffUserId: z.string().min(1, "Staff member is required"), ...compensationRecordFields })
+  .refine(refinePayPeriod, { message: "Pay period end must not be before its start", path: ["payPeriodEnd"] });
+export type CreateCompensationRecordFormValues = z.infer<typeof createCompensationRecordSchema>;
+
+export const updateCompensationRecordSchema = z.object({ ...compensationRecordFields }).refine(refinePayPeriod, {
+  message: "Pay period end must not be before its start",
+  path: ["payPeriodEnd"],
+});
+export type UpdateCompensationRecordFormValues = z.infer<typeof updateCompensationRecordSchema>;
+
+// ---- No-Show Record (V58) ----
+
+const noShowRecordFields = {
+  occurredAt: z.string().min(1, "Date/time is required"),
+  relatedType: z.string().min(1, "Type is required"),
+  feeAmount: optionalNumberString,
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createNoShowRecordSchema = z.object({ contactId: z.string().min(1, "Client is required"), ...noShowRecordFields });
+export type CreateNoShowRecordFormValues = z.infer<typeof createNoShowRecordSchema>;
+
+export const updateNoShowRecordSchema = z.object({ ...noShowRecordFields });
+export type UpdateNoShowRecordFormValues = z.infer<typeof updateNoShowRecordSchema>;
+
+// ---- Loyalty Transaction (V59) ----
+
+const loyaltyTransactionFields = {
+  points: z.string().min(1, "Points is required"),
+  reason: z.string().min(1, "Reason is required"),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createLoyaltyTransactionSchema = z.object({ contactId: z.string().min(1, "Client is required"), ...loyaltyTransactionFields });
+export type CreateLoyaltyTransactionFormValues = z.infer<typeof createLoyaltyTransactionSchema>;
+
+export const updateLoyaltyTransactionSchema = z.object({ ...loyaltyTransactionFields });
+export type UpdateLoyaltyTransactionFormValues = z.infer<typeof updateLoyaltyTransactionSchema>;
+
+// ---- Intake Form + Submission (V60) ----
+
+export const createIntakeFormSchema = z.object({
+  title: z.string().min(1, "Title is required").max(200),
+  formType: z.string().min(1, "Type is required"),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+});
+export type CreateIntakeFormFormValues = z.infer<typeof createIntakeFormSchema>;
+
+export const updateIntakeFormSchema = z.object({
+  title: z.string().min(1, "Title is required").max(200),
+  formType: z.string().min(1, "Type is required"),
+  active: z.boolean(),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+});
+export type UpdateIntakeFormFormValues = z.infer<typeof updateIntakeFormSchema>;
+
+const intakeFormSubmissionFields = {
+  responses: z.string().max(20000).optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createIntakeFormSubmissionSchema = z.object({
+  formId: z.string().min(1, "Form is required"),
+  contactId: z.string().min(1, "Client is required"),
+  ...intakeFormSubmissionFields,
+});
+export type CreateIntakeFormSubmissionFormValues = z.infer<typeof createIntakeFormSubmissionSchema>;
+
+export const updateIntakeFormSubmissionSchema = z.object({ ...intakeFormSubmissionFields });
+export type UpdateIntakeFormSubmissionFormValues = z.infer<typeof updateIntakeFormSubmissionSchema>;

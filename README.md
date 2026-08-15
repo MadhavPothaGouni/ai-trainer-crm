@@ -190,7 +190,13 @@ never re-issued); a Vendor catalog with Purchase Orders (DRAFT →
 ORDERED → RECEIVED, received-at timestamp stamped once); and a Promo Code
 catalog with Redemptions (discount codes checked for active/unexpired/
 under-cap before a redemption is recorded, with amount-discounted tracked
-per redemption).
+per redemption); Gift Cards (issued with a balance, redeemed down via a
+dedicated action endpoint that rejects over-redemption, expiry, and
+non-ACTIVE cards, auto-moving to REDEEMED and stamping redeemed-at once the
+balance hits zero); and a Loyalty Transaction points ledger (signed
+point deltas — earned reasons must be positive, redemptions must be
+negative — with a live balance computed on read rather than stored, scoped
+to what the caller can see).
 
 **Support & service** — Support Tickets (free, non-linear status
 transitions, since reopening a resolved ticket is normal); SLA policies
@@ -213,9 +219,16 @@ stamped once); Client Documents (waivers, medical clearances, photo
 releases, tracked PENDING → SIGNED with a signed-at timestamp stamped
 once); a Locker catalog with Locker Assignments (which client has which
 locker, ACTIVE → RETURNED/EXPIRED, with a returned-at timestamp stamped
-once); and Client Check-Ins (a facility access log distinct from Class
+once); Client Check-Ins (a facility access log distinct from Class
 Attendance/Training Sessions, CHECKED_IN → CHECKED_OUT with a
-checked-out-at timestamp stamped once).
+checked-out-at timestamp stamped once); a bookable Room catalog with Room
+Bookings (the platform's first scheduling-conflict check — overlapping
+CONFIRMED bookings for the same room are rejected); Equipment Reservations
+(informal equipment booking, no overlap check by design); Progress Photos
+(a point-in-time client photo log); No-Show Records (missed bookings with
+an optional fee, waived via a dedicated action that rejects a missing or
+already-waived fee); and an Intake Form catalog with Submissions (client
+questionnaire responses stored as an opaque free-text/JSON blob).
 
 **Marketing & content** — Campaigns with member tracking (Leads/Contacts
 through an engagement funnel) and per-status stats; Email Templates;
@@ -242,9 +255,12 @@ Approval Workflows for Quotes/Orders/Opportunities.
 password reset/email verification); API Keys for programmatic access;
 outbound Webhooks (HMAC-signed HTTP callbacks); an in-app Notification
 inbox; file Attachments (pluggable storage behind a `FileStorageService`
-interface); bulk CSV Import/Export; and Custom Objects/Fields for
+interface); bulk CSV Import/Export; Custom Objects/Fields for
 platform extensibility (EAV-backed, validated against each field's
-declared type).
+declared type); and Compensation Records (staff pay per pay period — hours,
+rate, commission, and bonus rolled into a server-computed total that's
+never trusted from the client, DRAFT → APPROVED → PAID with a paid-at
+timestamp stamped once).
 
 Cross-cutting: a full frontend test suite (Vitest + React Testing
 Library), Docker Compose + CI for both halves, and a production deploy

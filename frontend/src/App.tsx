@@ -122,6 +122,36 @@ import PromoRedemptionListPage from "./pages/promoRedemptions/PromoRedemptionLis
 import ClientCheckInCreatePage from "./pages/clientCheckIns/ClientCheckInCreatePage";
 import ClientCheckInDetailPage from "./pages/clientCheckIns/ClientCheckInDetailPage";
 import ClientCheckInListPage from "./pages/clientCheckIns/ClientCheckInListPage";
+import RoomCreatePage from "./pages/rooms/RoomCreatePage";
+import RoomDetailPage from "./pages/rooms/RoomDetailPage";
+import RoomListPage from "./pages/rooms/RoomListPage";
+import RoomBookingCreatePage from "./pages/roomBookings/RoomBookingCreatePage";
+import RoomBookingDetailPage from "./pages/roomBookings/RoomBookingDetailPage";
+import RoomBookingListPage from "./pages/roomBookings/RoomBookingListPage";
+import GiftCardCreatePage from "./pages/giftCards/GiftCardCreatePage";
+import GiftCardDetailPage from "./pages/giftCards/GiftCardDetailPage";
+import GiftCardListPage from "./pages/giftCards/GiftCardListPage";
+import ProgressPhotoCreatePage from "./pages/progressPhotos/ProgressPhotoCreatePage";
+import ProgressPhotoDetailPage from "./pages/progressPhotos/ProgressPhotoDetailPage";
+import ProgressPhotoListPage from "./pages/progressPhotos/ProgressPhotoListPage";
+import EquipmentReservationCreatePage from "./pages/equipmentReservations/EquipmentReservationCreatePage";
+import EquipmentReservationDetailPage from "./pages/equipmentReservations/EquipmentReservationDetailPage";
+import EquipmentReservationListPage from "./pages/equipmentReservations/EquipmentReservationListPage";
+import CompensationRecordCreatePage from "./pages/compensationRecords/CompensationRecordCreatePage";
+import CompensationRecordDetailPage from "./pages/compensationRecords/CompensationRecordDetailPage";
+import CompensationRecordListPage from "./pages/compensationRecords/CompensationRecordListPage";
+import NoShowRecordCreatePage from "./pages/noShowRecords/NoShowRecordCreatePage";
+import NoShowRecordDetailPage from "./pages/noShowRecords/NoShowRecordDetailPage";
+import NoShowRecordListPage from "./pages/noShowRecords/NoShowRecordListPage";
+import LoyaltyTransactionCreatePage from "./pages/loyaltyTransactions/LoyaltyTransactionCreatePage";
+import LoyaltyTransactionDetailPage from "./pages/loyaltyTransactions/LoyaltyTransactionDetailPage";
+import LoyaltyTransactionListPage from "./pages/loyaltyTransactions/LoyaltyTransactionListPage";
+import IntakeFormCreatePage from "./pages/intakeForms/IntakeFormCreatePage";
+import IntakeFormDetailPage from "./pages/intakeForms/IntakeFormDetailPage";
+import IntakeFormListPage from "./pages/intakeForms/IntakeFormListPage";
+import IntakeFormSubmissionCreatePage from "./pages/intakeFormSubmissions/IntakeFormSubmissionCreatePage";
+import IntakeFormSubmissionDetailPage from "./pages/intakeFormSubmissions/IntakeFormSubmissionDetailPage";
+import IntakeFormSubmissionListPage from "./pages/intakeFormSubmissions/IntakeFormSubmissionListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -362,6 +392,36 @@ export default function App() {
           <Route path="/client-check-ins" element={<ClientCheckInListPage />} />
           <Route path="/client-check-ins/new" element={<ClientCheckInCreatePage />} />
           <Route path="/client-check-ins/:clientCheckInId" element={<ClientCheckInDetailPage />} />
+          <Route path="/rooms" element={<RoomListPage />} />
+          <Route path="/rooms/new" element={<RoomCreatePage />} />
+          <Route path="/rooms/:roomId" element={<RoomDetailPage />} />
+          <Route path="/room-bookings" element={<RoomBookingListPage />} />
+          <Route path="/room-bookings/new" element={<RoomBookingCreatePage />} />
+          <Route path="/room-bookings/:roomBookingId" element={<RoomBookingDetailPage />} />
+          <Route path="/gift-cards" element={<GiftCardListPage />} />
+          <Route path="/gift-cards/new" element={<GiftCardCreatePage />} />
+          <Route path="/gift-cards/:giftCardId" element={<GiftCardDetailPage />} />
+          <Route path="/progress-photos" element={<ProgressPhotoListPage />} />
+          <Route path="/progress-photos/new" element={<ProgressPhotoCreatePage />} />
+          <Route path="/progress-photos/:progressPhotoId" element={<ProgressPhotoDetailPage />} />
+          <Route path="/equipment-reservations" element={<EquipmentReservationListPage />} />
+          <Route path="/equipment-reservations/new" element={<EquipmentReservationCreatePage />} />
+          <Route path="/equipment-reservations/:equipmentReservationId" element={<EquipmentReservationDetailPage />} />
+          <Route path="/compensation-records" element={<CompensationRecordListPage />} />
+          <Route path="/compensation-records/new" element={<CompensationRecordCreatePage />} />
+          <Route path="/compensation-records/:compensationRecordId" element={<CompensationRecordDetailPage />} />
+          <Route path="/no-show-records" element={<NoShowRecordListPage />} />
+          <Route path="/no-show-records/new" element={<NoShowRecordCreatePage />} />
+          <Route path="/no-show-records/:noShowRecordId" element={<NoShowRecordDetailPage />} />
+          <Route path="/loyalty-transactions" element={<LoyaltyTransactionListPage />} />
+          <Route path="/loyalty-transactions/new" element={<LoyaltyTransactionCreatePage />} />
+          <Route path="/loyalty-transactions/:loyaltyTransactionId" element={<LoyaltyTransactionDetailPage />} />
+          <Route path="/intake-forms" element={<IntakeFormListPage />} />
+          <Route path="/intake-forms/new" element={<IntakeFormCreatePage />} />
+          <Route path="/intake-forms/:intakeFormId" element={<IntakeFormDetailPage />} />
+          <Route path="/intake-form-submissions" element={<IntakeFormSubmissionListPage />} />
+          <Route path="/intake-form-submissions/new" element={<IntakeFormSubmissionCreatePage />} />
+          <Route path="/intake-form-submissions/:intakeFormSubmissionId" element={<IntakeFormSubmissionDetailPage />} />
           <Route path="/vendors" element={<VendorListPage />} />
           <Route path="/vendors/new" element={<VendorCreatePage />} />
           <Route path="/vendors/:vendorId" element={<VendorDetailPage />} />
