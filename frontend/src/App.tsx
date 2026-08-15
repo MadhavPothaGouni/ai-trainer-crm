@@ -86,6 +86,24 @@ import EquipmentListPage from "./pages/equipment/EquipmentListPage";
 import MaintenanceLogCreatePage from "./pages/maintenanceLogs/MaintenanceLogCreatePage";
 import MaintenanceLogDetailPage from "./pages/maintenanceLogs/MaintenanceLogDetailPage";
 import MaintenanceLogListPage from "./pages/maintenanceLogs/MaintenanceLogListPage";
+import ShiftTemplateCreatePage from "./pages/shiftTemplates/ShiftTemplateCreatePage";
+import ShiftTemplateDetailPage from "./pages/shiftTemplates/ShiftTemplateDetailPage";
+import ShiftTemplateListPage from "./pages/shiftTemplates/ShiftTemplateListPage";
+import ShiftCreatePage from "./pages/shifts/ShiftCreatePage";
+import ShiftDetailPage from "./pages/shifts/ShiftDetailPage";
+import ShiftListPage from "./pages/shifts/ShiftListPage";
+import ReferralCreatePage from "./pages/referrals/ReferralCreatePage";
+import ReferralDetailPage from "./pages/referrals/ReferralDetailPage";
+import ReferralListPage from "./pages/referrals/ReferralListPage";
+import VendorCreatePage from "./pages/vendors/VendorCreatePage";
+import VendorDetailPage from "./pages/vendors/VendorDetailPage";
+import VendorListPage from "./pages/vendors/VendorListPage";
+import PurchaseOrderCreatePage from "./pages/purchaseOrders/PurchaseOrderCreatePage";
+import PurchaseOrderDetailPage from "./pages/purchaseOrders/PurchaseOrderDetailPage";
+import PurchaseOrderListPage from "./pages/purchaseOrders/PurchaseOrderListPage";
+import ClientDocumentCreatePage from "./pages/clientDocuments/ClientDocumentCreatePage";
+import ClientDocumentDetailPage from "./pages/clientDocuments/ClientDocumentDetailPage";
+import ClientDocumentListPage from "./pages/clientDocuments/ClientDocumentListPage";
 import AttachmentDetailPage from "./pages/attachments/AttachmentDetailPage";
 import AttachmentListPage from "./pages/attachments/AttachmentListPage";
 import AttachmentUploadPage from "./pages/attachments/AttachmentUploadPage";
@@ -299,6 +317,24 @@ export default function App() {
           <Route path="/maintenance-logs" element={<MaintenanceLogListPage />} />
           <Route path="/maintenance-logs/new" element={<MaintenanceLogCreatePage />} />
           <Route path="/maintenance-logs/:maintenanceLogId" element={<MaintenanceLogDetailPage />} />
+          <Route path="/shift-templates" element={<ShiftTemplateListPage />} />
+          <Route path="/shift-templates/new" element={<ShiftTemplateCreatePage />} />
+          <Route path="/shift-templates/:shiftTemplateId" element={<ShiftTemplateDetailPage />} />
+          <Route path="/shifts" element={<ShiftListPage />} />
+          <Route path="/shifts/new" element={<ShiftCreatePage />} />
+          <Route path="/shifts/:shiftId" element={<ShiftDetailPage />} />
+          <Route path="/referrals" element={<ReferralListPage />} />
+          <Route path="/referrals/new" element={<ReferralCreatePage />} />
+          <Route path="/referrals/:referralId" element={<ReferralDetailPage />} />
+          <Route path="/vendors" element={<VendorListPage />} />
+          <Route path="/vendors/new" element={<VendorCreatePage />} />
+          <Route path="/vendors/:vendorId" element={<VendorDetailPage />} />
+          <Route path="/purchase-orders" element={<PurchaseOrderListPage />} />
+          <Route path="/purchase-orders/new" element={<PurchaseOrderCreatePage />} />
+          <Route path="/purchase-orders/:purchaseOrderId" element={<PurchaseOrderDetailPage />} />
+          <Route path="/client-documents" element={<ClientDocumentListPage />} />
+          <Route path="/client-documents/new" element={<ClientDocumentCreatePage />} />
+          <Route path="/client-documents/:clientDocumentId" element={<ClientDocumentDetailPage />} />
 
           <Route path="/knowledge-articles" element={<KnowledgeArticleListPage />} />
           <Route path="/knowledge-articles/new" element={<KnowledgeArticleCreatePage />} />

@@ -2848,3 +2848,268 @@ export interface UpdateMaintenanceLogRequest {
   notes?: string | null;
   nextDueDate?: string | null;
 }
+
+//
+// See backend/crm-platform/src/main/resources/db/migration/V45__shift_scheduling.sql - staff
+// shift scheduling. Same catalog/occurrence shape as GroupClass/ClassSession: ShiftTemplate is
+// the shared organization catalog of recurring shift patterns (no OWN scope, same as
+// Product/MembershipPlan/GroupClass); Shift is one employee's actual scheduled shift, owner-scoped
+// to the employee working it, with clock-in/out stamped once on entering IN_PROGRESS/COMPLETED.
+
+export type ShiftTemplateDayOfWeek = "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+
+export const SHIFT_TEMPLATE_DAYS_OF_WEEK: ShiftTemplateDayOfWeek[] = [
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+  "SUNDAY",
+];
+
+export type ShiftStatus = "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "MISSED" | "CANCELLED";
+
+export const SHIFT_STATUSES: ShiftStatus[] = ["SCHEDULED", "IN_PROGRESS", "COMPLETED", "MISSED", "CANCELLED"];
+
+export interface ShiftTemplateDto {
+  id: string;
+  name: string;
+  dayOfWeek: ShiftTemplateDayOfWeek;
+  startTime: string;
+  endTime: string;
+  role: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateShiftTemplateRequest {
+  name: string;
+  dayOfWeek: ShiftTemplateDayOfWeek;
+  startTime: string;
+  endTime: string;
+  role?: string | null;
+}
+
+export interface UpdateShiftTemplateRequest {
+  name: string;
+  dayOfWeek: ShiftTemplateDayOfWeek;
+  startTime: string;
+  endTime: string;
+  role?: string | null;
+  active: boolean;
+}
+
+export interface ShiftDto {
+  id: string;
+  shiftTemplateId: string | null;
+  ownerId: string;
+  shiftDate: string;
+  startsAt: string;
+  endsAt: string;
+  status: ShiftStatus;
+  clockInAt: string | null;
+  clockOutAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateShiftRequest {
+  shiftTemplateId?: string | null;
+  shiftDate: string;
+  startsAt: string;
+  endsAt: string;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateShiftRequest {
+  shiftDate: string;
+  startsAt: string;
+  endsAt: string;
+  notes?: string | null;
+}
+
+export interface UpdateShiftStatusRequest {
+  status: ShiftStatus;
+}
+
+//
+// See backend/crm-platform/src/main/resources/db/migration/V46__referrals.sql - a client
+// referring someone they know. Single owner-scoped entity: referrerContactId is the existing
+// client who made the referral; convertedContactId is nullable and only gets set once the
+// referral actually becomes a Contact (stamped once); rewardIssuedAt is stamped once via a
+// dedicated endpoint, independent of rewardAmount.
+
+export type ReferralStatus = "PENDING" | "CONTACTED" | "CONVERTED" | "DECLINED";
+
+export const REFERRAL_STATUSES: ReferralStatus[] = ["PENDING", "CONTACTED", "CONVERTED", "DECLINED"];
+
+export interface ReferralDto {
+  id: string;
+  referrerContactId: string;
+  referredName: string;
+  referredEmail: string | null;
+  referredPhone: string | null;
+  ownerId: string;
+  status: ReferralStatus;
+  convertedContactId: string | null;
+  rewardAmount: number | null;
+  rewardIssuedAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateReferralRequest {
+  referrerContactId: string;
+  referredName: string;
+  referredEmail?: string | null;
+  referredPhone?: string | null;
+  rewardAmount?: number | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateReferralRequest {
+  referredName: string;
+  referredEmail?: string | null;
+  referredPhone?: string | null;
+  rewardAmount?: number | null;
+  notes?: string | null;
+}
+
+export interface UpdateReferralStatusRequest {
+  status: ReferralStatus;
+  convertedContactId?: string | null;
+}
+
+//
+// See backend/crm-platform/src/main/resources/db/migration/V47__vendors_purchase_orders.sql -
+// who the organization buys from, and the orders placed with them. Same catalog/occurrence shape
+// as Equipment/MaintenanceLog: Vendor is the shared organization catalog of suppliers (no OWN
+// scope); PurchaseOrder is one order placed with a vendor, owner-scoped, with receivedAt stamped
+// once on entering RECEIVED.
+
+export interface VendorDto {
+  id: string;
+  name: string;
+  contactName: string | null;
+  email: string | null;
+  phone: string | null;
+  category: string | null;
+  active: boolean;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateVendorRequest {
+  name: string;
+  contactName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  category?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdateVendorRequest {
+  name: string;
+  contactName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  category?: string | null;
+  notes?: string | null;
+  active: boolean;
+}
+
+export type PurchaseOrderStatus = "DRAFT" | "ORDERED" | "RECEIVED" | "CANCELLED";
+
+export const PURCHASE_ORDER_STATUSES: PurchaseOrderStatus[] = ["DRAFT", "ORDERED", "RECEIVED", "CANCELLED"];
+
+export interface PurchaseOrderDto {
+  id: string;
+  vendorId: string;
+  ownerId: string;
+  orderDate: string;
+  status: PurchaseOrderStatus;
+  totalAmount: number | null;
+  expectedDeliveryDate: string | null;
+  receivedAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePurchaseOrderRequest {
+  vendorId: string;
+  orderDate: string;
+  totalAmount?: number | null;
+  expectedDeliveryDate?: string | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdatePurchaseOrderRequest {
+  orderDate: string;
+  totalAmount?: number | null;
+  expectedDeliveryDate?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdatePurchaseOrderStatusRequest {
+  status: PurchaseOrderStatus;
+}
+
+//
+// See backend/crm-platform/src/main/resources/db/migration/V48__client_documents.sql - signed
+// documents tied to one client (liability waivers, medical clearances, photo releases, etc).
+// Single owner-scoped entity, same shape as ClientGoal/Referral. signedAt is stamped once via
+// PATCH .../status, the first time status moves to SIGNED.
+
+export type ClientDocumentType = "WAIVER" | "MEDICAL_CLEARANCE" | "PHOTO_RELEASE" | "CONTRACT_ADDENDUM" | "OTHER";
+
+export const CLIENT_DOCUMENT_TYPES: ClientDocumentType[] = ["WAIVER", "MEDICAL_CLEARANCE", "PHOTO_RELEASE", "CONTRACT_ADDENDUM", "OTHER"];
+
+export type ClientDocumentStatus = "PENDING" | "SIGNED" | "EXPIRED" | "REVOKED";
+
+export const CLIENT_DOCUMENT_STATUSES: ClientDocumentStatus[] = ["PENDING", "SIGNED", "EXPIRED", "REVOKED"];
+
+export interface ClientDocumentDto {
+  id: string;
+  contactId: string;
+  ownerId: string;
+  documentType: ClientDocumentType;
+  title: string;
+  status: ClientDocumentStatus;
+  signedAt: string | null;
+  expiresAt: string | null;
+  fileUrl: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateClientDocumentRequest {
+  contactId: string;
+  documentType: ClientDocumentType;
+  title: string;
+  expiresAt?: string | null;
+  fileUrl?: string | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+export interface UpdateClientDocumentRequest {
+  documentType: ClientDocumentType;
+  title: string;
+  expiresAt?: string | null;
+  fileUrl?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdateClientDocumentStatusRequest {
+  status: ClientDocumentStatus;
+}

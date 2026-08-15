@@ -1159,3 +1159,104 @@ export type CreateMaintenanceLogFormValues = z.infer<typeof createMaintenanceLog
 
 export const updateMaintenanceLogSchema = createMaintenanceLogSchema.omit({ equipmentId: true });
 export type UpdateMaintenanceLogFormValues = z.infer<typeof updateMaintenanceLogSchema>;
+
+// ---- Shift Template / Shift (V45) ----
+
+const shiftTemplateFields = {
+  name: z.string().min(1, "Name is required").max(200),
+  dayOfWeek: z.string().min(1, "Day of week is required"),
+  startTime: z.string().min(1, "Start time is required"),
+  endTime: z.string().min(1, "End time is required"),
+  role: z.string().max(100).optional().or(z.literal("")),
+};
+
+export const createShiftTemplateSchema = z.object({ ...shiftTemplateFields });
+export type CreateShiftTemplateFormValues = z.infer<typeof createShiftTemplateSchema>;
+
+export const updateShiftTemplateSchema = z.object({ ...shiftTemplateFields, active: z.boolean().optional() });
+export type UpdateShiftTemplateFormValues = z.infer<typeof updateShiftTemplateSchema>;
+
+const shiftDateFields = {
+  shiftDate: z.string().min(1, "Shift date is required"),
+  startsAt: z.string().min(1, "Start time is required"),
+  endsAt: z.string().min(1, "End time is required"),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+/** endsAt must be after startsAt - same datetime-local comparison approach as class sessions. */
+function refineShiftTimes<T extends { startsAt: string; endsAt: string }>(data: T): boolean {
+  return !data.startsAt || !data.endsAt || new Date(data.endsAt) > new Date(data.startsAt);
+}
+
+export const createShiftSchema = z
+  .object({ shiftTemplateId: z.string().optional().or(z.literal("")), ...shiftDateFields })
+  .refine(refineShiftTimes, { message: "End time must be after the start time", path: ["endsAt"] });
+export type CreateShiftFormValues = z.infer<typeof createShiftSchema>;
+
+export const updateShiftSchema = z.object({ ...shiftDateFields }).refine(refineShiftTimes, {
+  message: "End time must be after the start time",
+  path: ["endsAt"],
+});
+export type UpdateShiftFormValues = z.infer<typeof updateShiftSchema>;
+
+// ---- Referral (V46) ----
+
+const referralFields = {
+  referredName: z.string().min(1, "Name is required").max(200),
+  referredEmail: z.string().max(255).optional().or(z.literal("")).refine((value) => !value || /\S+@\S+\.\S+/.test(value), "Enter a valid email"),
+  referredPhone: z.string().max(50).optional().or(z.literal("")),
+  rewardAmount: optionalNumberString,
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createReferralSchema = z.object({ referrerContactId: z.string().min(1, "Referrer is required"), ...referralFields });
+export type CreateReferralFormValues = z.infer<typeof createReferralSchema>;
+
+export const updateReferralSchema = z.object({ ...referralFields });
+export type UpdateReferralFormValues = z.infer<typeof updateReferralSchema>;
+
+// ---- Vendor / Purchase Order (V47) ----
+
+const vendorFields = {
+  name: z.string().min(1, "Name is required").max(200),
+  contactName: z.string().max(200).optional().or(z.literal("")),
+  email: z.string().max(255).optional().or(z.literal("")).refine((value) => !value || /\S+@\S+\.\S+/.test(value), "Enter a valid email"),
+  phone: z.string().max(50).optional().or(z.literal("")),
+  category: z.string().max(100).optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createVendorSchema = z.object({ ...vendorFields });
+export type CreateVendorFormValues = z.infer<typeof createVendorSchema>;
+
+export const updateVendorSchema = z.object({ ...vendorFields, active: z.boolean().optional() });
+export type UpdateVendorFormValues = z.infer<typeof updateVendorSchema>;
+
+const purchaseOrderFields = {
+  orderDate: z.string().min(1, "Order date is required"),
+  totalAmount: optionalNumberString,
+  expectedDeliveryDate: z.string().optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createPurchaseOrderSchema = z.object({ vendorId: z.string().min(1, "Vendor is required"), ...purchaseOrderFields });
+export type CreatePurchaseOrderFormValues = z.infer<typeof createPurchaseOrderSchema>;
+
+export const updatePurchaseOrderSchema = z.object({ ...purchaseOrderFields });
+export type UpdatePurchaseOrderFormValues = z.infer<typeof updatePurchaseOrderSchema>;
+
+// ---- Client Document (V48) ----
+
+const clientDocumentFields = {
+  documentType: z.string().min(1, "Document type is required"),
+  title: z.string().min(1, "Title is required").max(200),
+  expiresAt: z.string().optional().or(z.literal("")),
+  fileUrl: z.string().max(2000).optional().or(z.literal("")),
+  notes: z.string().max(2000).optional().or(z.literal("")),
+};
+
+export const createClientDocumentSchema = z.object({ contactId: z.string().min(1, "Client is required"), ...clientDocumentFields });
+export type CreateClientDocumentFormValues = z.infer<typeof createClientDocumentSchema>;
+
+export const updateClientDocumentSchema = z.object({ ...clientDocumentFields });
+export type UpdateClientDocumentFormValues = z.infer<typeof updateClientDocumentSchema>;

@@ -183,7 +183,11 @@ Contracts; Membership Plans and Memberships (recurring client billing,
 price/credits snapshotted at signup so later plan-price changes don't
 retroactively affect existing members); a Commission engine that
 auto-calculates rep commission on closed-won deals; Sales Goals (rep/team
-quotas); and Forecasting (daily pipeline snapshots for trend reporting).
+quotas); Forecasting (daily pipeline snapshots for trend reporting); a
+Referral Program (clients referring people they know, worked through
+PENDING → CONTACTED → CONVERTED, with an optional reward issued once and
+never re-issued); and a Vendor catalog with Purchase Orders (DRAFT →
+ORDERED → RECEIVED, received-at timestamp stamped once).
 
 **Support & service** — Support Tickets (free, non-linear status
 transitions, since reopening a resolved ticket is normal); SLA policies
@@ -197,8 +201,12 @@ objectives); Training Sessions with per-session exercises logged; an
 Exercise library; Nutrition Plans; Body Measurement check-ins; Booking
 Links for client self-scheduling; Group Classes (a class-type catalog,
 scheduled Class Sessions, and a capacity-enforced attendance roster —
-distinct from the 1:1 Training Session/Booking Link); and an Equipment
-inventory with Maintenance Logs tracking service history per asset.
+distinct from the 1:1 Training Session/Booking Link); an Equipment
+inventory with Maintenance Logs tracking service history per asset; Staff
+Shift Scheduling (recurring shift templates plus actual scheduled shifts,
+with clock-in/out timestamps stamped once per shift); and Client
+Documents (waivers, medical clearances, photo releases, tracked
+PENDING → SIGNED with a signed-at timestamp stamped once).
 
 **Marketing & content** — Campaigns with member tracking (Leads/Contacts
 through an engagement funnel) and per-status stats; Email Templates;
